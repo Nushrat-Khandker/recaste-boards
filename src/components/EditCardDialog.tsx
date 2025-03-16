@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -27,7 +26,6 @@ const rainbowColors = [
   { label: 'Blue', value: '#5293d1' },
   { label: 'Purple', value: '#882cd3' },
   { label: 'Pink', value: '#D946EF' },
-  { label: 'Indigo', value: '#423ec1' },
 ];
 
 // Available tag colors for selection (keeping as fallback)
