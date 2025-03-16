@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -35,7 +34,6 @@ const tagColorOptions = [
   { label: 'Green', value: 'bg-green-100 text-green-800' },
   { label: 'Purple', value: 'bg-purple-100 text-purple-800' },
   { label: 'Orange', value: 'bg-orange-100 text-orange-800' },
-  { label: 'Red', value: 'bg-red-100 text-red-800' },
   { label: 'Yellow', value: 'bg-yellow-100 text-yellow-800' },
   { label: 'Indigo', value: 'bg-indigo-100 text-indigo-800' },
   { label: 'Gray', value: 'bg-gray-100 text-gray-800' },
