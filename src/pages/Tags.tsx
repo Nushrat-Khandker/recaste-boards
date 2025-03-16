@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useKanban, Tag } from '../context/KanbanContext';
 import { Button } from "@/components/ui/button";
@@ -27,6 +26,17 @@ const rainbowColors = [
   { label: 'Blue', value: '#5293d1' },
   { label: 'Indigo', value: '#423ec1' },
   { label: 'Pink', value: '#D946EF' },
+];
+
+// Available tag colors for selection (keeping as fallback)
+const tagColorOptions = [
+  { label: 'Blue', value: 'bg-blue-100 text-blue-800' },
+  { label: 'Green', value: 'bg-green-100 text-green-800' },
+  { label: 'Purple', value: 'bg-purple-100 text-purple-800' },
+  { label: 'Orange', value: 'bg-orange-100 text-orange-800' },
+  { label: 'Yellow', value: 'bg-yellow-100 text-yellow-800' },
+  { label: 'Indigo', value: 'bg-indigo-100 text-indigo-800' },
+  { label: 'Gray', value: 'bg-gray-100 text-gray-800' },
 ];
 
 const Tags: React.FC = () => {
