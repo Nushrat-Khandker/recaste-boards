@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { X, Move, Pencil } from 'lucide-react';
@@ -57,6 +58,30 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
     setIsEditDialogOpen(true);
   };
 
+  // Render tag with proper styling based on whether it has a custom color
+  const renderTag = (tag: Tag) => {
+    if (tag.customColor) {
+      return (
+        <span 
+          key={tag.text} 
+          className="tag"
+          style={{ backgroundColor: tag.customColor }}
+        >
+          {tag.text}
+        </span>
+      );
+    }
+    
+    return (
+      <span 
+        key={tag.text} 
+        className={`tag ${tag.color || tagColors[tag.text] || 'bg-gray-100 text-gray-800'}`}
+      >
+        {tag.text}
+      </span>
+    );
+  };
+
   return (
     <>
       <Card 
@@ -102,14 +127,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
         
         {(tags.length > 0 || priority) && (
           <div className="flex flex-wrap gap-1 mt-2">
-            {tags.map((tag) => (
-              <span 
-                key={tag.text} 
-                className={`tag ${tag.color || tagColors[tag.text] || 'bg-gray-100 text-gray-800'}`}
-              >
-                {tag.text}
-              </span>
-            ))}
+            {tags.map((tag) => renderTag(tag))}
             
             {priority && (
               <span 

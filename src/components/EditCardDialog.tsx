@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -82,9 +81,6 @@ const ColorWheel: React.FC<ColorWheelProps> = ({ onSelectColor }) => {
   }, []);
 
   const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -105,16 +101,15 @@ const ColorWheel: React.FC<ColorWheelProps> = ({ onSelectColor }) => {
     // Create the CSS rgb string
     const rgbColor = `rgb(${r}, ${g}, ${b})`;
     
-    // Determine text color based on brightness
-    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-    const textColor = brightness < 128 ? 'text-white' : 'text-gray-800';
-    
-    const colorClass = `${textColor}`;
     onSelectColor(rgbColor);
+    
+    // Prevent event propagation
+    e.preventDefault();
+    e.stopPropagation();
   };
 
   return (
-    <div className="flex flex-col items-center gap-2 p-2">
+    <div className="flex flex-col items-center gap-2 p-2" onClick={(e) => e.stopPropagation()}>
       <canvas 
         ref={canvasRef} 
         width={200} 
@@ -155,23 +150,26 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
   const handleSelectPreset = (colorValue: string) => {
     setSelectedColor(colorValue);
     setCustomColor(null);
+    // Keep color picker open
   };
 
   const handleSelectCustomColor = (rgbColor: string) => {
     setCustomColor(rgbColor);
+    // Keep color picker open
   };
 
   const handleAddTag = () => {
     if (newTagText.trim()) {
-      const tagColor = customColor 
-        ? `bg-transparent text-gray-800` // We'll use inline style for custom colors
-        : selectedColor;
-
       const newTag: Tag = { 
-        text: newTagText.trim(), 
-        color: tagColor,
-        customColor: customColor // Store the custom color if present
+        text: newTagText.trim()
       };
+      
+      if (customColor) {
+        newTag.customColor = customColor;
+        newTag.color = 'bg-transparent text-gray-800'; // Base class for custom colors
+      } else {
+        newTag.color = selectedColor;
+      }
       
       setTags([...tags, newTag]);
       setNewTagText('');
@@ -307,6 +305,10 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
                     type="button" 
                     variant="outline" 
                     className="h-10 w-10 p-0 flex items-center justify-center"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsColorPickerOpen(!isColorPickerOpen);
+                    }}
                   >
                     {renderColorPreview()}
                   </Button>
@@ -314,15 +316,21 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
                 <PopoverContent 
                   className="w-auto p-0" 
                   align="end"
+                  onInteractOutside={(e) => {
+                    e.preventDefault();
+                  }}
                 >
-                  <div className="p-2">
+                  <div className="p-2" onClick={(e) => e.stopPropagation()}>
                     <div className="mb-2">
                       <p className="text-sm font-medium mb-2">Presets</p>
                       <div className="flex flex-wrap gap-1">
                         {tagColorOptions.map((colorOption) => (
                           <button
                             key={colorOption.value}
-                            onClick={() => handleSelectPreset(colorOption.value)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSelectPreset(colorOption.value);
+                            }}
                             className={`w-6 h-6 rounded-full ${colorOption.value.split(' ')[0]} border border-gray-200`}
                             title={colorOption.label}
                           />

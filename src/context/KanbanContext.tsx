@@ -1,9 +1,9 @@
-
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 export interface Tag {
   text: string;
   color?: string;
+  customColor?: string;  // Added this property for custom RGB colors
 }
 
 export interface KanbanCard {
