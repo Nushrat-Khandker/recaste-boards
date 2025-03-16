@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -17,7 +18,7 @@ interface EditCardDialogProps {
   onSave: (columnId: string, updatedCard: KanbanCard) => void;
 }
 
-// Rainbow color options
+// Rainbow color options (reordered to put blue between green and purple)
 const rainbowColors = [
   { label: 'Red', value: '#ea384c' },
   { label: 'Orange', value: '#F97316' },

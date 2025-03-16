@@ -17,7 +17,7 @@ const isColorDark = (hexColor: string): boolean => {
   return luminance < 0.5;
 };
 
-// Rainbow color options (updated to remove the first blue color)
+// Rainbow color options (reordered to put blue between green and purple)
 const rainbowColors = [
   { label: 'Red', value: '#ea384c' },
   { label: 'Orange', value: '#F97316' },
