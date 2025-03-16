@@ -84,7 +84,6 @@ const ColorWheel: React.FC<ColorWheelProps> = ({ color, onChange }) => {
   }, []);
 
   const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    // Stop event propagation to prevent popover from closing
     e.preventDefault();
     e.stopPropagation();
     
@@ -99,27 +98,24 @@ const ColorWheel: React.FC<ColorWheelProps> = ({ color, onChange }) => {
     if (!ctx) return;
     
     const imageData = ctx.getImageData(x, y, 1, 1).data;
-    const rgbColor = `rgb(${imageData[0]}, ${imageData[1]}, ${imageData[2]})`;
     
-    // Convert to HSL to determine text color
-    const r = imageData[0] / 255;
-    const g = imageData[1] / 255;
-    const b = imageData[2] / 255;
+    // Format the RGB values
+    const r = imageData[0];
+    const g = imageData[1];
+    const b = imageData[2];
+    const rgbColor = `rgb(${r}, ${g}, ${b})`;
     
-    const max = Math.max(r, g, b);
-    const min = Math.min(r, g, b);
-    const l = (max + min) / 2;
+    // Determine text color based on brightness
+    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+    const textColor = brightness < 128 ? 'text-white' : 'text-gray-800';
     
-    // Use light text for dark backgrounds, dark text for light backgrounds
-    const textColor = l < 0.6 ? 'text-white' : 'text-gray-800';
+    // Generate a class that combines background and text color
+    const colorClass = `bg-[${rgbColor}] ${textColor}`;
     
-    // Generate a dynamic class
-    const tailwindClass = `bg-[${rgbColor}] ${textColor}`;
+    setSelectedColor(colorClass);
+    onChange(colorClass);
     
-    setSelectedColor(tailwindClass);
-    onChange(tailwindClass);
-    
-    console.log('Selected color:', tailwindClass, 'RGB:', rgbColor);
+    console.log('Selected color:', colorClass, 'RGB:', rgbColor);
   };
 
   return (
@@ -139,7 +135,7 @@ const ColorWheel: React.FC<ColorWheelProps> = ({ color, onChange }) => {
       />
       <div className="flex items-center gap-2 mt-2">
         <div 
-          className={`w-8 h-8 rounded-full ${selectedColor.split(' ')[0]}`} 
+          className={`w-8 h-8 rounded-full ${selectedColor.split(' ')[0] || ''}`} 
           style={{ borderColor: 'rgba(0,0,0,0.1)', borderWidth: '1px' }}
         />
         <span className="text-xs">Click on the wheel to pick a color</span>
@@ -172,14 +168,13 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
   }, [card]);
 
   const handleColorChange = (color: string) => {
-    console.log("Color changed to:", color); // Debug log
+    console.log("Color changed to:", color);
     setSelectedColor(color);
   };
 
   const handleAddTag = () => {
     if (newTagText.trim()) {
       const newTag: Tag = { text: newTagText.trim(), color: selectedColor };
-      console.log("Adding tag with color:", selectedColor); // Debug log
       setTags([...tags, newTag]);
       setNewTagText('');
     }
@@ -269,7 +264,14 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
               
               <Popover 
                 open={isColorPickerOpen} 
-                onOpenChange={setIsColorPickerOpen}
+                onOpenChange={(open) => {
+                  // Only close if it's currently open and trying to close
+                  if (isColorPickerOpen && !open) {
+                    setIsColorPickerOpen(false);
+                  } else {
+                    setIsColorPickerOpen(open);
+                  }
+                }}
               >
                 <PopoverTrigger asChild>
                   <Button 
@@ -287,7 +289,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
                   className="w-auto p-0" 
                   align="end"
                   onInteractOutside={(e) => {
-                    // Prevent closing when interacting with color wheel
+                    // Don't close when interacting with color wheel
                     e.preventDefault();
                   }}
                   onClick={(e) => {
@@ -324,7 +326,10 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
                       <p className="text-sm font-medium mb-2">Custom color</p>
                       <ColorWheel 
                         color={selectedColor} 
-                        onChange={handleColorChange} 
+                        onChange={(color) => {
+                          handleColorChange(color);
+                          // Don't close popover for color wheel selections to allow multiple tries
+                        }} 
                       />
                     </div>
                   </div>
