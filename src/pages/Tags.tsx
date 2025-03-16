@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useKanban, Tag } from '../context/KanbanContext';
 import { Button } from "@/components/ui/button";
@@ -18,7 +17,7 @@ const isColorDark = (hexColor: string): boolean => {
   return luminance < 0.5;
 };
 
-// Rainbow color options (reordered to put blue between green and purple)
+// Rainbow color options with only one red color
 const rainbowColors = [
   { label: 'Red', value: '#ea384c' },
   { label: 'Orange', value: '#F97316' },
@@ -33,7 +32,6 @@ const Tags: React.FC = () => {
   const { getAllTags, updateTag, deleteTag, addTag } = useKanban();
   const [tags, setTags] = useState<Tag[]>(getAllTags());
   const [editingId, setEditingId] = useState<number | null>(null);
-  // Update the default color to red (the first in the rainbow array) instead of blue
   const [newTag, setNewTag] = useState<Tag>({ text: '', customColor: rainbowColors[0].value });
   const [isAdding, setIsAdding] = useState(false);
 
