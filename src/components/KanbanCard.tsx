@@ -1,7 +1,9 @@
 
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
-import { X, Move } from 'lucide-react';
+import { X, Move, Edit } from 'lucide-react';
+import EditCardDialog from './EditCardDialog';
+import { useKanban } from '../context/KanbanContext';
 
 interface Tag {
   text: string;
@@ -41,6 +43,8 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
   columnId
 }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const { updateCard } = useKanban();
 
   const handleDragStart = (e: React.DragEvent) => {
     e.dataTransfer.effectAllowed = 'move';
@@ -54,62 +58,84 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
     e.currentTarget.classList.remove('dragging');
   };
 
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsEditDialogOpen(true);
+  };
+
   return (
-    <Card 
-      className="kanban-card animate-hover group"
-      draggable="true"
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      data-card-id={id}
-    >
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <h3 className="font-medium text-sm mb-1">{title}</h3>
-          {description && (
-            <p className="text-xs text-muted-foreground mb-3">{description}</p>
-          )}
-        </div>
-        
-        <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-          <button 
-            className="text-gray-400 hover:text-gray-600 transition-colors p-0.5 rounded"
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete();
-            }}
-            aria-label="Delete card"
-          >
-            <X size={14} />
-          </button>
-          <div className="text-gray-400 cursor-grab p-0.5 rounded">
-            <Move size={14} />
+    <>
+      <Card 
+        className="kanban-card animate-hover group"
+        draggable="true"
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        data-card-id={id}
+      >
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <h3 className="font-medium text-sm mb-1">{title}</h3>
+            {description && (
+              <p className="text-xs text-muted-foreground mb-3">{description}</p>
+            )}
+          </div>
+          
+          <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <button 
+              className="text-gray-400 hover:text-gray-600 transition-colors p-0.5 rounded"
+              onClick={handleEdit}
+              aria-label="Edit card"
+            >
+              <Edit size={14} />
+            </button>
+            <button 
+              className="text-gray-400 hover:text-gray-600 transition-colors p-0.5 rounded"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+              aria-label="Delete card"
+            >
+              <X size={14} />
+            </button>
+            <div className="text-gray-400 cursor-grab p-0.5 rounded">
+              <Move size={14} />
+            </div>
           </div>
         </div>
-      </div>
-      
-      {(tags.length > 0 || priority) && (
-        <div className="flex flex-wrap gap-1 mt-2">
-          {tags.map((tag) => (
-            <span 
-              key={tag} 
-              className={`tag ${tagColors[tag] || 'bg-gray-100 text-gray-800'}`}
-            >
-              {tag}
-            </span>
-          ))}
-          
-          {priority && (
-            <span 
-              className={`tag ${tagColors[priority]}`}
-            >
-              {priority}
-            </span>
-          )}
-        </div>
-      )}
-    </Card>
+        
+        {(tags.length > 0 || priority) && (
+          <div className="flex flex-wrap gap-1 mt-2">
+            {tags.map((tag) => (
+              <span 
+                key={tag} 
+                className={`tag ${tagColors[tag] || 'bg-gray-100 text-gray-800'}`}
+              >
+                {tag}
+              </span>
+            ))}
+            
+            {priority && (
+              <span 
+                className={`tag ${tagColors[priority]}`}
+              >
+                {priority}
+              </span>
+            )}
+          </div>
+        )}
+      </Card>
+
+      <EditCardDialog
+        card={{ id, title, description, tags, priority }}
+        columnId={columnId}
+        isOpen={isEditDialogOpen}
+        onClose={() => setIsEditDialogOpen(false)}
+        onSave={updateCard}
+      />
+    </>
   );
 };
 
