@@ -94,7 +94,7 @@
   }
   
   .tag {
-    @apply px-2 py-0.5 rounded-full text-[10px] font-medium tracking-wide;
+    @apply px-2 py-0.5 rounded-full text-[10px] font-medium tracking-wide shadow-sm;
   }
 
   .animate-hover {

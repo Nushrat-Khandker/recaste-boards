@@ -27,6 +27,24 @@ const tagColors: Record<string, string> = {
   'high': 'bg-red-50 text-red-600',
 };
 
+// Helper function to determine if a color is dark
+const isColorDark = (hexColor: string): boolean => {
+  // Remove the # if it exists
+  const hex = hexColor.replace('#', '');
+  
+  // Convert hex to RGB
+  const r = parseInt(hex.substr(0, 2), 16);
+  const g = parseInt(hex.substr(2, 2), 16);
+  const b = parseInt(hex.substr(4, 2), 16);
+  
+  // Calculate luminance (perceived brightness)
+  // Using the formula: (0.299*R + 0.587*G + 0.114*B)
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  
+  // Return true if the color is dark (luminance < 0.5)
+  return luminance < 0.5;
+};
+
 const KanbanCard: React.FC<KanbanCardProps> = ({
   id,
   title,
@@ -61,10 +79,12 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
   // Render tag with proper styling
   const renderTag = (tag: Tag) => {
     if (tag.customColor) {
+      const isDark = isColorDark(tag.customColor);
+      
       return (
         <span 
           key={tag.text} 
-          className="tag text-gray-800"
+          className={`tag ${isDark ? 'text-white' : 'text-gray-800'}`}
           style={{ backgroundColor: tag.customColor }}
         >
           {tag.text}
