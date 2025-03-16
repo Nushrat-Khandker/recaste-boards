@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useKanban, Tag } from '../context/KanbanContext';
 import { Button } from "@/components/ui/button";
@@ -18,13 +17,12 @@ const isColorDark = (hexColor: string): boolean => {
   return luminance < 0.5;
 };
 
-// Rainbow color options (same as in EditCardDialog)
+// Rainbow color options (updated to remove the first blue color)
 const rainbowColors = [
   { label: 'Red', value: '#ea384c' },
   { label: 'Orange', value: '#F97316' },
   { label: 'Yellow', value: '#f0e04b' },
   { label: 'Green', value: '#5ec639' },
-  { label: 'Blue', value: '#5293d1' },
   { label: 'Purple', value: '#882cd3' },
   { label: 'Pink', value: '#D946EF' },
 ];
