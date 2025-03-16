@@ -36,29 +36,7 @@ interface ColorWheelProps {
 
 const ColorWheel: React.FC<ColorWheelProps> = ({ color, onChange }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [isPickingColor, setIsPickingColor] = useState(false);
   const [selectedColor, setSelectedColor] = useState(color);
-
-  // Parse the Tailwind color to get background and text colors
-  const getBackgroundColor = (tailwindClass: string) => {
-    if (tailwindClass.includes('bg-')) {
-      const match = tailwindClass.match(/bg-([a-z]+-\d+)/);
-      if (match && match[1]) {
-        return match[1];
-      }
-    }
-    return 'gray-100';
-  };
-
-  const getTextColor = (tailwindClass: string) => {
-    if (tailwindClass.includes('text-')) {
-      const match = tailwindClass.match(/text-([a-z]+-\d+)/);
-      if (match && match[1]) {
-        return match[1];
-      }
-    }
-    return 'gray-800';
-  };
 
   // Create color wheel on canvas
   useEffect(() => {
@@ -139,6 +117,8 @@ const ColorWheel: React.FC<ColorWheelProps> = ({ color, onChange }) => {
     
     setSelectedColor(tailwindClass);
     onChange(tailwindClass);
+    
+    console.log('Selected color:', tailwindClass); // Debug log
   };
 
   return (
@@ -176,9 +156,24 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
   const [selectedColor, setSelectedColor] = useState(tagColorOptions[0].value);
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
 
+  // Reset form when card changes
+  useEffect(() => {
+    setTitle(card.title);
+    setDescription(card.description || '');
+    setTags(card.tags || []);
+    setPriority(card.priority || 'medium');
+  }, [card]);
+
+  const handleColorChange = (color: string) => {
+    console.log("Color changed to:", color); // Debug log
+    setSelectedColor(color);
+  };
+
   const handleAddTag = () => {
     if (newTagText.trim()) {
-      setTags([...tags, { text: newTagText.trim(), color: selectedColor }]);
+      const newTag: Tag = { text: newTagText.trim(), color: selectedColor };
+      console.log("Adding tag with color:", selectedColor); // Debug log
+      setTags([...tags, newTag]);
       setNewTagText('');
     }
   };
@@ -285,6 +280,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
                     // Prevent closing when interacting with color wheel
                     e.preventDefault();
                   }}
+                  onClick={(e) => e.stopPropagation()}
                 >
                   <div className="p-2" onClick={(e) => e.stopPropagation()}>
                     <div className="mb-2">
@@ -294,7 +290,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
                           <button
                             key={colorOption.value}
                             onClick={() => {
-                              setSelectedColor(colorOption.value);
+                              handleColorChange(colorOption.value);
                               setIsColorPickerOpen(false);
                             }}
                             className={`w-6 h-6 rounded-full ${colorOption.value.split(' ')[0]} border border-gray-200`}
@@ -307,7 +303,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
                       <p className="text-sm font-medium mb-2">Custom color</p>
                       <ColorWheel 
                         color={selectedColor} 
-                        onChange={(color) => setSelectedColor(color)} 
+                        onChange={handleColorChange} 
                       />
                     </div>
                   </div>
