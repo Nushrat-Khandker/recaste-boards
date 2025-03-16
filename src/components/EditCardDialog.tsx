@@ -85,6 +85,7 @@ const ColorWheel: React.FC<ColorWheelProps> = ({ color, onChange }) => {
 
   const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     // Stop event propagation to prevent popover from closing
+    e.preventDefault();
     e.stopPropagation();
     
     const canvas = canvasRef.current;
@@ -112,17 +113,23 @@ const ColorWheel: React.FC<ColorWheelProps> = ({ color, onChange }) => {
     // Use light text for dark backgrounds, dark text for light backgrounds
     const textColor = l < 0.6 ? 'text-white' : 'text-gray-800';
     
-    // Generate a temporary class that will be converted to a tailwind class by our backend
+    // Generate a dynamic class
     const tailwindClass = `bg-[${rgbColor}] ${textColor}`;
     
     setSelectedColor(tailwindClass);
     onChange(tailwindClass);
     
-    console.log('Selected color:', tailwindClass); // Debug log
+    console.log('Selected color:', tailwindClass, 'RGB:', rgbColor);
   };
 
   return (
-    <div className="flex flex-col items-center gap-2 p-2" onClick={(e) => e.stopPropagation()}>
+    <div 
+      className="flex flex-col items-center gap-2 p-2" 
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }}
+    >
       <canvas 
         ref={canvasRef} 
         width={200} 
@@ -260,7 +267,10 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
                 className="flex-1"
               />
               
-              <Popover open={isColorPickerOpen} onOpenChange={setIsColorPickerOpen}>
+              <Popover 
+                open={isColorPickerOpen} 
+                onOpenChange={setIsColorPickerOpen}
+              >
                 <PopoverTrigger asChild>
                   <Button 
                     type="button" 
@@ -280,16 +290,27 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
                     // Prevent closing when interacting with color wheel
                     e.preventDefault();
                   }}
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
                 >
-                  <div className="p-2" onClick={(e) => e.stopPropagation()}>
+                  <div 
+                    className="p-2" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                  >
                     <div className="mb-2">
                       <p className="text-sm font-medium mb-2">Presets</p>
                       <div className="flex flex-wrap gap-1">
                         {tagColorOptions.map((colorOption) => (
                           <button
                             key={colorOption.value}
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
                               handleColorChange(colorOption.value);
                               setIsColorPickerOpen(false);
                             }}
