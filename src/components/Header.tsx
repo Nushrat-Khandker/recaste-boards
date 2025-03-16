@@ -12,7 +12,7 @@ const Header: React.FC = () => {
             <NavigationMenuList>
               <NavigationMenuItem>
                 <Link to="/" className={navigationMenuTriggerStyle()}>
-                  Kanban Board
+                  Recaste
                 </Link>
               </NavigationMenuItem>
             </NavigationMenuList>
