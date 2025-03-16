@@ -12,7 +12,7 @@ const Header: React.FC = () => {
             <NavigationMenuList>
               <NavigationMenuItem>
                 <Link to="/" className={navigationMenuTriggerStyle()}>
-                  re*caste
+                  re<span className="text-[#FE446F]">*</span>caste
                 </Link>
               </NavigationMenuItem>
             </NavigationMenuList>
