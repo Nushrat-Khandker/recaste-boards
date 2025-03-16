@@ -33,7 +33,8 @@ const Tags: React.FC = () => {
   const { getAllTags, updateTag, deleteTag, addTag } = useKanban();
   const [tags, setTags] = useState<Tag[]>(getAllTags());
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [newTag, setNewTag] = useState<Tag>({ text: '', customColor: '#5293d1' });
+  // Update the default color to red (the first in the rainbow array) instead of blue
+  const [newTag, setNewTag] = useState<Tag>({ text: '', customColor: rainbowColors[0].value });
   const [isAdding, setIsAdding] = useState(false);
 
   const handleStartEdit = (index: number) => {
