@@ -106,6 +106,9 @@ const ColorWheel: React.FC<ColorWheelProps> = ({ color, onChange }) => {
   }, []);
 
   const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    // Stop event propagation to prevent popover from closing
+    e.stopPropagation();
+    
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -139,7 +142,7 @@ const ColorWheel: React.FC<ColorWheelProps> = ({ color, onChange }) => {
   };
 
   return (
-    <div className="flex flex-col items-center gap-2 p-2">
+    <div className="flex flex-col items-center gap-2 p-2" onClick={(e) => e.stopPropagation()}>
       <canvas 
         ref={canvasRef} 
         width={200} 
@@ -275,8 +278,15 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
                     />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="end">
-                  <div className="p-2">
+                <PopoverContent 
+                  className="w-auto p-0" 
+                  align="end"
+                  onInteractOutside={(e) => {
+                    // Prevent closing when interacting with color wheel
+                    e.preventDefault();
+                  }}
+                >
+                  <div className="p-2" onClick={(e) => e.stopPropagation()}>
                     <div className="mb-2">
                       <p className="text-sm font-medium mb-2">Presets</p>
                       <div className="flex flex-wrap gap-1">
