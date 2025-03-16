@@ -18,7 +18,7 @@ interface EditCardDialogProps {
   onSave: (columnId: string, updatedCard: KanbanCard) => void;
 }
 
-// Rainbow color options with only one red color
+// Exactly 7 rainbow colors with only one red
 const rainbowColors = [
   { label: 'Red', value: '#ea384c' },
   { label: 'Orange', value: '#F97316' },
