@@ -12,7 +12,7 @@ const Header: React.FC = () => {
             <NavigationMenuList>
               <NavigationMenuItem>
                 <Link to="/" className={navigationMenuTriggerStyle()}>
-                  Recaste
+                  Re*caste
                 </Link>
               </NavigationMenuItem>
             </NavigationMenuList>
