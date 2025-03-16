@@ -1,20 +1,14 @@
-
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { X, Move, Pencil } from 'lucide-react';
 import EditCardDialog from './EditCardDialog';
-import { useKanban } from '../context/KanbanContext';
-
-interface Tag {
-  text: string;
-  color: string;
-}
+import { useKanban, Tag } from '../context/KanbanContext';
 
 interface KanbanCardProps {
   id: string;
   title: string;
   description?: string;
-  tags?: string[];
+  tags?: Tag[];
   priority?: 'low' | 'medium' | 'high';
   onDelete: () => void;
   onDragStart: (e: React.DragEvent, cardId: string, columnId: string) => void;
@@ -110,10 +104,10 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
           <div className="flex flex-wrap gap-1 mt-2">
             {tags.map((tag) => (
               <span 
-                key={tag} 
-                className={`tag ${tagColors[tag] || 'bg-gray-100 text-gray-800'}`}
+                key={tag.text} 
+                className={`tag ${tag.color || tagColors[tag.text] || 'bg-gray-100 text-gray-800'}`}
               >
-                {tag}
+                {tag.text}
               </span>
             ))}
             
