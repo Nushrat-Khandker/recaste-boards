@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -21,7 +22,7 @@ interface EditCardDialogProps {
 const rainbowColors = [
   { label: 'Red', value: '#ea384c' },
   { label: 'Orange', value: '#F97316' },
-  { label: 'Yellow', value: '#FEF7CD' },
+  { label: 'Yellow', value: '#f0e04b' },
   { label: 'Green', value: '#F2FCE2' },
   { label: 'Blue', value: '#1EAEDB' },
   { label: 'Purple', value: '#8B5CF6' },
