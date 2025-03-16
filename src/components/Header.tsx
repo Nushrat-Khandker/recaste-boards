@@ -16,11 +16,6 @@ const Header: React.FC = () => {
                   Kanban Board
                 </Link>
               </NavigationMenuItem>
-              <NavigationMenuItem>
-                <Link to="/tags" className={navigationMenuTriggerStyle()}>
-                  Tags
-                </Link>
-              </NavigationMenuItem>
             </NavigationMenuList>
           </NavigationMenu>
         </div>
