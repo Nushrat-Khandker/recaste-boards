@@ -30,14 +30,12 @@ const tagColorOptions = [
 ];
 
 interface ColorWheelProps {
-  color: string;
-  onChange: (color: string) => void;
+  onSelectColor: (colorClass: string) => void;
 }
 
-const ColorWheel: React.FC<ColorWheelProps> = ({ color, onChange }) => {
+const ColorWheel: React.FC<ColorWheelProps> = ({ onSelectColor }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [selectedColor, setSelectedColor] = useState(color);
-
+  
   // Create color wheel on canvas
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -83,7 +81,7 @@ const ColorWheel: React.FC<ColorWheelProps> = ({ color, onChange }) => {
     ctx.fill();
   }, []);
 
-  const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     e.preventDefault();
     e.stopPropagation();
     
@@ -104,51 +102,27 @@ const ColorWheel: React.FC<ColorWheelProps> = ({ color, onChange }) => {
     const g = imageData[1];
     const b = imageData[2];
     
-    // Create a proper CSS rgb string
+    // Create the CSS rgb string
     const rgbColor = `rgb(${r}, ${g}, ${b})`;
     
     // Determine text color based on brightness
     const brightness = (r * 299 + g * 587 + b * 114) / 1000;
     const textColor = brightness < 128 ? 'text-white' : 'text-gray-800';
     
-    // Fixed: Use correct CSS format for background color
-    const colorClass = `bg-[${rgbColor}] ${textColor}`;
-    
-    setSelectedColor(colorClass);
-    // Important: Call the onChange to actually update the parent component state
-    onChange(colorClass);
-    
-    console.log('Selected color:', colorClass, 'RGB:', rgbColor);
+    const colorClass = `${textColor}`;
+    onSelectColor(rgbColor);
   };
 
   return (
-    <div 
-      className="flex flex-col items-center gap-2 p-2" 
-      onClick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-      }}
-    >
+    <div className="flex flex-col items-center gap-2 p-2">
       <canvas 
         ref={canvasRef} 
         width={200} 
         height={200} 
-        onClick={handleCanvasClick}
+        onClick={handleClick}
         className="cursor-pointer rounded-full"
       />
-      <div className="flex items-center gap-2 mt-2">
-        <div 
-          className="w-8 h-8 rounded-full" 
-          style={{ 
-            backgroundColor: selectedColor.includes('bg-[') 
-              ? selectedColor.split('bg-[')[1]?.split(']')[0] 
-              : '', 
-            borderColor: 'rgba(0,0,0,0.1)', 
-            borderWidth: '1px' 
-          }}
-        />
-        <span className="text-xs">Click on the wheel to pick a color</span>
-      </div>
+      <p className="text-xs text-center">Click on the wheel to select a color</p>
     </div>
   );
 };
@@ -166,6 +140,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>(card.priority || 'medium');
   const [newTagText, setNewTagText] = useState('');
   const [selectedColor, setSelectedColor] = useState(tagColorOptions[0].value);
+  const [customColor, setCustomColor] = useState<string | null>(null);
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
 
   // Reset form when card changes
@@ -174,17 +149,30 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
     setDescription(card.description || '');
     setTags(card.tags || []);
     setPriority(card.priority || 'medium');
+    setCustomColor(null);
   }, [card]);
 
-  const handleColorChange = (color: string) => {
-    console.log("Color changed to:", color);
-    setSelectedColor(color);
+  const handleSelectPreset = (colorValue: string) => {
+    setSelectedColor(colorValue);
+    setCustomColor(null);
+  };
+
+  const handleSelectCustomColor = (rgbColor: string) => {
+    setCustomColor(rgbColor);
   };
 
   const handleAddTag = () => {
     if (newTagText.trim()) {
-      console.log("Adding new tag with color:", selectedColor);
-      const newTag: Tag = { text: newTagText.trim(), color: selectedColor };
+      const tagColor = customColor 
+        ? `bg-transparent text-gray-800` // We'll use inline style for custom colors
+        : selectedColor;
+
+      const newTag: Tag = { 
+        text: newTagText.trim(), 
+        color: tagColor,
+        customColor: customColor // Store the custom color if present
+      };
+      
       setTags([...tags, newTag]);
       setNewTagText('');
     }
@@ -218,30 +206,51 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
     }
   };
   
-  // Preview the selected color
-  const renderColorPreview = () => {
-    if (selectedColor.includes('bg-[')) {
-      // Custom color from color wheel
-      const bgColor = selectedColor.split('bg-[')[1]?.split(']')[0] || '';
+  // Render tag with either tailwind class or inline style
+  const renderTag = (tag: Tag, index: number) => {
+    if (tag.customColor) {
       return (
-        <div 
-          className="w-6 h-6 rounded-full" 
-          style={{ 
-            backgroundColor: bgColor,
-            borderColor: 'rgba(0,0,0,0.1)', 
-            borderWidth: '1px' 
-          }}
-        />
+        <Badge 
+          key={index} 
+          className="cursor-pointer flex items-center gap-1 bg-transparent"
+          style={{ backgroundColor: tag.customColor }}
+          onClick={() => handleRemoveTag(index)}
+        >
+          {tag.text}
+          <X size={12} className="ml-1" />
+        </Badge>
       );
-    } else {
-      // Preset color
+    }
+    
+    return (
+      <Badge 
+        key={index} 
+        className={`cursor-pointer flex items-center gap-1 ${tag.color}`}
+        onClick={() => handleRemoveTag(index)}
+      >
+        {tag.text}
+        <X size={12} className="ml-1" />
+      </Badge>
+    );
+  };
+  
+  // Render the color preview button
+  const renderColorPreview = () => {
+    if (customColor) {
       return (
         <div 
-          className={`w-6 h-6 rounded-full ${selectedColor.split(' ')[0]}`}
-          style={{ borderColor: 'rgba(0,0,0,0.1)', borderWidth: '1px' }}
+          className="w-6 h-6 rounded-full border border-gray-200"
+          style={{ backgroundColor: customColor }}
         />
       );
     }
+    
+    // For preset colors, use tailwind classes
+    return (
+      <div 
+        className={`w-6 h-6 rounded-full border border-gray-200 ${selectedColor.split(' ')[0]}`}
+      />
+    );
   };
 
   return (
@@ -277,16 +286,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
             <label className="text-sm font-medium">Tags</label>
             
             <div className="flex flex-wrap gap-1 mb-2">
-              {tags.map((tag, index) => (
-                <Badge 
-                  key={index} 
-                  className={`cursor-pointer flex items-center gap-1 ${tag.color}`}
-                  onClick={() => handleRemoveTag(index)}
-                >
-                  {tag.text}
-                  <X size={12} className="ml-1" />
-                </Badge>
-              ))}
+              {tags.map((tag, index) => renderTag(tag, index))}
             </div>
             
             <div className="flex gap-2">
@@ -300,19 +300,13 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
               
               <Popover 
                 open={isColorPickerOpen} 
-                onOpenChange={(open) => {
-                  // Handle open state carefully
-                  setIsColorPickerOpen(open);
-                }}
+                onOpenChange={setIsColorPickerOpen}
               >
                 <PopoverTrigger asChild>
                   <Button 
                     type="button" 
                     variant="outline" 
                     className="h-10 w-10 p-0 flex items-center justify-center"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                    }}
                   >
                     {renderColorPreview()}
                   </Button>
@@ -320,31 +314,15 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
                 <PopoverContent 
                   className="w-auto p-0" 
                   align="end"
-                  onPointerDownOutside={(e) => e.preventDefault()}
-                  onInteractOutside={(e) => e.preventDefault()}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }}
                 >
-                  <div 
-                    className="p-2" 
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                    }}
-                  >
+                  <div className="p-2">
                     <div className="mb-2">
                       <p className="text-sm font-medium mb-2">Presets</p>
                       <div className="flex flex-wrap gap-1">
                         {tagColorOptions.map((colorOption) => (
                           <button
                             key={colorOption.value}
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              handleColorChange(colorOption.value);
-                            }}
+                            onClick={() => handleSelectPreset(colorOption.value)}
                             className={`w-6 h-6 rounded-full ${colorOption.value.split(' ')[0]} border border-gray-200`}
                             title={colorOption.label}
                           />
@@ -353,10 +331,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
                     </div>
                     <div className="border-t pt-2">
                       <p className="text-sm font-medium mb-2">Custom color</p>
-                      <ColorWheel 
-                        color={selectedColor} 
-                        onChange={handleColorChange} 
-                      />
+                      <ColorWheel onSelectColor={handleSelectCustomColor} />
                     </div>
                   </div>
                 </PopoverContent>
