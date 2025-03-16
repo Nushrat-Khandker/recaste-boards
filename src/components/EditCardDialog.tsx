@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -24,7 +25,7 @@ const rainbowColors = [
   { label: 'Yellow', value: '#f0e04b' },
   { label: 'Green', value: '#5ec639' },
   { label: 'Blue', value: '#5293d1' },
-  { label: 'Purple', value: '#8B5CF6' },
+  { label: 'Purple', value: '#882cd3' },
   { label: 'Pink', value: '#D946EF' },
   { label: 'Indigo', value: '#423ec1' },
 ];
