@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useKanban, Tag } from '../context/KanbanContext';
 import { Button } from "@/components/ui/button";
@@ -23,7 +24,8 @@ const rainbowColors = [
   { label: 'Orange', value: '#F97316' },
   { label: 'Yellow', value: '#f0e04b' },
   { label: 'Green', value: '#5ec639' },
-  { label: 'Purple', value: '#882cd3' },
+  { label: 'Blue', value: '#5293d1' },
+  { label: 'Indigo', value: '#423ec1' },
   { label: 'Pink', value: '#D946EF' },
 ];
 
