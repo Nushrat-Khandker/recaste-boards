@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { X, Move, Pencil } from 'lucide-react';
@@ -64,7 +63,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
       return (
         <span 
           key={tag.text} 
-          className="tag"
+          className="tag text-gray-800"
           style={{ backgroundColor: tag.customColor }}
         >
           {tag.text}

@@ -102,14 +102,10 @@ const ColorWheel: React.FC<ColorWheelProps> = ({ onSelectColor }) => {
     const rgbColor = `rgb(${r}, ${g}, ${b})`;
     
     onSelectColor(rgbColor);
-    
-    // Prevent event propagation
-    e.preventDefault();
-    e.stopPropagation();
   };
 
   return (
-    <div className="flex flex-col items-center gap-2 p-2" onClick={(e) => e.stopPropagation()}>
+    <div className="flex flex-col items-center gap-2 p-2">
       <canvas 
         ref={canvasRef} 
         width={200} 
@@ -150,12 +146,10 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
   const handleSelectPreset = (colorValue: string) => {
     setSelectedColor(colorValue);
     setCustomColor(null);
-    // Keep color picker open
   };
 
   const handleSelectCustomColor = (rgbColor: string) => {
     setCustomColor(rgbColor);
-    // Keep color picker open
   };
 
   const handleAddTag = () => {
@@ -166,7 +160,6 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
       
       if (customColor) {
         newTag.customColor = customColor;
-        newTag.color = 'bg-transparent text-gray-800'; // Base class for custom colors
       } else {
         newTag.color = selectedColor;
       }
@@ -210,7 +203,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
       return (
         <Badge 
           key={index} 
-          className="cursor-pointer flex items-center gap-1 bg-transparent"
+          className="cursor-pointer flex items-center gap-1 text-gray-800"
           style={{ backgroundColor: tag.customColor }}
           onClick={() => handleRemoveTag(index)}
         >
@@ -296,19 +289,12 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
                 className="flex-1"
               />
               
-              <Popover 
-                open={isColorPickerOpen} 
-                onOpenChange={setIsColorPickerOpen}
-              >
+              <Popover open={isColorPickerOpen} onOpenChange={setIsColorPickerOpen}>
                 <PopoverTrigger asChild>
                   <Button 
                     type="button" 
                     variant="outline" 
                     className="h-10 w-10 p-0 flex items-center justify-center"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setIsColorPickerOpen(!isColorPickerOpen);
-                    }}
                   >
                     {renderColorPreview()}
                   </Button>
@@ -316,21 +302,15 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
                 <PopoverContent 
                   className="w-auto p-0" 
                   align="end"
-                  onInteractOutside={(e) => {
-                    e.preventDefault();
-                  }}
                 >
-                  <div className="p-2" onClick={(e) => e.stopPropagation()}>
+                  <div className="p-2">
                     <div className="mb-2">
                       <p className="text-sm font-medium mb-2">Presets</p>
                       <div className="flex flex-wrap gap-1">
                         {tagColorOptions.map((colorOption) => (
                           <button
                             key={colorOption.value}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleSelectPreset(colorOption.value);
-                            }}
+                            onClick={() => handleSelectPreset(colorOption.value)}
                             className={`w-6 h-6 rounded-full ${colorOption.value.split(' ')[0]} border border-gray-200`}
                             title={colorOption.label}
                           />
