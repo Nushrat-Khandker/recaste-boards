@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -78,7 +79,8 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
     setDescription(card.description || '');
     setTags(card.tags || []);
     setPriority(card.priority || 'medium');
-  }, [card]);
+    setSelectedColor(rainbowColors[0].value); // Reset to the first color (red) when dialog reopens
+  }, [card, isOpen]);
 
   const handleAddTag = () => {
     if (newTagText.trim()) {

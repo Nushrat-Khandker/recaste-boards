@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useKanban, Tag } from '../context/KanbanContext';
 import { Button } from "@/components/ui/button";
@@ -63,7 +64,7 @@ const Tags: React.FC = () => {
     if (newTag.text.trim()) {
       addTag(newTag);
       setTags([...tags, newTag]);
-      setNewTag({ text: '', customColor: '#5293d1' });
+      setNewTag({ text: '', customColor: rainbowColors[0].value });
       setIsAdding(false);
       toast.success(`Tag "${newTag.text}" added successfully`);
     }
