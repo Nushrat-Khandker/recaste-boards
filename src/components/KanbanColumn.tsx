@@ -2,7 +2,7 @@
 import React from 'react';
 import KanbanCard from './KanbanCard';
 import AddCard from './AddCard';
-import { useKanban, KanbanCard as KanbanCardType } from '../context/KanbanContext';
+import { useKanban, KanbanCard as KanbanCardType, Tag } from '../context/KanbanContext';
 
 interface KanbanColumnProps {
   id: string;
@@ -41,8 +41,16 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
     onDrop(e, id);
   };
 
-  const handleAddCard = (columnId: string, cardData: Omit<KanbanCardType, 'id'>) => {
-    addCard(columnId, cardData);
+  const handleAddCard = (columnId: string, cardData: { title: string; description?: string; tags?: string[] }) => {
+    // Convert string[] tags to Tag[] objects to match the KanbanCard type
+    const formattedCardData: Omit<KanbanCardType, 'id'> = {
+      title: cardData.title,
+      description: cardData.description,
+      // Convert string tags to Tag objects with default colors
+      tags: cardData.tags?.map(tagText => ({ text: tagText, color: 'bg-gray-100 text-gray-800' }))
+    };
+    
+    addCard(columnId, formattedCardData);
   };
 
   return (
