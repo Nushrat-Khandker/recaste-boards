@@ -1,12 +1,13 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { X } from "lucide-react"; // Added missing import for X icon
+import { X } from "lucide-react"; 
 import { KanbanCard, Tag } from '../context/KanbanContext';
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 
 interface EditCardDialogProps {
   card: KanbanCard;
@@ -28,6 +29,135 @@ const tagColorOptions = [
   { label: 'Gray', value: 'bg-gray-100 text-gray-800' },
 ];
 
+interface ColorWheelProps {
+  color: string;
+  onChange: (color: string) => void;
+}
+
+const ColorWheel: React.FC<ColorWheelProps> = ({ color, onChange }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [isPickingColor, setIsPickingColor] = useState(false);
+  const [selectedColor, setSelectedColor] = useState(color);
+
+  // Parse the Tailwind color to get background and text colors
+  const getBackgroundColor = (tailwindClass: string) => {
+    if (tailwindClass.includes('bg-')) {
+      const match = tailwindClass.match(/bg-([a-z]+-\d+)/);
+      if (match && match[1]) {
+        return match[1];
+      }
+    }
+    return 'gray-100';
+  };
+
+  const getTextColor = (tailwindClass: string) => {
+    if (tailwindClass.includes('text-')) {
+      const match = tailwindClass.match(/text-([a-z]+-\d+)/);
+      if (match && match[1]) {
+        return match[1];
+      }
+    }
+    return 'gray-800';
+  };
+
+  // Create color wheel on canvas
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const radius = canvas.width / 2 - 5;
+
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Draw color wheel
+    for (let angle = 0; angle < 360; angle++) {
+      const startAngle = (angle - 1) * Math.PI / 180;
+      const endAngle = (angle + 1) * Math.PI / 180;
+
+      ctx.beginPath();
+      ctx.moveTo(centerX, centerY);
+      ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+      ctx.closePath();
+
+      const hue = angle;
+      ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
+      ctx.fill();
+    }
+
+    // Draw inner white to black gradient for saturation/lightness
+    const gradient = ctx.createRadialGradient(
+      centerX, centerY, 0,
+      centerX, centerY, radius
+    );
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+    gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0)');
+    gradient.addColorStop(1, 'rgba(0, 0, 0, 0.5)');
+    
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+    ctx.fillStyle = gradient;
+    ctx.fill();
+  }, []);
+
+  const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    const imageData = ctx.getImageData(x, y, 1, 1).data;
+    const rgbColor = `rgb(${imageData[0]}, ${imageData[1]}, ${imageData[2]})`;
+    
+    // Convert to HSL to determine text color
+    const r = imageData[0] / 255;
+    const g = imageData[1] / 255;
+    const b = imageData[2] / 255;
+    
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const l = (max + min) / 2;
+    
+    // Use light text for dark backgrounds, dark text for light backgrounds
+    const textColor = l < 0.6 ? 'text-white' : 'text-gray-800';
+    
+    // Generate a temporary class that will be converted to a tailwind class by our backend
+    const tailwindClass = `bg-[${rgbColor}] ${textColor}`;
+    
+    setSelectedColor(tailwindClass);
+    onChange(tailwindClass);
+  };
+
+  return (
+    <div className="flex flex-col items-center gap-2 p-2">
+      <canvas 
+        ref={canvasRef} 
+        width={200} 
+        height={200} 
+        onClick={handleCanvasClick}
+        className="cursor-pointer rounded-full"
+      />
+      <div className="flex items-center gap-2 mt-2">
+        <div 
+          className={`w-8 h-8 rounded-full ${selectedColor.split(' ')[0]}`} 
+          style={{ borderColor: 'rgba(0,0,0,0.1)', borderWidth: '1px' }}
+        />
+        <span className="text-xs">Click on the wheel to pick a color</span>
+      </div>
+    </div>
+  );
+};
+
 const EditCardDialog: React.FC<EditCardDialogProps> = ({
   card,
   columnId,
@@ -41,6 +171,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>(card.priority || 'medium');
   const [newTagText, setNewTagText] = useState('');
   const [selectedColor, setSelectedColor] = useState(tagColorOptions[0].value);
+  const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
 
   const handleAddTag = () => {
     if (newTagText.trim()) {
@@ -131,17 +262,47 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
                 className="flex-1"
               />
               
-              <select 
-                value={selectedColor}
-                onChange={(e) => setSelectedColor(e.target.value)}
-                className="h-10 w-28 rounded-md border border-input bg-background px-3 py-2 text-sm"
-              >
-                {tagColorOptions.map((color) => (
-                  <option key={color.value} value={color.value}>
-                    {color.label}
-                  </option>
-                ))}
-              </select>
+              <Popover open={isColorPickerOpen} onOpenChange={setIsColorPickerOpen}>
+                <PopoverTrigger asChild>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    className="h-10 w-10 p-0 flex items-center justify-center"
+                  >
+                    <div 
+                      className={`w-6 h-6 rounded-full ${selectedColor.split(' ')[0]}`} 
+                      style={{ borderColor: 'rgba(0,0,0,0.1)', borderWidth: '1px' }}
+                    />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="end">
+                  <div className="p-2">
+                    <div className="mb-2">
+                      <p className="text-sm font-medium mb-2">Presets</p>
+                      <div className="flex flex-wrap gap-1">
+                        {tagColorOptions.map((colorOption) => (
+                          <button
+                            key={colorOption.value}
+                            onClick={() => {
+                              setSelectedColor(colorOption.value);
+                              setIsColorPickerOpen(false);
+                            }}
+                            className={`w-6 h-6 rounded-full ${colorOption.value.split(' ')[0]} border border-gray-200`}
+                            title={colorOption.label}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <div className="border-t pt-2">
+                      <p className="text-sm font-medium mb-2">Custom color</p>
+                      <ColorWheel 
+                        color={selectedColor} 
+                        onChange={(color) => setSelectedColor(color)} 
+                      />
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
               
               <Button 
                 type="button" 
