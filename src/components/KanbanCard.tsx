@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
-import { X, Move, Edit } from 'lucide-react';
+import { X, Move, Pencil } from 'lucide-react';
 import EditCardDialog from './EditCardDialog';
 import { useKanban } from '../context/KanbanContext';
 
@@ -88,7 +88,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
               onClick={handleEdit}
               aria-label="Edit card"
             >
-              <Edit size={14} />
+              <Pencil size={14} />
             </button>
             <button 
               className="text-gray-400 hover:text-gray-600 transition-colors p-0.5 rounded"
