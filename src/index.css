@@ -105,11 +105,13 @@
     @apply active:scale-95 transition-transform duration-150;
   }
   
+  /* Fixed circular dependency by using direct animation properties */
   .animate-fade-in {
-    @apply animate-fade-in;
+    animation: fade-in 0.3s ease-out;
   }
   
+  /* Fixed circular dependency by using direct animation properties */
   .animate-scale-in {
-    @apply animate-scale-in;
+    animation: scale-in 0.2s ease-out;
   }
 }
