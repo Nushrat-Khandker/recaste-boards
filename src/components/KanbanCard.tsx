@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { X, Move, Pencil } from 'lucide-react';
@@ -57,7 +58,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
     setIsEditDialogOpen(true);
   };
 
-  // Render tag with proper styling based on whether it has a custom color
+  // Render tag with proper styling
   const renderTag = (tag: Tag) => {
     if (tag.customColor) {
       return (
