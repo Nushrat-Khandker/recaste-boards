@@ -26,6 +26,10 @@ interface KanbanContextType {
   moveCard: (cardId: string, sourceColumnId: string, destinationColumnId: string) => void;
   deleteCard: (columnId: string, cardId: string) => void;
   updateCard: (columnId: string, card: KanbanCard) => void;
+  getAllTags: () => Tag[];
+  updateTag: (updatedTag: Tag) => void;
+  deleteTag: (tagToDelete: Tag) => void;
+  addTag: (newTag: Tag) => void;
 }
 
 const tagColors: Record<string, string> = {
@@ -102,7 +106,11 @@ export const KanbanContext = createContext<KanbanContextType>({
   addCard: () => {},
   moveCard: () => {},
   deleteCard: () => {},
-  updateCard: () => {}
+  updateCard: () => {},
+  getAllTags: () => [],
+  updateTag: () => {},
+  deleteTag: () => {},
+  addTag: () => {}
 });
 
 export const useKanban = () => useContext(KanbanContext);
@@ -131,14 +139,12 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
     
     if (!card) return;
 
-    // Remove from source
     const updatedSourceColumn = columns.map(column => 
       column.id === sourceColumnId
         ? { ...column, cards: column.cards.filter(c => c.id !== cardId) }
         : column
     );
 
-    // Add to destination
     setColumns(
       updatedSourceColumn.map(column => 
         column.id === destinationColumnId
@@ -173,13 +179,78 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
     );
   };
 
+  const getAllTags = (): Tag[] => {
+    const allTags: Tag[] = [];
+    const tagMap = new Map<string, Tag>();
+
+    columns.forEach(column => {
+      column.cards.forEach(card => {
+        if (card.tags) {
+          card.tags.forEach(tag => {
+            if (!tagMap.has(tag.text)) {
+              tagMap.set(tag.text, tag);
+            }
+          });
+        }
+      });
+    });
+
+    return Array.from(tagMap.values());
+  };
+
+  const updateTag = (updatedTag: Tag): void => {
+    setColumns(prevColumns => 
+      prevColumns.map(column => ({
+        ...column,
+        cards: column.cards.map(card => {
+          if (card.tags) {
+            return {
+              ...card,
+              tags: card.tags.map(tag => 
+                tag.text === updatedTag.text ? updatedTag : tag
+              )
+            };
+          }
+          return card;
+        })
+      }))
+    );
+  };
+
+  const deleteTag = (tagToDelete: Tag): void => {
+    setColumns(prevColumns => 
+      prevColumns.map(column => ({
+        ...column,
+        cards: column.cards.map(card => {
+          if (card.tags) {
+            return {
+              ...card,
+              tags: card.tags.filter(tag => tag.text !== tagToDelete.text)
+            };
+          }
+          return card;
+        })
+      }))
+    );
+  };
+
+  const addTag = (newTag: Tag): void => {
+    // This is a no-op function since tags are only stored on cards
+    // But we include it for completeness of the API
+    // Tags will be available for selection when editing cards
+  };
+
   return (
     <KanbanContext.Provider value={{ 
       columns, 
       addCard, 
       moveCard, 
       deleteCard, 
-      updateCard 
+      updateCard,
+      getAllTags,
+      updateTag,
+      deleteTag,
+      addTag
     }}>
       {children}
     </KanbanContext.Provider>

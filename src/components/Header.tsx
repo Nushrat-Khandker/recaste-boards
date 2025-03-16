@@ -1,17 +1,30 @@
 
 import React from 'react';
-import { Square } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu";
+import { ModeToggle } from "@/components/mode-toggle";
 
 const Header: React.FC = () => {
   return (
-    <header className="border-b border-border py-4 px-6 mb-8 flex items-center justify-between bg-white/70 backdrop-blur-sm sticky top-0 z-50">
-      <div className="flex items-center">
-        <Square size={24} className="text-primary mr-2" />
-        <h1 className="text-xl font-semibold tracking-tight">Kanban</h1>
-      </div>
-      
-      <div className="text-sm text-muted-foreground">
-        Your tasks, simplified
+    <header className="border-b mb-8">
+      <div className="container mx-auto px-4 py-3 flex justify-between items-center">
+        <div className="flex items-center">
+          <NavigationMenu>
+            <NavigationMenuList>
+              <NavigationMenuItem>
+                <Link to="/" className={navigationMenuTriggerStyle()}>
+                  Kanban Board
+                </Link>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <Link to="/tags" className={navigationMenuTriggerStyle()}>
+                  Tags
+                </Link>
+              </NavigationMenuItem>
+            </NavigationMenuList>
+          </NavigationMenu>
+        </div>
+        <ModeToggle />
       </div>
     </header>
   );
