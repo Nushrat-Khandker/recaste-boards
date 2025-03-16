@@ -1,12 +1,17 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useKanban } from '../context/KanbanContext';
 
 const Header: React.FC = () => {
-  const [selectedNumber, setSelectedNumber] = useState("1446");
-  const [selectedQuarter, setSelectedQuarter] = useState("Q3");
+  const { 
+    selectedNumber, 
+    setSelectedNumber, 
+    selectedQuarter, 
+    setSelectedQuarter 
+  } = useKanban();
 
   return (
     <header className="border-b mb-8">

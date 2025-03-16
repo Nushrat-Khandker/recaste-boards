@@ -1,8 +1,10 @@
+
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { X, Move, Pencil } from 'lucide-react';
 import EditCardDialog from './EditCardDialog';
 import { useKanban, Tag } from '../context/KanbanContext';
+import { Badge } from '@/components/ui/badge';
 
 interface KanbanCardProps {
   id: string;
@@ -10,6 +12,8 @@ interface KanbanCardProps {
   description?: string;
   tags?: Tag[];
   priority?: 'low' | 'medium' | 'high';
+  number?: string;
+  quarter?: string;
   onDelete: () => void;
   onDragStart: (e: React.DragEvent, cardId: string, columnId: string) => void;
   columnId: string;
@@ -50,6 +54,8 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
   description,
   tags = [],
   priority,
+  number,
+  quarter,
   onDelete,
   onDragStart,
   columnId
@@ -144,6 +150,23 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
           </div>
         </div>
         
+        {/* Display number and quarter badges */}
+        {(number || quarter) && (
+          <div className="flex gap-1 mt-2 mb-1">
+            {number && (
+              <Badge variant="secondary" className="text-xs py-0 h-5">
+                {number}
+              </Badge>
+            )}
+            {quarter && (
+              <Badge variant="outline" className="text-xs py-0 h-5">
+                {quarter}
+              </Badge>
+            )}
+          </div>
+        )}
+        
+        {/* Display tags and priority */}
         {(tags.length > 0 || priority) && (
           <div className="flex flex-wrap gap-1 mt-2">
             {tags.map((tag) => renderTag(tag))}
@@ -160,7 +183,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
       </Card>
 
       <EditCardDialog
-        card={{ id, title, description, tags, priority }}
+        card={{ id, title, description, tags, priority, number, quarter }}
         columnId={columnId}
         isOpen={isEditDialogOpen}
         onClose={() => setIsEditDialogOpen(false)}

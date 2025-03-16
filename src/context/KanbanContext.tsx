@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 export interface Tag {
@@ -12,6 +13,8 @@ export interface KanbanCard {
   description?: string;
   tags?: Tag[];
   priority?: 'low' | 'medium' | 'high';
+  number?: string; // Added number field
+  quarter?: string; // Added quarter field
 }
 
 export interface KanbanColumn {
@@ -30,6 +33,11 @@ interface KanbanContextType {
   updateTag: (updatedTag: Tag) => void;
   deleteTag: (tagToDelete: Tag) => void;
   addTag: (newTag: Tag) => void;
+  selectedNumber: string;
+  setSelectedNumber: (number: string) => void;
+  selectedQuarter: string;
+  setSelectedQuarter: (quarter: string) => void;
+  filteredColumns: KanbanColumn[];
 }
 
 const tagColors: Record<string, string> = {
@@ -56,7 +64,9 @@ const defaultColumns: KanbanColumn[] = [
           { text: 'research', color: tagColors['research'] },
           { text: 'planning', color: tagColors['planning'] }
         ],
-        priority: 'high'
+        priority: 'high',
+        number: '1446',
+        quarter: 'Q3'
       },
       {
         id: 'card-2',
@@ -65,7 +75,9 @@ const defaultColumns: KanbanColumn[] = [
         tags: [
           { text: 'design', color: tagColors['design'] }
         ],
-        priority: 'medium'
+        priority: 'medium',
+        number: '1447',
+        quarter: 'Q2'
       }
     ]
   },
@@ -80,7 +92,9 @@ const defaultColumns: KanbanColumn[] = [
         tags: [
           { text: 'development', color: tagColors['development'] }
         ],
-        priority: 'high'
+        priority: 'high',
+        number: '1446',
+        quarter: 'Q3'
       }
     ]
   },
@@ -95,7 +109,9 @@ const defaultColumns: KanbanColumn[] = [
         tags: [
           { text: 'setup', color: tagColors['setup'] }
         ],
-        priority: 'low'
+        priority: 'low',
+        number: '1448+',
+        quarter: 'Q1'
       }
     ]
   }
@@ -110,18 +126,41 @@ export const KanbanContext = createContext<KanbanContextType>({
   getAllTags: () => [],
   updateTag: () => {},
   deleteTag: () => {},
-  addTag: () => {}
+  addTag: () => {},
+  selectedNumber: '1446',
+  setSelectedNumber: () => {},
+  selectedQuarter: 'Q3',
+  setSelectedQuarter: () => {},
+  filteredColumns: []
 });
 
 export const useKanban = () => useContext(KanbanContext);
 
 export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) => {
   const [columns, setColumns] = useState<KanbanColumn[]>(defaultColumns);
+  const [selectedNumber, setSelectedNumber] = useState<string>('1446');
+  const [selectedQuarter, setSelectedQuarter] = useState<string>('Q3');
+
+  // Filter columns based on selected number and quarter
+  const filteredColumns = React.useMemo(() => {
+    return columns.map(column => ({
+      ...column,
+      cards: column.cards.filter(card => {
+        // If the card has matching number and quarter values, show it
+        // If the card doesn't have these values, show it as well (backwards compatibility)
+        const matchesNumber = !card.number || card.number === selectedNumber;
+        const matchesQuarter = !card.quarter || card.quarter === selectedQuarter;
+        return matchesNumber && matchesQuarter;
+      })
+    }));
+  }, [columns, selectedNumber, selectedQuarter]);
 
   const addCard = (columnId: string, card: Omit<KanbanCard, 'id'>) => {
     const newCard: KanbanCard = {
       ...card,
-      id: `card-${Date.now()}`
+      id: `card-${Date.now()}`,
+      number: selectedNumber, // Assign current selected number
+      quarter: selectedQuarter // Assign current selected quarter
     };
 
     setColumns(prevColumns => 
@@ -250,7 +289,12 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
       getAllTags,
       updateTag,
       deleteTag,
-      addTag
+      addTag,
+      selectedNumber,
+      setSelectedNumber,
+      selectedQuarter,
+      setSelectedQuarter,
+      filteredColumns
     }}>
       {children}
     </KanbanContext.Provider>

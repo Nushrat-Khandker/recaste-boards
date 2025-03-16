@@ -75,6 +75,8 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
             description={card.description}
             tags={card.tags}
             priority={card.priority}
+            number={card.number}
+            quarter={card.quarter}
             onDelete={() => deleteCard(id, card.id)}
             onDragStart={onDragStart}
             columnId={id}

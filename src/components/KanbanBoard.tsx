@@ -2,9 +2,10 @@
 import React, { useState } from 'react';
 import KanbanColumn from './KanbanColumn';
 import { useKanban } from '../context/KanbanContext';
+import { Badge } from '@/components/ui/badge';
 
 const KanbanBoard: React.FC = () => {
-  const { columns, moveCard } = useKanban();
+  const { filteredColumns, selectedNumber, selectedQuarter, moveCard } = useKanban();
   const [draggingCardId, setDraggingCardId] = useState<string | null>(null);
   const [sourceColumnId, setSourceColumnId] = useState<string | null>(null);
 
@@ -34,8 +35,20 @@ const KanbanBoard: React.FC = () => {
 
   return (
     <div className="px-6 py-4">
+      <div className="mb-4 flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Kanban Board</h1>
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="bg-background">
+            {selectedNumber}
+          </Badge>
+          <Badge variant="outline" className="bg-background">
+            {selectedQuarter}
+          </Badge>
+        </div>
+      </div>
+      
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {columns.map(column => (
+        {filteredColumns.map(column => (
           <KanbanColumn
             key={column.id}
             id={column.id}
