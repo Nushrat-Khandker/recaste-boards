@@ -2,7 +2,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu";
-import { ModeToggle } from "@/components/mode-toggle";
 
 const Header: React.FC = () => {
   return (
@@ -19,7 +18,6 @@ const Header: React.FC = () => {
             </NavigationMenuList>
           </NavigationMenu>
         </div>
-        <ModeToggle />
       </div>
     </header>
   );
