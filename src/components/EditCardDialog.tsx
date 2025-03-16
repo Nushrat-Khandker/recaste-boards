@@ -24,7 +24,7 @@ const rainbowColors = [
   { label: 'Orange', value: '#F97316' },
   { label: 'Yellow', value: '#f0e04b' },
   { label: 'Green', value: '#5ec639' },
-  { label: 'Blue', value: '#1EAEDB' },
+  { label: 'Blue', value: '#5293d1' },
   { label: 'Purple', value: '#8B5CF6' },
   { label: 'Pink', value: '#D946EF' },
 ];
