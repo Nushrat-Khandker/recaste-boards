@@ -70,6 +70,9 @@ function julianToHijri(jd: number): { year: number; month: number; day: number }
   let day = l - Math.floor((709 * month) / 24);
   let year = 30 * n + j - 30;
   
+  // Ensure month is between 1-12 (not 0-11)
+  month = month + 1;
+  
   return { year, month, day };
 }
 
@@ -77,8 +80,11 @@ function julianToHijri(jd: number): { year: number; month: number; day: number }
  * Convert Hijri date to Julian day
  */
 function hijriToJulian(year: number, month: number, day: number): number {
-  return Math.floor((11 * year + 3) / 30) + 354 * year + 30 * month - 
-         Math.floor((month - 1) / 2) + day + 1948440 - 385;
+  // Adjust month for calculation (input is 1-12, calculation needs 0-11)
+  const adjustedMonth = month - 1;
+  
+  return Math.floor((11 * year + 3) / 30) + 354 * year + 30 * adjustedMonth - 
+         Math.floor((adjustedMonth - 1) / 2) + day + 1948440 - 385;
 }
 
 /**
@@ -121,7 +127,7 @@ export function getHijriMonthName(month: number): string {
     "Ramadan", "Shawwal", "Dhu al-Qi'dah", "Dhu al-Hijjah"
   ];
   
-  // Month should be 1-12, adjust if 0-based
+  // Month should be 1-12, adjust index for zero-based array
   const index = ((month - 1) % 12 + 12) % 12;
   return monthNames[index];
 }
