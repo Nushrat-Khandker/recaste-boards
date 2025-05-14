@@ -2,10 +2,11 @@
 import * as React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { DayPicker } from "react-day-picker";
+import type { Locale } from "date-fns";
 
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
-import { formatHijriDate, getHijriWeekdays, gregorianToHijri } from "@/lib/hijri-utils";
+import { formatHijriDate, getHijriWeekdays } from "@/lib/hijri-utils";
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 
