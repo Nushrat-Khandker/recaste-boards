@@ -1,10 +1,11 @@
+
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { X, Move, Pencil, CalendarClock } from 'lucide-react';
 import EditCardDialog from './EditCardDialog';
 import { useKanban, Tag } from '../context/KanbanContext';
 import { Badge } from '@/components/ui/badge';
-import { format } from 'date-fns';
+import { formatDate, formatDateRange } from '../lib/utils';
 
 interface KanbanCardProps {
   id: string;
@@ -111,11 +112,8 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
     );
   };
 
-  // Format dates for display
-  const formatDate = (date: Date | undefined) => {
-    if (!date) return null;
-    return format(date, 'MMM d, yyyy');
-  };
+  // Check if we have date information to display
+  const hasDateInfo = startDate || dueDate;
 
   return (
     <>
@@ -177,14 +175,10 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
         )}
         
         {/* Display dates */}
-        {(startDate || dueDate) && (
+        {hasDateInfo && (
           <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
             <CalendarClock size={12} className="shrink-0" />
-            <span>
-              {startDate && formatDate(startDate)}
-              {startDate && dueDate && ' - '}
-              {dueDate && formatDate(dueDate)}
-            </span>
+            <span className="truncate">{formatDateRange(startDate, dueDate)}</span>
           </div>
         )}
         
