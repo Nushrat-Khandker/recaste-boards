@@ -1,10 +1,10 @@
-
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
-import { X, Move, Pencil } from 'lucide-react';
+import { X, Move, Pencil, CalendarClock } from 'lucide-react';
 import EditCardDialog from './EditCardDialog';
 import { useKanban, Tag } from '../context/KanbanContext';
 import { Badge } from '@/components/ui/badge';
+import { format } from 'date-fns';
 
 interface KanbanCardProps {
   id: string;
@@ -14,6 +14,8 @@ interface KanbanCardProps {
   priority?: 'low' | 'medium' | 'high';
   number?: string;
   quarter?: string;
+  startDate?: Date;
+  dueDate?: Date;
   onDelete: () => void;
   onDragStart: (e: React.DragEvent, cardId: string, columnId: string) => void;
   columnId: string;
@@ -56,6 +58,8 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
   priority,
   number,
   quarter,
+  startDate,
+  dueDate,
   onDelete,
   onDragStart,
   columnId
@@ -105,6 +109,12 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
         {tag.text}
       </span>
     );
+  };
+
+  // Format dates for display
+  const formatDate = (date: Date | undefined) => {
+    if (!date) return null;
+    return format(date, 'MMM d, yyyy');
   };
 
   return (
@@ -166,6 +176,18 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
           </div>
         )}
         
+        {/* Display dates */}
+        {(startDate || dueDate) && (
+          <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
+            <CalendarClock size={12} className="shrink-0" />
+            <span>
+              {startDate && formatDate(startDate)}
+              {startDate && dueDate && ' - '}
+              {dueDate && formatDate(dueDate)}
+            </span>
+          </div>
+        )}
+        
         {/* Display tags and priority */}
         {(tags.length > 0 || priority) && (
           <div className="flex flex-wrap gap-1 mt-2">
@@ -183,7 +205,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
       </Card>
 
       <EditCardDialog
-        card={{ id, title, description, tags, priority, number, quarter }}
+        card={{ id, title, description, tags, priority, number, quarter, startDate, dueDate }}
         columnId={columnId}
         isOpen={isEditDialogOpen}
         onClose={() => setIsEditDialogOpen(false)}

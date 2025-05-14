@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 export interface Tag {
@@ -15,6 +14,8 @@ export interface KanbanCard {
   priority?: 'low' | 'medium' | 'high';
   number?: string; // Added number field
   quarter?: string; // Added quarter field
+  startDate?: Date; // New field for start date
+  dueDate?: Date;   // New field for due date
 }
 
 export interface KanbanColumn {
@@ -66,7 +67,9 @@ const defaultColumns: KanbanColumn[] = [
         ],
         priority: 'high',
         number: '1446',
-        quarter: 'Q3'
+        quarter: 'Q3',
+        startDate: new Date(2025, 4, 20), // Example dates for demonstration
+        dueDate: new Date(2025, 5, 15)
       },
       {
         id: 'card-2',
@@ -77,7 +80,9 @@ const defaultColumns: KanbanColumn[] = [
         ],
         priority: 'medium',
         number: '1447',
-        quarter: 'Q2'
+        quarter: 'Q2',
+        startDate: new Date(2025, 3, 10),
+        dueDate: new Date(2025, 4, 5)
       }
     ]
   },
@@ -94,7 +99,9 @@ const defaultColumns: KanbanColumn[] = [
         ],
         priority: 'high',
         number: '1446',
-        quarter: 'Q3'
+        quarter: 'Q3',
+        startDate: new Date(2025, 4, 1),
+        dueDate: new Date(2025, 5, 1)
       }
     ]
   },
@@ -111,7 +118,9 @@ const defaultColumns: KanbanColumn[] = [
         ],
         priority: 'low',
         number: '1448+',
-        quarter: 'Q1'
+        quarter: 'Q1',
+        startDate: new Date(2025, 1, 15),
+        dueDate: new Date(2025, 2, 15)
       }
     ]
   }

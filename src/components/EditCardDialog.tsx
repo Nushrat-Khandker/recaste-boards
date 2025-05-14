@@ -4,10 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { X } from "lucide-react"; 
+import { X, CalendarClock } from "lucide-react"; 
 import { KanbanCard, Tag } from '../context/KanbanContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DatePicker } from './DatePicker';
+import { Separator } from "@/components/ui/separator";
 
 interface EditCardDialogProps {
   card: KanbanCard;
@@ -70,6 +72,8 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>(card.priority || 'medium');
   const [newTagText, setNewTagText] = useState('');
   const [selectedColor, setSelectedColor] = useState(rainbowColors[0].value);
+  const [startDate, setStartDate] = useState<Date | undefined>(card.startDate);
+  const [dueDate, setDueDate] = useState<Date | undefined>(card.dueDate);
 
   // Reset form when card changes
   useEffect(() => {
@@ -77,7 +81,9 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
     setDescription(card.description || '');
     setTags(card.tags || []);
     setPriority(card.priority || 'medium');
-    setSelectedColor(rainbowColors[0].value); // Reset to the first color (red) when dialog reopens
+    setSelectedColor(rainbowColors[0].value);
+    setStartDate(card.startDate);
+    setDueDate(card.dueDate);
   }, [card, isOpen]);
 
   const handleAddTag = () => {
@@ -106,7 +112,9 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
       title,
       description: description.trim() || undefined,
       tags: tags.length > 0 ? tags : undefined,
-      priority: priority
+      priority: priority,
+      startDate,
+      dueDate
     };
     
     onSave(columnId, updatedCard);
@@ -165,6 +173,25 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
               className="min-h-[80px]"
             />
           </div>
+          
+          {/* Date picker section */}
+          <div className="grid gap-2">
+            <label className="text-sm font-medium">Dates</label>
+            <div className="grid grid-cols-2 gap-2">
+              <DatePicker 
+                date={startDate} 
+                setDate={setStartDate} 
+                label="Start date" 
+              />
+              <DatePicker 
+                date={dueDate} 
+                setDate={setDueDate} 
+                label="Due date" 
+              />
+            </div>
+          </div>
+          
+          <Separator />
           
           <div className="grid gap-2">
             <label className="text-sm font-medium">Tags</label>
