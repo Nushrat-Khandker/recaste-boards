@@ -18,7 +18,7 @@ function Calendar({
   const hijriWeekdays = getHijriWeekdays();
   
   // Custom formatter for day labels (to show Hijri date)
-  const formatCaption = (date: Date, options: { locale?: Locale }): string => {
+  const formatCaption = (date: Date, options?: { locale?: Locale }): string => {
     return formatHijriDate(date);
   };
 

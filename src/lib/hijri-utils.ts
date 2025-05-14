@@ -74,6 +74,14 @@ function julianToHijri(jd: number): { year: number; month: number; day: number }
 }
 
 /**
+ * Convert Hijri date to Julian day
+ */
+function hijriToJulian(year: number, month: number, day: number): number {
+  return Math.floor((11 * year + 3) / 30) + 354 * year + 30 * month - 
+         Math.floor((month - 1) / 2) + day + 1948440 - 385;
+}
+
+/**
  * Convert Julian day to Gregorian date
  */
 function julianToGregorian(jd: number): { year: number; month: number; day: number } {
