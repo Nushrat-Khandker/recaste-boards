@@ -1,9 +1,11 @@
+
 import * as React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { DayPicker } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
+import { formatHijriDate, getHijriWeekdays, gregorianToHijri } from "@/lib/hijri-utils";
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 
@@ -13,6 +15,13 @@ function Calendar({
   showOutsideDays = true,
   ...props
 }: CalendarProps) {
+  const hijriWeekdays = getHijriWeekdays();
+  
+  // Custom formatter for day labels (to show Hijri date)
+  const formatCaption = (date: Date, options: { locale?: Locale }): string => {
+    return formatHijriDate(date);
+  };
+
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
@@ -55,6 +64,8 @@ function Calendar({
         IconLeft: ({ ..._props }) => <ChevronLeft className="h-4 w-4" />,
         IconRight: ({ ..._props }) => <ChevronRight className="h-4 w-4" />,
       }}
+      formatters={{ formatCaption }}
+      weekStartsOn={6} // Start on Saturday for Hijri calendar
       {...props}
     />
   );

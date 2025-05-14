@@ -1,11 +1,11 @@
 
 import * as React from "react"
-import { format } from "date-fns"
 import { CalendarClock } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { formatHijriDate } from "@/lib/hijri-utils"
 
 interface DatePickerProps {
   date: Date | undefined
@@ -27,7 +27,7 @@ export function DatePicker({ date, setDate, label, className }: DatePickerProps)
           )}
         >
           <CalendarClock className="mr-2 h-4 w-4" />
-          {date ? format(date, "MMM d, yyyy") : <span>{label || "Pick a date"}</span>}
+          {date ? formatHijriDate(date) : <span>{label || "Pick a date"}</span>}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">
