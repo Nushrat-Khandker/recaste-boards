@@ -151,11 +151,44 @@ export const KanbanContext = createContext<KanbanContextType>({
 
 export const useKanban = () => useContext(KanbanContext);
 
+const STORAGE_KEY = 'kanban-data';
+
+// Load data from localStorage with fallback to defaults
+const loadStoredData = (): KanbanColumn[] => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      // Convert date strings back to Date objects
+      return parsed.map((column: KanbanColumn) => ({
+        ...column,
+        cards: column.cards.map(card => ({
+          ...card,
+          startDate: card.startDate ? new Date(card.startDate) : undefined,
+          dueDate: card.dueDate ? new Date(card.dueDate) : undefined,
+        }))
+      }));
+    }
+  } catch (error) {
+    console.error('Error loading kanban data from localStorage:', error);
+  }
+  return defaultColumns;
+};
+
 export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) => {
-  const [columns, setColumns] = useState<KanbanColumn[]>(defaultColumns);
+  const [columns, setColumns] = useState<KanbanColumn[]>(loadStoredData);
   const [selectedNumber, setSelectedNumber] = useState<string>('1446');
   const [selectedQuarter, setSelectedQuarter] = useState<string>('Q3');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+
+  // Save to localStorage whenever columns change
+  React.useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(columns));
+    } catch (error) {
+      console.error('Error saving kanban data to localStorage:', error);
+    }
+  }, [columns]);
 
   // Filter columns based on selected number, quarter, and tags
   const filteredColumns = React.useMemo(() => {
