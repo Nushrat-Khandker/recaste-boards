@@ -34,6 +34,12 @@
     --ring: 222.2 84% 4.9%;
  
     --radius: 0.5rem;
+
+    /* Custom tag colors */
+    --kanban-tag-1: 218 100% 95%; /* Light blue for research */
+    --kanban-tag-2: 270 100% 95%; /* Light purple for planning */
+    --kanban-tag-3: 39 100% 95%; /* Light orange for design */
+    --kanban-tag-4: 120 100% 95%; /* Light green for development */
   }
  
   .dark {
@@ -64,6 +70,12 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
+
+    /* Dark mode tag colors */
+    --kanban-tag-1: 218 70% 25%; /* Darker blue for research */
+    --kanban-tag-2: 270 70% 25%; /* Darker purple for planning */
+    --kanban-tag-3: 39 70% 25%; /* Darker orange for design */
+    --kanban-tag-4: 120 70% 25%; /* Darker green for development */
   }
 }
  

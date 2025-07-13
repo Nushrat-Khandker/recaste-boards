@@ -45,11 +45,11 @@ interface KanbanContextType {
 }
 
 const tagColors: Record<string, string> = {
-  'research': 'bg-kanban-tag-1 text-blue-800',
-  'planning': 'bg-kanban-tag-2 text-purple-800',
-  'design': 'bg-kanban-tag-3 text-orange-800',
-  'development': 'bg-kanban-tag-4 text-green-800',
-  'setup': 'bg-gray-100 text-gray-800',
+  'research': 'bg-kanban-tag-1 text-blue-700',
+  'planning': 'bg-kanban-tag-2 text-purple-700',
+  'design': 'bg-kanban-tag-3 text-orange-700',
+  'development': 'bg-kanban-tag-4 text-green-700',
+  'setup': 'bg-muted text-muted-foreground',
   'low': 'bg-blue-50 text-blue-600',
   'medium': 'bg-yellow-50 text-yellow-600',
   'high': 'bg-red-50 text-red-600',

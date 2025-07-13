@@ -64,15 +64,10 @@ export default {
 					ring: 'hsl(var(--sidebar-ring))'
 				},
 				kanban: {
-					'column-bg': '#f8f8f8',
-					'card-bg': '#ffffff',
-					'todo': '#e4e4e4',
-					'in-progress': '#f0f0f0',
-					'done': '#f8f8f8',
-					'tag-1': '#E5F6FD',
-					'tag-2': '#F4F3FF',
-					'tag-3': '#FFF4E5',
-					'tag-4': '#F1FCEF',
+					'tag-1': 'hsl(var(--kanban-tag-1))',
+					'tag-2': 'hsl(var(--kanban-tag-2))',
+					'tag-3': 'hsl(var(--kanban-tag-3))',
+					'tag-4': 'hsl(var(--kanban-tag-4))',
 				}
 			},
 			borderRadius: {
