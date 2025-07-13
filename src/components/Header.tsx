@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useKanban } from '../context/KanbanContext';
+import TagFilter from './TagFilter';
 
 const Header: React.FC = () => {
   const { 
@@ -51,6 +52,8 @@ const Header: React.FC = () => {
               <SelectItem value="Q4">Q4</SelectItem>
             </SelectContent>
           </Select>
+
+          <TagFilter />
         </div>
       </div>
     </header>

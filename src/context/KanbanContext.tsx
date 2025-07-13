@@ -38,6 +38,9 @@ interface KanbanContextType {
   setSelectedNumber: (number: string) => void;
   selectedQuarter: string;
   setSelectedQuarter: (quarter: string) => void;
+  selectedTags: string[];
+  setSelectedTags: (tags: string[]) => void;
+  clearAllFilters: () => void;
   filteredColumns: KanbanColumn[];
 }
 
@@ -140,6 +143,9 @@ export const KanbanContext = createContext<KanbanContextType>({
   setSelectedNumber: () => {},
   selectedQuarter: 'Q3',
   setSelectedQuarter: () => {},
+  selectedTags: [],
+  setSelectedTags: () => {},
+  clearAllFilters: () => {},
   filteredColumns: []
 });
 
@@ -149,20 +155,25 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
   const [columns, setColumns] = useState<KanbanColumn[]>(defaultColumns);
   const [selectedNumber, setSelectedNumber] = useState<string>('1446');
   const [selectedQuarter, setSelectedQuarter] = useState<string>('Q3');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
-  // Filter columns based on selected number and quarter
+  // Filter columns based on selected number, quarter, and tags
   const filteredColumns = React.useMemo(() => {
     return columns.map(column => ({
       ...column,
       cards: column.cards.filter(card => {
-        // If the card has matching number and quarter values, show it
-        // If the card doesn't have these values, show it as well (backwards compatibility)
+        // Check number and quarter filters (backwards compatibility)
         const matchesNumber = !card.number || card.number === selectedNumber;
         const matchesQuarter = !card.quarter || card.quarter === selectedQuarter;
-        return matchesNumber && matchesQuarter;
+        
+        // Check tag filters - if no tags selected, show all cards; if tags selected, card must have at least one matching tag
+        const matchesTags = selectedTags.length === 0 || 
+          (card.tags && card.tags.some(tag => selectedTags.includes(tag.text)));
+        
+        return matchesNumber && matchesQuarter && matchesTags;
       })
     }));
-  }, [columns, selectedNumber, selectedQuarter]);
+  }, [columns, selectedNumber, selectedQuarter, selectedTags]);
 
   const addCard = (columnId: string, card: Omit<KanbanCard, 'id'>) => {
     const newCard: KanbanCard = {
@@ -288,6 +299,10 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
     // Tags will be available for selection when editing cards
   };
 
+  const clearAllFilters = (): void => {
+    setSelectedTags([]);
+  };
+
   return (
     <KanbanContext.Provider value={{ 
       columns, 
@@ -303,6 +318,9 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
       setSelectedNumber,
       selectedQuarter,
       setSelectedQuarter,
+      selectedTags,
+      setSelectedTags,
+      clearAllFilters,
       filteredColumns
     }}>
       {children}
