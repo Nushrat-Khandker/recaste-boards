@@ -68,6 +68,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
 }) => {
   const [title, setTitle] = useState(card.title);
   const [description, setDescription] = useState(card.description || '');
+  const [projectName, setProjectName] = useState(card.projectName || '');
   const [tags, setTags] = useState<Tag[]>(card.tags || []);
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>(card.priority || 'medium');
   const [newTagText, setNewTagText] = useState('');
@@ -81,6 +82,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
   useEffect(() => {
     setTitle(card.title);
     setDescription(card.description || '');
+    setProjectName(card.projectName || '');
     setTags(card.tags || []);
     setPriority(card.priority || 'medium');
     setSelectedColor(rainbowColors[0].value);
@@ -115,6 +117,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
       ...card,
       title,
       description: description.trim() || undefined,
+      projectName: projectName.trim() || undefined,
       tags: tags.length > 0 ? tags : undefined,
       priority: priority,
       number: number.trim() || undefined,
@@ -153,7 +156,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Card</DialogTitle>
         </DialogHeader>
@@ -166,6 +169,16 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Enter card title"
+            />
+          </div>
+          
+          <div className="grid gap-2">
+            <label htmlFor="projectName" className="text-sm font-medium">Project Name</label>
+            <Input
+              id="projectName"
+              value={projectName}
+              onChange={(e) => setProjectName(e.target.value)}
+              placeholder="Enter project name (optional)"
             />
           </div>
           

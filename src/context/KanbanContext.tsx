@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from "@/integrations/supabase/client";
 
 export interface Tag {
   text: string;
@@ -10,6 +11,7 @@ export interface KanbanCard {
   id: string;
   title: string;
   description?: string;
+  projectName?: string; // Added project name field
   tags?: Tag[];
   priority?: 'low' | 'medium' | 'high';
   number?: string; // Added number field
@@ -42,6 +44,7 @@ interface KanbanContextType {
   setSelectedTags: (tags: string[]) => void;
   clearAllFilters: () => void;
   filteredColumns: KanbanColumn[];
+  loading: boolean;
 }
 
 const tagColors: Record<string, string> = {
@@ -68,6 +71,7 @@ const defaultColumns: KanbanColumn[] = [
           { text: 'research', color: tagColors['research'] },
           { text: 'planning', color: tagColors['planning'] }
         ],
+        projectName: 'Research Project',
         priority: 'high',
         number: '1446',
         quarter: 'Q3',
@@ -81,6 +85,7 @@ const defaultColumns: KanbanColumn[] = [
         tags: [
           { text: 'design', color: tagColors['design'] }
         ],
+        projectName: 'Design System',
         priority: 'medium',
         number: '1447',
         quarter: 'Q2',
@@ -100,6 +105,7 @@ const defaultColumns: KanbanColumn[] = [
         tags: [
           { text: 'development', color: tagColors['development'] }
         ],
+        projectName: 'Auth Module',
         priority: 'high',
         number: '1446',
         quarter: 'Q3',
@@ -119,6 +125,7 @@ const defaultColumns: KanbanColumn[] = [
         tags: [
           { text: 'setup', color: tagColors['setup'] }
         ],
+        projectName: 'Infrastructure',
         priority: 'low',
         number: '1448+',
         quarter: 'Q1',
@@ -146,49 +153,74 @@ export const KanbanContext = createContext<KanbanContextType>({
   selectedTags: [],
   setSelectedTags: () => {},
   clearAllFilters: () => {},
-  filteredColumns: []
+  filteredColumns: [],
+  loading: false
 });
 
 export const useKanban = () => useContext(KanbanContext);
 
-const STORAGE_KEY = 'kanban-data';
-
-// Load data from localStorage with fallback to defaults
-const loadStoredData = (): KanbanColumn[] => {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      // Convert date strings back to Date objects
-      return parsed.map((column: KanbanColumn) => ({
-        ...column,
-        cards: column.cards.map(card => ({
-          ...card,
-          startDate: card.startDate ? new Date(card.startDate) : undefined,
-          dueDate: card.dueDate ? new Date(card.dueDate) : undefined,
-        }))
-      }));
-    }
-  } catch (error) {
-    console.error('Error loading kanban data from localStorage:', error);
-  }
-  return defaultColumns;
+// Convert Supabase data to KanbanColumn format
+const convertSupabaseDataToColumns = (cards: any[], columns: any[]): KanbanColumn[] => {
+  return columns.map(column => ({
+    id: column.id,
+    title: column.title,
+    cards: cards
+      .filter(card => card.column_id === column.id)
+      .map(card => ({
+        id: card.id,
+        title: card.title,
+        description: card.description,
+        projectName: card.project_name,
+        tags: card.tags ? JSON.parse(card.tags as string) : [],
+        priority: card.priority as 'low' | 'medium' | 'high',
+        number: card.number,
+        quarter: card.quarter,
+        startDate: card.start_date ? new Date(card.start_date) : undefined,
+        dueDate: card.due_date ? new Date(card.due_date) : undefined,
+      }))
+  }));
 };
 
 export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) => {
-  const [columns, setColumns] = useState<KanbanColumn[]>(loadStoredData);
+  const [columns, setColumns] = useState<KanbanColumn[]>([]);
   const [selectedNumber, setSelectedNumber] = useState<string>('1446');
   const [selectedQuarter, setSelectedQuarter] = useState<string>('Q3');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
-  // Save to localStorage whenever columns change
-  React.useEffect(() => {
+  // Load data from Supabase
+  const loadData = async () => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(columns));
+      setLoading(true);
+      
+      // Load columns and cards
+      const [columnsResult, cardsResult] = await Promise.all([
+        supabase.from('kanban_columns').select('*').order('position'),
+        supabase.from('kanban_cards').select('*').order('created_at')
+      ]);
+
+      if (columnsResult.error) throw columnsResult.error;
+      if (cardsResult.error) throw cardsResult.error;
+
+      const convertedColumns = convertSupabaseDataToColumns(
+        cardsResult.data || [], 
+        columnsResult.data || []
+      );
+      
+      setColumns(convertedColumns);
     } catch (error) {
-      console.error('Error saving kanban data to localStorage:', error);
+      console.error('Error loading data from Supabase:', error);
+      // Fallback to default columns if loading fails
+      setColumns(defaultColumns);
+    } finally {
+      setLoading(false);
     }
-  }, [columns]);
+  };
+
+  // Load data on mount
+  useEffect(() => {
+    loadData();
+  }, []);
 
   // Filter columns based on selected number, quarter, and tags
   const filteredColumns = React.useMemo(() => {
@@ -208,67 +240,143 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
     }));
   }, [columns, selectedNumber, selectedQuarter, selectedTags]);
 
-  const addCard = (columnId: string, card: Omit<KanbanCard, 'id'>) => {
-    const newCard: KanbanCard = {
-      ...card,
-      id: `card-${Date.now()}`,
-      number: selectedNumber, // Assign current selected number
-      quarter: selectedQuarter // Assign current selected quarter
-    };
+  const addCard = async (columnId: string, card: Omit<KanbanCard, 'id'>) => {
+    try {
+      const cardData = {
+        title: card.title,
+        description: card.description,
+        project_name: card.projectName,
+        column_id: columnId,
+        priority: card.priority || 'medium',
+        number: card.number || selectedNumber,
+        quarter: card.quarter || selectedQuarter,
+        tags: card.tags ? JSON.stringify(card.tags) : null,
+        start_date: card.startDate?.toISOString(),
+        due_date: card.dueDate?.toISOString(),
+      };
 
-    setColumns(prevColumns => 
-      prevColumns.map(column => 
-        column.id === columnId
-          ? { ...column, cards: [...column.cards, newCard] }
-          : column
-      )
-    );
+      const { data, error } = await supabase
+        .from('kanban_cards')
+        .insert([cardData])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const newCard: KanbanCard = {
+        id: data.id,
+        title: data.title,
+        description: data.description,
+        projectName: data.project_name,
+        tags: data.tags ? JSON.parse(data.tags as string) : [],
+        priority: data.priority as 'low' | 'medium' | 'high',
+        number: data.number,
+        quarter: data.quarter,
+        startDate: data.start_date ? new Date(data.start_date) : undefined,
+        dueDate: data.due_date ? new Date(data.due_date) : undefined,
+      };
+
+      setColumns(prevColumns => 
+        prevColumns.map(column => 
+          column.id === columnId
+            ? { ...column, cards: [...column.cards, newCard] }
+            : column
+        )
+      );
+    } catch (error) {
+      console.error('Error adding card:', error);
+    }
   };
 
-  const moveCard = (cardId: string, sourceColumnId: string, destinationColumnId: string) => {
-    const sourceColumn = columns.find(column => column.id === sourceColumnId);
-    const card = sourceColumn?.cards.find(card => card.id === cardId);
-    
-    if (!card) return;
+  const moveCard = async (cardId: string, sourceColumnId: string, destinationColumnId: string) => {
+    try {
+      const { error } = await supabase
+        .from('kanban_cards')
+        .update({ column_id: destinationColumnId })
+        .eq('id', cardId);
 
-    const updatedSourceColumn = columns.map(column => 
-      column.id === sourceColumnId
-        ? { ...column, cards: column.cards.filter(c => c.id !== cardId) }
-        : column
-    );
+      if (error) throw error;
 
-    setColumns(
-      updatedSourceColumn.map(column => 
-        column.id === destinationColumnId
-          ? { ...column, cards: [...column.cards, card] }
+      const sourceColumn = columns.find(column => column.id === sourceColumnId);
+      const card = sourceColumn?.cards.find(card => card.id === cardId);
+      
+      if (!card) return;
+
+      const updatedSourceColumn = columns.map(column => 
+        column.id === sourceColumnId
+          ? { ...column, cards: column.cards.filter(c => c.id !== cardId) }
           : column
-      )
-    );
+      );
+
+      setColumns(
+        updatedSourceColumn.map(column => 
+          column.id === destinationColumnId
+            ? { ...column, cards: [...column.cards, card] }
+            : column
+        )
+      );
+    } catch (error) {
+      console.error('Error moving card:', error);
+    }
   };
 
-  const deleteCard = (columnId: string, cardId: string) => {
-    setColumns(prevColumns => 
-      prevColumns.map(column => 
-        column.id === columnId
-          ? { ...column, cards: column.cards.filter(card => card.id !== cardId) }
-          : column
-      )
-    );
+  const deleteCard = async (columnId: string, cardId: string) => {
+    try {
+      const { error } = await supabase
+        .from('kanban_cards')
+        .delete()
+        .eq('id', cardId);
+
+      if (error) throw error;
+
+      setColumns(prevColumns => 
+        prevColumns.map(column => 
+          column.id === columnId
+            ? { ...column, cards: column.cards.filter(card => card.id !== cardId) }
+            : column
+        )
+      );
+    } catch (error) {
+      console.error('Error deleting card:', error);
+    }
   };
 
-  const updateCard = (columnId: string, updatedCard: KanbanCard) => {
-    setColumns(prevColumns => 
-      prevColumns.map(column => 
-        column.id === columnId
-          ? { 
-              ...column, 
-              cards: column.cards.map(card => 
-                card.id === updatedCard.id ? updatedCard : card
-              ) 
-            }
-          : column
-      )
-    );
+  const updateCard = async (columnId: string, updatedCard: KanbanCard) => {
+    try {
+      const cardData = {
+        title: updatedCard.title,
+        description: updatedCard.description,
+        project_name: updatedCard.projectName,
+        priority: updatedCard.priority,
+        number: updatedCard.number,
+        quarter: updatedCard.quarter,
+        tags: updatedCard.tags ? JSON.stringify(updatedCard.tags) : null,
+        start_date: updatedCard.startDate?.toISOString(),
+        due_date: updatedCard.dueDate?.toISOString(),
+      };
+
+      const { error } = await supabase
+        .from('kanban_cards')
+        .update(cardData)
+        .eq('id', updatedCard.id);
+
+      if (error) throw error;
+
+      setColumns(prevColumns => 
+        prevColumns.map(column => 
+          column.id === columnId
+            ? { 
+                ...column, 
+                cards: column.cards.map(card => 
+                  card.id === updatedCard.id ? updatedCard : card
+                ) 
+              }
+            : column
+        )
+      );
+    } catch (error) {
+      console.error('Error updating card:', error);
+    }
   };
 
   const getAllTags = (): Tag[] => {
@@ -336,7 +444,7 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
     setSelectedTags([]);
   };
 
-  return (
+    return (
     <KanbanContext.Provider value={{ 
       columns, 
       addCard, 
@@ -354,7 +462,8 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
       selectedTags,
       setSelectedTags,
       clearAllFilters,
-      filteredColumns
+      filteredColumns,
+      loading
     }}>
       {children}
     </KanbanContext.Provider>

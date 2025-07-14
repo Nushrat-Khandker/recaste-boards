@@ -5,9 +5,20 @@ import { useKanban } from '../context/KanbanContext';
 import { Badge } from '@/components/ui/badge';
 
 const KanbanBoard: React.FC = () => {
-  const { filteredColumns, selectedNumber, selectedQuarter, moveCard } = useKanban();
+  const { filteredColumns, selectedNumber, selectedQuarter, moveCard, loading } = useKanban();
   const [draggingCardId, setDraggingCardId] = useState<string | null>(null);
   const [sourceColumnId, setSourceColumnId] = useState<string | null>(null);
+
+  if (loading) {
+    return (
+      <div className="px-6 py-4 flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading your kanban board...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleDragStart = (e: React.DragEvent, cardId: string, columnId: string) => {
     setDraggingCardId(cardId);

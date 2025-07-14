@@ -8,13 +8,14 @@ import { Plus, X } from 'lucide-react';
 
 interface AddCardProps {
   columnId: string;
-  onAddCard: (columnId: string, card: { title: string; description?: string; tags?: string[] }) => void;
+  onAddCard: (columnId: string, card: { title: string; description?: string; projectName?: string; tags?: string[] }) => void;
 }
 
 const AddCard: React.FC<AddCardProps> = ({ columnId, onAddCard }) => {
   const [isAdding, setIsAdding] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [projectName, setProjectName] = useState('');
   const [tags, setTags] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -30,12 +31,14 @@ const AddCard: React.FC<AddCardProps> = ({ columnId, onAddCard }) => {
     onAddCard(columnId, {
       title,
       description: description.trim() || undefined,
+      projectName: projectName.trim() || undefined,
       tags: tagsArray.length > 0 ? tagsArray : undefined
     });
     
     // Reset form
     setTitle('');
     setDescription('');
+    setProjectName('');
     setTags('');
     setIsAdding(false);
   };
@@ -72,6 +75,13 @@ const AddCard: React.FC<AddCardProps> = ({ columnId, onAddCard }) => {
           onChange={(e) => setTitle(e.target.value)}
           className="mb-2"
           autoFocus
+        />
+        
+        <Input
+          placeholder="Project name (optional)"
+          value={projectName}
+          onChange={(e) => setProjectName(e.target.value)}
+          className="mb-2"
         />
         
         <Textarea

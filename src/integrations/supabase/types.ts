@@ -14,7 +14,75 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      kanban_cards: {
+        Row: {
+          column_id: string
+          created_at: string
+          description: string | null
+          due_date: string | null
+          id: string
+          number: string | null
+          priority: string | null
+          project_name: string | null
+          quarter: string | null
+          start_date: string | null
+          tags: Json | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          column_id: string
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          number?: string | null
+          priority?: string | null
+          project_name?: string | null
+          quarter?: string | null
+          start_date?: string | null
+          tags?: Json | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          column_id?: string
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          number?: string | null
+          priority?: string | null
+          project_name?: string | null
+          quarter?: string | null
+          start_date?: string | null
+          tags?: Json | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      kanban_columns: {
+        Row: {
+          created_at: string
+          id: string
+          position: number
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          position?: number
+          title: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          position?: number
+          title?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

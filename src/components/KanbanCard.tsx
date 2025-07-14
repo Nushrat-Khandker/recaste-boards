@@ -11,6 +11,7 @@ interface KanbanCardProps {
   id: string;
   title: string;
   description?: string;
+  projectName?: string;
   tags?: Tag[];
   priority?: 'low' | 'medium' | 'high';
   number?: string;
@@ -55,6 +56,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
   id,
   title,
   description,
+  projectName,
   tags = [],
   priority,
   number,
@@ -129,6 +131,9 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <h3 className="font-medium text-sm mb-1">{title}</h3>
+            {projectName && (
+              <p className="text-xs text-muted-foreground font-medium mb-1">{projectName}</p>
+            )}
             {description && (
               <p className="text-xs text-muted-foreground mb-3">{description}</p>
             )}
@@ -199,7 +204,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
       </Card>
 
       <EditCardDialog
-        card={{ id, title, description, tags, priority, number, quarter, startDate, dueDate }}
+        card={{ id, title, description, projectName, tags, priority, number, quarter, startDate, dueDate }}
         columnId={columnId}
         isOpen={isEditDialogOpen}
         onClose={() => setIsEditDialogOpen(false)}
