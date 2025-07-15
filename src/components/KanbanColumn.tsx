@@ -11,6 +11,7 @@ interface KanbanColumnProps {
   onDragOver: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent, columnId: string) => void;
   onDragStart: (e: React.DragEvent, cardId: string, columnId: string) => void;
+  hideHeader?: boolean;
 }
 
 const KanbanColumn: React.FC<KanbanColumnProps> = ({
@@ -19,7 +20,8 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
   cards,
   onDragOver,
   onDrop,
-  onDragStart
+  onDragStart,
+  hideHeader = false
 }) => {
   const { addCard, deleteCard } = useKanban();
 
@@ -61,12 +63,14 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
       onDrop={handleDrop}
       data-column-id={id}
     >
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="font-medium text-sm tracking-wide uppercase">{title}</h2>
-        <span className="text-xs text-muted-foreground">{cards.length}</span>
-      </div>
+      {!hideHeader && (
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-medium text-sm tracking-wide uppercase">{title}</h2>
+          <span className="text-xs text-muted-foreground">{cards.length}</span>
+        </div>
+      )}
       
-      <div className="flex-1">
+      <div className="flex-1 pt-16">
         {cards.map((card) => (
           <KanbanCard
             key={card.id}

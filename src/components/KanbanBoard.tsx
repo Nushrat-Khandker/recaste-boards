@@ -59,17 +59,31 @@ const KanbanBoard: React.FC = () => {
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {filteredColumns.map(column => (
-          <KanbanColumn
-            key={column.id}
-            id={column.id}
-            title={column.title}
-            cards={column.cards}
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
-            onDragStart={handleDragStart}
-          />
-        ))}
+        {/* Sticky column headers */}
+        <div className="sticky top-[73px] z-40 bg-background py-2 mb-4 grid grid-cols-1 md:grid-cols-3 gap-6">
+          {filteredColumns.map(column => (
+            <div key={`header-${column.id}`} className="flex items-center justify-between">
+              <h2 className="font-medium text-sm tracking-wide uppercase">{column.title}</h2>
+              <span className="text-xs text-muted-foreground">{column.cards.length}</span>
+            </div>
+          ))}
+        </div>
+        
+        {/* Column content */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 -mt-16">
+          {filteredColumns.map(column => (
+            <KanbanColumn
+              key={column.id}
+              id={column.id}
+              title={column.title}
+              cards={column.cards}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+              onDragStart={handleDragStart}
+              hideHeader={true}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );

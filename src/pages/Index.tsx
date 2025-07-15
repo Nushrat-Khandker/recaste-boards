@@ -11,7 +11,9 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <KanbanProvider>
-        <Header />
+        <div className="sticky top-0 z-50 bg-background">
+          <Header />
+        </div>
         <main className="container mx-auto pb-16 animate-fade-in flex-grow">
           <KanbanBoard />
         </main>
