@@ -183,8 +183,12 @@ const convertSupabaseDataToColumns = (cards: any[], columns: any[]): KanbanColum
 
 export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) => {
   const [columns, setColumns] = useState<KanbanColumn[]>([]);
-  const [selectedNumber, setSelectedNumber] = useState<string>('1446');
-  const [selectedQuarter, setSelectedQuarter] = useState<string>('Q3');
+  const [selectedNumber, setSelectedNumber] = useState<string>(() => {
+    return localStorage.getItem('selectedNumber') || '1446';
+  });
+  const [selectedQuarter, setSelectedQuarter] = useState<string>(() => {
+    return localStorage.getItem('selectedQuarter') || 'Q3';
+  });
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -216,6 +220,16 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
       setLoading(false);
     }
   };
+
+  // Persist selectedNumber to localStorage
+  useEffect(() => {
+    localStorage.setItem('selectedNumber', selectedNumber);
+  }, [selectedNumber]);
+
+  // Persist selectedQuarter to localStorage
+  useEffect(() => {
+    localStorage.setItem('selectedQuarter', selectedQuarter);
+  }, [selectedQuarter]);
 
   // Load data on mount
   useEffect(() => {
