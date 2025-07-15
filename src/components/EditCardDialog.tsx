@@ -9,6 +9,7 @@ import { KanbanCard, Tag } from '../context/KanbanContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { DatePicker } from './DatePicker';
+import { YearWheel } from './YearWheel';
 import { Separator } from "@/components/ui/separator";
 
 interface EditCardDialogProps {
@@ -291,17 +292,13 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
 
           <div className="grid grid-cols-2 gap-2">
             <div className="grid gap-2">
-              <label htmlFor="number" className="text-sm font-medium">Number</label>
-              <Select value={number} onValueChange={setNumber}>
-                <SelectTrigger id="number">
-                  <SelectValue placeholder="Select number" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1446">1446</SelectItem>
-                  <SelectItem value="1447">1447</SelectItem>
-                  <SelectItem value="1448+">1448+</SelectItem>
-                </SelectContent>
-              </Select>
+              <label htmlFor="number" className="text-sm font-medium">Year</label>
+              <YearWheel 
+                value={number} 
+                onValueChange={setNumber}
+                placeholder="Select year"
+                className="w-full"
+              />
             </div>
             
             <div className="grid gap-2">

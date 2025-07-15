@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useKanban } from '../context/KanbanContext';
+import { YearWheel } from './YearWheel';
 import TagFilter from './TagFilter';
 
 const Header: React.FC = () => {
@@ -30,16 +31,12 @@ const Header: React.FC = () => {
         </div>
         
         <div className="flex items-center gap-2">
-          <Select value={selectedNumber} onValueChange={setSelectedNumber}>
-            <SelectTrigger className="w-24">
-              <SelectValue placeholder="Select" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="1446">1446</SelectItem>
-              <SelectItem value="1447">1447</SelectItem>
-              <SelectItem value="1448+">1448+</SelectItem>
-            </SelectContent>
-          </Select>
+          <YearWheel 
+            value={selectedNumber} 
+            onValueChange={setSelectedNumber}
+            placeholder="Year"
+            className="w-24"
+          />
           
           <Select value={selectedQuarter} onValueChange={setSelectedQuarter}>
             <SelectTrigger className="w-20">
