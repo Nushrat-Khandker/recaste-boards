@@ -120,33 +120,21 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
   return (
     <>
       <Card 
-        className="kanban-card animate-hover group"
+        className="kanban-card animate-hover group cursor-pointer"
         draggable="true"
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
+        onClick={() => setIsEditDialogOpen(true)}
         data-card-id={id}
       >
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <h3 className="font-medium text-sm mb-1">{title}</h3>
-            {projectName && (
-              <p className="text-xs text-muted-foreground font-medium mb-1">{projectName}</p>
-            )}
-            {description && (
-              <p className="text-xs text-muted-foreground mb-3">{description}</p>
-            )}
+            <h3 className="font-medium text-sm mb-2">{title}</h3>
           </div>
           
           <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-            <button 
-              className="text-gray-400 hover:text-gray-600 transition-colors p-0.5 rounded"
-              onClick={handleEdit}
-              aria-label="Edit card"
-            >
-              <Pencil size={14} />
-            </button>
             <button 
               className="text-gray-400 hover:text-gray-600 transition-colors p-0.5 rounded"
               onClick={(e) => {
@@ -163,33 +151,9 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
           </div>
         </div>
         
-        {/* Display number and quarter badges */}
-        {(number || quarter) && (
-          <div className="flex gap-1 mt-2 mb-1">
-            {number && (
-              <Badge variant="secondary" className="text-xs py-0 h-5">
-                {number}
-              </Badge>
-            )}
-            {quarter && (
-              <Badge variant="outline" className="text-xs py-0 h-5">
-                {quarter}
-              </Badge>
-            )}
-          </div>
-        )}
-        
-        {/* Display dates */}
-        {hasDateInfo && (
-          <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
-            <CalendarClock size={12} className="shrink-0" />
-            <span className="truncate">{formatDateRange(startDate, dueDate)}</span>
-          </div>
-        )}
-        
-        {/* Display tags and priority */}
+        {/* Display only tags */}
         {(tags.length > 0 || priority) && (
-          <div className="flex flex-wrap gap-1 mt-2">
+          <div className="flex flex-wrap gap-1">
             {tags.map((tag) => renderTag(tag))}
             
             {priority && (
