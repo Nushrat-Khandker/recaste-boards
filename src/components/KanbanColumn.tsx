@@ -64,12 +64,12 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
       {/* Sticky column header */}
       <div className="sticky top-[73px] z-40 bg-background py-2 mb-4">
         <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <h2 className="font-medium text-sm tracking-wide uppercase">{title}</h2>
-            <span className="bg-muted text-muted-foreground text-xs px-2 py-1 rounded-full">
-              {cards.length}
-            </span>
-          </div>
+        <div className="flex items-center gap-3">
+          <h2 className="font-medium text-sm tracking-wide uppercase">{title}</h2>
+          <span className="bg-muted text-muted-foreground text-xs px-2 py-1 rounded-full min-w-[20px] text-center">
+            {cards.length}
+          </span>
+        </div>
           <AddCard 
             columnId={id} 
             onAddCard={handleAddCard}

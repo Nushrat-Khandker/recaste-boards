@@ -18,6 +18,7 @@ interface EditCardDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (columnId: string, updatedCard: KanbanCard) => void;
+  isNew?: boolean;
 }
 
 // Exactly 7 rainbow colors with only one red
@@ -65,7 +66,8 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
   columnId,
   isOpen,
   onClose,
-  onSave
+  onSave,
+  isNew = false
 }) => {
   const [title, setTitle] = useState(card.title);
   const [description, setDescription] = useState(card.description || '');
@@ -131,6 +133,13 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
     onClose();
   };
 
+  const handleTitleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && title.trim()) {
+      e.preventDefault();
+      handleSave();
+    }
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && newTagText.trim()) {
       e.preventDefault();
@@ -159,18 +168,21 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit Card</DialogTitle>
+          <DialogTitle>{isNew ? 'Add New Card' : 'Edit Card'}</DialogTitle>
         </DialogHeader>
         
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
-            <label htmlFor="title" className="text-sm font-medium">Title</label>
+            <label htmlFor="title" className="text-sm font-medium">Title *</label>
             <Input
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              onKeyDown={handleTitleKeyDown}
               placeholder="Enter card title"
+              autoFocus={isNew}
             />
+            {isNew && <p className="text-xs text-muted-foreground">Press Enter to create card with just the title</p>}
           </div>
           
           <div className="grid gap-2">
@@ -320,7 +332,9 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
         
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={handleSave} disabled={!title.trim()}>Save Changes</Button>
+          <Button onClick={handleSave} disabled={!title.trim()}>
+            {isNew ? 'Add Card' : 'Save Changes'}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
