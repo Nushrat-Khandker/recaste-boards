@@ -9,9 +9,10 @@ import { Plus, X } from 'lucide-react';
 interface AddCardProps {
   columnId: string;
   onAddCard: (columnId: string, card: { title: string; description?: string; projectName?: string; tags?: string[] }) => void;
+  variant?: 'default' | 'compact';
 }
 
-const AddCard: React.FC<AddCardProps> = ({ columnId, onAddCard }) => {
+const AddCard: React.FC<AddCardProps> = ({ columnId, onAddCard, variant = 'default' }) => {
   const [isAdding, setIsAdding] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -44,6 +45,19 @@ const AddCard: React.FC<AddCardProps> = ({ columnId, onAddCard }) => {
   };
 
   if (!isAdding) {
+    if (variant === 'compact') {
+      return (
+        <Button
+          onClick={() => setIsAdding(true)}
+          variant="outline"
+          size="sm"
+          className="h-8 px-2"
+        >
+          <Plus size={14} />
+        </Button>
+      );
+    }
+    
     return (
       <button
         onClick={() => setIsAdding(true)}
