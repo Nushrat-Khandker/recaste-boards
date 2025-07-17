@@ -9,8 +9,8 @@ interface YearWheelProps {
 }
 
 export function YearWheel({ value, onValueChange, placeholder = "Select year", className }: YearWheelProps) {
-  // Generate years starting from 1446 (current Hijri year) and going 10 years into the future
-  const currentHijriYear = 1446;
+  // Generate years starting from 1447 (current Hijri year) and going into the future
+  const currentHijriYear = 1447;
   const years = Array.from({ length: 20 }, (_, i) => currentHijriYear + i);
 
   return (
