@@ -152,10 +152,10 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
         </div>
         
         {/* Display project name if it exists */}
-        {projectName && (
+        {project_name && (
           <div className="mb-2">
             <Badge variant="outline" className="text-xs">
-              {projectName}
+              {project_name}
             </Badge>
           </div>
         )}
