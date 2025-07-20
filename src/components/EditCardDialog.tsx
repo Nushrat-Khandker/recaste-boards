@@ -133,7 +133,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
     onClose();
   };
 
-  const handleTitleKeyDown = (e: React.KeyboardEvent) => {
+  const handleInputKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && title.trim()) {
       e.preventDefault();
       handleSave();
@@ -144,13 +144,6 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
     if (e.key === 'Enter' && newTagText.trim()) {
       e.preventDefault();
       handleAddTag();
-    }
-  };
-
-  const handleInputKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && title.trim()) {
-      e.preventDefault();
-      handleSave();
     }
   };
 
@@ -193,7 +186,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              onKeyDown={handleTitleKeyDown}
+              onKeyDown={handleInputKeyDown}
               placeholder="Enter card title"
               autoFocus={isNew}
             />
