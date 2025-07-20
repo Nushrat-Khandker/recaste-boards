@@ -147,8 +147,16 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
     }
   };
 
-  const handleGeneralKeyDown = (e: React.KeyboardEvent) => {
+  const handleInputKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && title.trim()) {
+      e.preventDefault();
+      handleSave();
+    }
+  };
+
+  const handleTextareaKeyDown = (e: React.KeyboardEvent) => {
+    // For textarea, only save on Ctrl+Enter or Cmd+Enter
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && title.trim()) {
       e.preventDefault();
       handleSave();
     }
@@ -198,7 +206,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
               id="projectName"
               value={projectName}
               onChange={(e) => setProjectName(e.target.value)}
-              onKeyDown={handleGeneralKeyDown}
+              onKeyDown={handleInputKeyDown}
               placeholder="Enter project name (optional)"
             />
           </div>
@@ -209,7 +217,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              onKeyDown={handleGeneralKeyDown}
+              onKeyDown={handleTextareaKeyDown}
               placeholder="Enter description (optional)"
               className="min-h-[80px]"
             />
