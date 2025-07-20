@@ -129,6 +129,9 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
       dueDate
     };
     
+    console.log('Saving card with projectName:', projectName.trim() || undefined);
+    console.log('Updated card data:', updatedCard);
+    
     onSave(columnId, updatedCard);
     onClose();
   };
