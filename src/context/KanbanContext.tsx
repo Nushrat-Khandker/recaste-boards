@@ -166,18 +166,21 @@ const convertSupabaseDataToColumns = (cards: any[], columns: any[]): KanbanColum
     title: column.title,
     cards: cards
       .filter(card => card.column_id === column.id)
-      .map(card => ({
-        id: card.id,
-        title: card.title,
-        description: card.description,
-        projectName: card.project_name,
-        tags: card.tags ? JSON.parse(card.tags as string) : [],
-        priority: card.priority as 'low' | 'medium' | 'high',
-        number: card.number,
-        quarter: card.quarter,
-        startDate: card.start_date ? new Date(card.start_date) : undefined,
-        dueDate: card.due_date ? new Date(card.due_date) : undefined,
-      }))
+      .map(card => {
+        console.log('Converting card:', card.title, 'project_name:', card.project_name);
+        return {
+          id: card.id,
+          title: card.title,
+          description: card.description,
+          projectName: card.project_name,
+          tags: card.tags ? JSON.parse(card.tags as string) : [],
+          priority: card.priority as 'low' | 'medium' | 'high',
+          number: card.number,
+          quarter: card.quarter,
+          startDate: card.start_date ? new Date(card.start_date) : undefined,
+          dueDate: card.due_date ? new Date(card.due_date) : undefined,
+        };
+      })
   }));
 };
 
