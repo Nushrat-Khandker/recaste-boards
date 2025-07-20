@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -180,6 +180,9 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
       <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isNew ? 'Add New Card' : 'Edit Card'}</DialogTitle>
+          <DialogDescription>
+            {isNew ? 'Create a new card by filling in the details below.' : 'Edit the card details and save your changes.'}
+          </DialogDescription>
         </DialogHeader>
         
         <div className="grid gap-4 py-4">
