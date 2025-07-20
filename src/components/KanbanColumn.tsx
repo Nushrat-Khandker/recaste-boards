@@ -86,6 +86,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
             id={card.id}
             title={card.title}
             description={card.description}
+            projectName={card.projectName}
             tags={card.tags}
             priority={card.priority}
             number={card.number}
