@@ -146,6 +146,13 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
       handleAddTag();
     }
   };
+
+  const handleGeneralKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && title.trim()) {
+      e.preventDefault();
+      handleSave();
+    }
+  };
   
   // Render tag with proper styling
   const renderTag = (tag: Tag, index: number) => {
@@ -191,6 +198,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
               id="projectName"
               value={projectName}
               onChange={(e) => setProjectName(e.target.value)}
+              onKeyDown={handleGeneralKeyDown}
               placeholder="Enter project name (optional)"
             />
           </div>
@@ -201,6 +209,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              onKeyDown={handleGeneralKeyDown}
               placeholder="Enter description (optional)"
               className="min-h-[80px]"
             />
