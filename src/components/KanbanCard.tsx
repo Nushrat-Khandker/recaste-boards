@@ -151,7 +151,16 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
           </div>
         </div>
         
-        {/* Display only tags */}
+        {/* Display project name if it exists */}
+        {projectName && (
+          <div className="mb-2">
+            <Badge variant="outline" className="text-xs">
+              {projectName}
+            </Badge>
+          </div>
+        )}
+        
+        {/* Display tags and priority */}
         {(tags.length > 0 || priority) && (
           <div className="flex flex-wrap gap-1">
             {tags.map((tag) => renderTag(tag))}
