@@ -382,7 +382,10 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
             ? { 
                 ...column, 
                 cards: column.cards.map(card => 
-                  card.id === updatedCard.id ? updatedCard : card
+                  card.id === updatedCard.id ? {
+                    ...updatedCard,
+                    projectName: updatedCard.projectName // Ensure projectName is preserved
+                  } : card
                 ) 
               }
             : column
