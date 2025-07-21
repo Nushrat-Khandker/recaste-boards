@@ -39,15 +39,21 @@ function Calendar({
       
       if (data && !error) {
         const phaseMap: Record<string, string> = {};
-        data.forEach(({ date, phase }) => {
+        data.forEach((item) => {
+          const { date, phase } = item;
           const emoji = MOON_PHASE_EMOJIS[phase as keyof typeof MOON_PHASE_EMOJIS];
           if (emoji) {
+            // Ensure we use the same date format as renderDayContent
             phaseMap[date] = emoji;
+          } else {
+            console.warn(`Unknown moon phase: ${phase} for date: ${date}`);
           }
           console.log(`Date: ${date}, Phase: ${phase}, Emoji: ${emoji}`);
         });
         console.log('Final phase map:', phaseMap);
         setMoonPhases(phaseMap);
+      } else if (error) {
+        console.error('Error fetching moon phases:', error);
       }
     };
     
@@ -61,16 +67,21 @@ function Calendar({
 
   // Custom day content renderer to show moon phases
   const renderDayContent = (date: Date) => {
+    // Use ISO date string format to match Supabase date storage
     const dateStr = format(date, 'yyyy-MM-dd');
     const moonPhase = moonPhases[dateStr];
     
-    console.log(`Rendering date: ${dateStr}, Moon phase: ${moonPhase}`);
+    console.log(`Rendering date: ${dateStr}, Moon phase: ${moonPhase}, Available phases:`, Object.keys(moonPhases));
     
     return (
       <div className="relative w-full h-full flex items-center justify-center">
-        <span>{date.getDate()}</span>
+        <span className="relative z-10">{date.getDate()}</span>
         {moonPhase && (
-          <span className="absolute top-0 right-0 text-xs leading-none" style={{ fontSize: '10px' }}>
+          <span 
+            className="absolute top-0 right-0 text-xs leading-none select-none" 
+            style={{ fontSize: '10px', zIndex: 20 }}
+            title={`Moon phase: ${Object.keys(MOON_PHASE_EMOJIS).find(key => MOON_PHASE_EMOJIS[key as keyof typeof MOON_PHASE_EMOJIS] === moonPhase) || 'unknown'}`}
+          >
             {moonPhase}
           </span>
         )}
