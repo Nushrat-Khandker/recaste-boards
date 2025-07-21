@@ -30,15 +30,23 @@ function Calendar({
   // Fetch moon phases for the current month
   React.useEffect(() => {
     const fetchMoonPhases = async () => {
+      console.log('Fetching moon phases...');
       const { data, error } = await supabase
         .from('moon_phases')
         .select('date, phase');
       
+      console.log('Moon phases data:', data, 'Error:', error);
+      
       if (data && !error) {
         const phaseMap: Record<string, string> = {};
         data.forEach(({ date, phase }) => {
-          phaseMap[date] = MOON_PHASE_EMOJIS[phase as keyof typeof MOON_PHASE_EMOJIS] || '';
+          const emoji = MOON_PHASE_EMOJIS[phase as keyof typeof MOON_PHASE_EMOJIS];
+          if (emoji) {
+            phaseMap[date] = emoji;
+          }
+          console.log(`Date: ${date}, Phase: ${phase}, Emoji: ${emoji}`);
         });
+        console.log('Final phase map:', phaseMap);
         setMoonPhases(phaseMap);
       }
     };
@@ -56,11 +64,13 @@ function Calendar({
     const dateStr = format(date, 'yyyy-MM-dd');
     const moonPhase = moonPhases[dateStr];
     
+    console.log(`Rendering date: ${dateStr}, Moon phase: ${moonPhase}`);
+    
     return (
       <div className="relative w-full h-full flex items-center justify-center">
         <span>{date.getDate()}</span>
         {moonPhase && (
-          <span className="absolute top-0 right-0 text-xs leading-none">
+          <span className="absolute top-0 right-0 text-xs leading-none" style={{ fontSize: '10px' }}>
             {moonPhase}
           </span>
         )}
