@@ -3,12 +3,21 @@ import * as React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { DayPicker } from "react-day-picker";
 import type { Locale } from "date-fns";
+import { format } from "date-fns";
 
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
-import { formatHijriDate, getHijriWeekdays } from "@/lib/hijri-utils";
+import { supabase } from "@/integrations/supabase/client";
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
+
+// Moon phase emoji mapping
+const MOON_PHASE_EMOJIS = {
+  'new': '🌑',
+  'first_quarter': '🌓', 
+  'full': '🌕',
+  'last_quarter': '🌗'
+};
 
 function Calendar({
   className,
@@ -16,11 +25,47 @@ function Calendar({
   showOutsideDays = true,
   ...props
 }: CalendarProps) {
-  const hijriWeekdays = getHijriWeekdays();
-  
-  // Custom formatter for day labels (to show Hijri date)
+  const [moonPhases, setMoonPhases] = React.useState<Record<string, string>>({});
+
+  // Fetch moon phases for the current month
+  React.useEffect(() => {
+    const fetchMoonPhases = async () => {
+      const { data, error } = await supabase
+        .from('moon_phases')
+        .select('date, phase');
+      
+      if (data && !error) {
+        const phaseMap: Record<string, string> = {};
+        data.forEach(({ date, phase }) => {
+          phaseMap[date] = MOON_PHASE_EMOJIS[phase as keyof typeof MOON_PHASE_EMOJIS] || '';
+        });
+        setMoonPhases(phaseMap);
+      }
+    };
+    
+    fetchMoonPhases();
+  }, []);
+
+  // Custom formatter for day labels (to show Gregorian date)
   const formatCaption = (date: Date, options?: { locale?: Locale }): string => {
-    return formatHijriDate(date);
+    return format(date, 'MMMM yyyy');
+  };
+
+  // Custom day content renderer to show moon phases
+  const renderDayContent = (date: Date) => {
+    const dateStr = format(date, 'yyyy-MM-dd');
+    const moonPhase = moonPhases[dateStr];
+    
+    return (
+      <div className="relative w-full h-full flex items-center justify-center">
+        <span>{date.getDate()}</span>
+        {moonPhase && (
+          <span className="absolute top-0 right-0 text-xs leading-none">
+            {moonPhase}
+          </span>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -64,9 +109,10 @@ function Calendar({
       components={{
         IconLeft: ({ ..._props }) => <ChevronLeft className="h-4 w-4" />,
         IconRight: ({ ..._props }) => <ChevronRight className="h-4 w-4" />,
+        DayContent: ({ date }) => renderDayContent(date),
       }}
       formatters={{ formatCaption }}
-      weekStartsOn={6} // Start on Saturday for Hijri calendar
+      weekStartsOn={0} // Start on Sunday for Gregorian calendar
       {...props}
     />
   );

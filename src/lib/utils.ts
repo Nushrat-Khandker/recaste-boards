@@ -2,7 +2,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { format, isValid } from "date-fns"
-import { formatHijriDate } from "./hijri-utils"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -11,8 +10,8 @@ export function cn(...inputs: ClassValue[]) {
 export function formatDate(date: Date | undefined): string | null {
   if (!date || !isValid(date)) return null;
   
-  // Use Hijri formatting
-  return formatHijriDate(date);
+  // Use Gregorian formatting
+  return format(date, "PPP");
 }
 
 export function formatDateRange(startDate: Date | undefined, dueDate: Date | undefined): string {

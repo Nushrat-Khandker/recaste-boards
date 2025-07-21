@@ -14,6 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
+      content_items: {
+        Row: {
+          campaign: string | null
+          caption: string | null
+          created_at: string
+          crosspost: string | null
+          cta: string | null
+          cycle: string | null
+          date: string | null
+          day: string | null
+          format: string | null
+          hashtags: string | null
+          id: string
+          media: string | null
+          notes: string | null
+          owner: string | null
+          performance: string | null
+          platform: string | null
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          campaign?: string | null
+          caption?: string | null
+          created_at?: string
+          crosspost?: string | null
+          cta?: string | null
+          cycle?: string | null
+          date?: string | null
+          day?: string | null
+          format?: string | null
+          hashtags?: string | null
+          id?: string
+          media?: string | null
+          notes?: string | null
+          owner?: string | null
+          performance?: string | null
+          platform?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          campaign?: string | null
+          caption?: string | null
+          created_at?: string
+          crosspost?: string | null
+          cta?: string | null
+          cycle?: string | null
+          date?: string | null
+          day?: string | null
+          format?: string | null
+          hashtags?: string | null
+          id?: string
+          media?: string | null
+          notes?: string | null
+          owner?: string | null
+          performance?: string | null
+          platform?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       kanban_cards: {
         Row: {
           column_id: string
@@ -80,6 +143,27 @@ export type Database = {
           id?: string
           position?: number
           title?: string
+        }
+        Relationships: []
+      }
+      moon_phases: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          phase: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          phase: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          phase?: string
         }
         Relationships: []
       }
