@@ -1,13 +1,18 @@
 
 import * as React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { DayPicker } from "react-day-picker";
+import { DayPicker, type DayPickerProps } from "react-day-picker";
 import type { Locale } from "date-fns";
 import { format } from "date-fns";
 
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
- new: '🌑',             // New Moon
+import { supabase } from "@/integrations/supabase/client";
+
+type CalendarProps = React.ComponentProps<typeof DayPicker>;
+// Moon phase emoji mapping
+const MOON_PHASE_EMOJIS = {
+  new: '🌑',             // New Moon
   first_quarter: '🌓',   // Right half-lit
   full: '🌕',            // Full Moon
   last_quarter: '🌗',    // Left half-lit
