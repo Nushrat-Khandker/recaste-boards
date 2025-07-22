@@ -45,31 +45,37 @@ const KanbanBoard: React.FC = () => {
   };
 
   return (
-    <div className="px-6 py-4">
-      <div className="mb-4 flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Kanban Board</h1>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="bg-background">
-            {selectedNumber}
-          </Badge>
-          <Badge variant="outline" className="bg-background">
-            {selectedQuarter}
-          </Badge>
+    <div>
+      {/* Fixed Header */}
+      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b px-6 py-4">
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold">Kanban Board</h1>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="bg-background">
+              {selectedNumber}
+            </Badge>
+            <Badge variant="outline" className="bg-background">
+              {selectedQuarter}
+            </Badge>
+          </div>
         </div>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {filteredColumns.map(column => (
-          <KanbanColumn
-            key={column.id}
-            id={column.id}
-            title={column.title}
-            cards={column.cards}
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
-            onDragStart={handleDragStart}
-          />
-        ))}
+      {/* Scrollable Content */}
+      <div className="px-6 py-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {filteredColumns.map(column => (
+            <KanbanColumn
+              key={column.id}
+              id={column.id}
+              title={column.title}
+              cards={column.cards}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+              onDragStart={handleDragStart}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
