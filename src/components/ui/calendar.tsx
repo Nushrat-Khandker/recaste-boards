@@ -36,20 +36,31 @@ function Calendar({
   const [moonPhases, setMoonPhases] = React.useState<Record<string, string>>({});
   const [solarEvents, setSolarEvents] = React.useState<Record<string, string>>({});
 
-  // Fetch moon phases and solar events
+  // Track current displayed month for dynamic fetching
+  const [currentMonth, setCurrentMonth] = React.useState<Date>(new Date());
+
+  // Fetch moon phases and solar events for current month range
   React.useEffect(() => {
-    const fetchAstronomicalData = async () => {
-      console.log('Fetching astronomical data...');
+    const fetchAstronomicalData = async (month: Date) => {
+      console.log('Fetching astronomical data for month:', format(month, 'MMMM yyyy'));
       
-      // Fetch moon phases
+      // Get start and end of month
+      const startOfMonth = new Date(month.getFullYear(), month.getMonth(), 1);
+      const endOfMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0);
+      
+      // Fetch moon phases for the month
       const { data: moonData, error: moonError } = await supabase
         .from('moon_phases')
-        .select('date, phase');
+        .select('date, phase')
+        .gte('date', format(startOfMonth, 'yyyy-MM-dd'))
+        .lte('date', format(endOfMonth, 'yyyy-MM-dd'));
       
-      // Fetch solar events
+      // Fetch solar events for the month
       const { data: solarData, error: solarError } = await supabase
         .from('solar_events')
-        .select('date, type');
+        .select('date, type')
+        .gte('date', format(startOfMonth, 'yyyy-MM-dd'))
+        .lte('date', format(endOfMonth, 'yyyy-MM-dd'));
       
       console.log('Moon phases data:', moonData, 'Solar events data:', solarData);
       
@@ -88,8 +99,8 @@ function Calendar({
       }
     };
     
-    fetchAstronomicalData();
-  }, []);
+    fetchAstronomicalData(currentMonth);
+  }, [currentMonth]);
 
   // Custom formatter for day labels (to show Gregorian date)
   const formatCaption = (date: Date, options?: { locale?: Locale }): string => {
@@ -134,6 +145,10 @@ function Calendar({
     <DayPicker
       showOutsideDays={showOutsideDays}
       className={cn("p-3", className)}
+      onMonthChange={(month) => {
+        console.log('Month changed to:', format(month, 'MMMM yyyy'));
+        setCurrentMonth(month);
+      }}
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4",
