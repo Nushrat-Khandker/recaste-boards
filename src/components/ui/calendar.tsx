@@ -13,10 +13,10 @@ export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 
 // Moon phase emoji mapping
 const MOON_PHASE_EMOJIS = {
-  'new': '🌑',
-  'first_quarter': '🌓', 
-  'full': '🌕',
-  'last_quarter': '🌗'
+  new: '🌑',             // New Moon
+  first_quarter: '🌓',   // Right half-lit
+  full: '🌕',            // Full Moon
+  last_quarter: '🌗',    // Left half-lit
 };
 
 // Solar event emoji mapping
@@ -68,11 +68,12 @@ function Calendar({
         const phaseMap: Record<string, string> = {};
         moonData.forEach((item) => {
           const { date, phase } = item;
-          const emoji = MOON_PHASE_EMOJIS[phase as keyof typeof MOON_PHASE_EMOJIS];
+          const normalizedPhase = phase.toLowerCase().replace(/\s/g, '_');
+          const emoji = MOON_PHASE_EMOJIS[normalizedPhase as keyof typeof MOON_PHASE_EMOJIS];
           if (emoji) {
             phaseMap[date] = emoji;
           } else {
-            console.warn(`Unknown moon phase: ${phase} for date: ${date}`);
+            console.warn(`Unknown moon phase: ${phase} (normalized: ${normalizedPhase}) for date: ${date}`);
           }
         });
         console.log('Final moon phase map:', phaseMap);
