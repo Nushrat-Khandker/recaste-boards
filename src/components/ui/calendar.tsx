@@ -19,6 +19,14 @@ const MOON_PHASE_EMOJIS = {
   'last_quarter': '🌗'
 };
 
+// Solar event emoji mapping
+const SOLAR_EVENT_EMOJIS = {
+  'equinox_spring': '🌼',
+  'equinox_autumn': '🍂',
+  'solstice_summer': '☀️',
+  'solstice_winter': '❄️'
+};
+
 function Calendar({
   className,
   classNames,
@@ -26,38 +34,61 @@ function Calendar({
   ...props
 }: CalendarProps) {
   const [moonPhases, setMoonPhases] = React.useState<Record<string, string>>({});
+  const [solarEvents, setSolarEvents] = React.useState<Record<string, string>>({});
 
-  // Fetch moon phases for the current month
+  // Fetch moon phases and solar events
   React.useEffect(() => {
-    const fetchMoonPhases = async () => {
-      console.log('Fetching moon phases...');
-      const { data, error } = await supabase
+    const fetchAstronomicalData = async () => {
+      console.log('Fetching astronomical data...');
+      
+      // Fetch moon phases
+      const { data: moonData, error: moonError } = await supabase
         .from('moon_phases')
         .select('date, phase');
       
-      console.log('Moon phases data:', data, 'Error:', error);
+      // Fetch solar events
+      const { data: solarData, error: solarError } = await supabase
+        .from('solar_events')
+        .select('date, type');
       
-      if (data && !error) {
+      console.log('Moon phases data:', moonData, 'Solar events data:', solarData);
+      
+      if (moonData && !moonError) {
         const phaseMap: Record<string, string> = {};
-        data.forEach((item) => {
+        moonData.forEach((item) => {
           const { date, phase } = item;
           const emoji = MOON_PHASE_EMOJIS[phase as keyof typeof MOON_PHASE_EMOJIS];
           if (emoji) {
-            // Ensure we use the same date format as renderDayContent
             phaseMap[date] = emoji;
           } else {
             console.warn(`Unknown moon phase: ${phase} for date: ${date}`);
           }
-          console.log(`Date: ${date}, Phase: ${phase}, Emoji: ${emoji}`);
         });
-        console.log('Final phase map:', phaseMap);
+        console.log('Final moon phase map:', phaseMap);
         setMoonPhases(phaseMap);
-      } else if (error) {
-        console.error('Error fetching moon phases:', error);
+      } else if (moonError) {
+        console.error('Error fetching moon phases:', moonError);
+      }
+      
+      if (solarData && !solarError) {
+        const eventMap: Record<string, string> = {};
+        solarData.forEach((item) => {
+          const { date, type } = item;
+          const emoji = SOLAR_EVENT_EMOJIS[type as keyof typeof SOLAR_EVENT_EMOJIS];
+          if (emoji) {
+            eventMap[date] = emoji;
+          } else {
+            console.warn(`Unknown solar event: ${type} for date: ${date}`);
+          }
+        });
+        console.log('Final solar event map:', eventMap);
+        setSolarEvents(eventMap);
+      } else if (solarError) {
+        console.error('Error fetching solar events:', solarError);
       }
     };
     
-    fetchMoonPhases();
+    fetchAstronomicalData();
   }, []);
 
   // Custom formatter for day labels (to show Gregorian date)
@@ -65,13 +96,14 @@ function Calendar({
     return format(date, 'MMMM yyyy');
   };
 
-  // Custom day content renderer to show moon phases
+  // Custom day content renderer to show moon phases and solar events
   const renderDayContent = (date: Date) => {
     // Use ISO date string format to match Supabase date storage
     const dateStr = format(date, 'yyyy-MM-dd');
     const moonPhase = moonPhases[dateStr];
+    const solarEvent = solarEvents[dateStr];
     
-    console.log(`Rendering date: ${dateStr}, Moon phase: ${moonPhase}, Available phases:`, Object.keys(moonPhases));
+    console.log(`Rendering date: ${dateStr}, Moon phase: ${moonPhase}, Solar event: ${solarEvent}`);
     
     return (
       <div className="relative w-full h-full flex items-center justify-center">
@@ -83,6 +115,15 @@ function Calendar({
             title={`Moon phase: ${Object.keys(MOON_PHASE_EMOJIS).find(key => MOON_PHASE_EMOJIS[key as keyof typeof MOON_PHASE_EMOJIS] === moonPhase) || 'unknown'}`}
           >
             {moonPhase}
+          </span>
+        )}
+        {solarEvent && (
+          <span 
+            className="absolute bottom-0 left-0 text-xs leading-none select-none" 
+            style={{ fontSize: '10px', zIndex: 20 }}
+            title={`Solar event: ${Object.keys(SOLAR_EVENT_EMOJIS).find(key => SOLAR_EVENT_EMOJIS[key as keyof typeof SOLAR_EVENT_EMOJIS] === solarEvent)?.replace('_', ' ') || 'unknown'}`}
+          >
+            {solarEvent}
           </span>
         )}
       </div>

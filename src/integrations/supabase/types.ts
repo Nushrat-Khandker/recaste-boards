@@ -167,6 +167,27 @@ export type Database = {
         }
         Relationships: []
       }
+      solar_events: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          type: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          type?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
