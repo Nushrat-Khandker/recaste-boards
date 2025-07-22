@@ -7,13 +7,7 @@ import { format } from "date-fns";
 
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
-
-export type CalendarProps = React.ComponentProps<typeof DayPicker>;
-
-// Moon phase emoji mapping
-const MOON_PHASE_EMOJIS = {
-  new: '🌑',             // New Moon
+ new: '🌑',             // New Moon
   first_quarter: '🌓',   // Right half-lit
   full: '🌕',            // Full Moon
   last_quarter: '🌗',    // Left half-lit
