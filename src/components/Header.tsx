@@ -16,7 +16,7 @@ const Header: React.FC = () => {
   } = useKanban();
 
   return (
-    <header className="border-b mb-8">
+    <header className="border-b">
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
         <div className="flex items-center">
           <NavigationMenu>
