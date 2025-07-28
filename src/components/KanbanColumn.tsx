@@ -77,7 +77,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
 
   return (
     <div 
-      className="kanban-column flex flex-col h-full"
+      className="kanban-column flex flex-col h-full bg-card rounded-lg p-3 shadow-sm"
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
