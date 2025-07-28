@@ -67,7 +67,7 @@ const KanbanBoard: React.FC = () => {
       </div>
       
       {/* Scrollable Content */}
-      <div className="px-6 py-4">
+      <div className="px-6 pt-2 pb-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {filteredColumns.map(column => (
             <KanbanColumn
