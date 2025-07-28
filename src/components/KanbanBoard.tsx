@@ -5,7 +5,7 @@ import { useKanban } from '../context/KanbanContext';
 import { Badge } from '@/components/ui/badge';
 
 const KanbanBoard: React.FC = () => {
-  const { filteredColumns, selectedNumber, selectedQuarter, moveCard, loading } = useKanban();
+  const { filteredColumns, selectedNumber, selectedQuarter, moveCard, reorderCard, loading } = useKanban();
   const [draggingCardId, setDraggingCardId] = useState<string | null>(null);
   const [sourceColumnId, setSourceColumnId] = useState<string | null>(null);
 
@@ -30,15 +30,20 @@ const KanbanBoard: React.FC = () => {
     e.preventDefault();
   };
 
-  const handleDrop = (e: React.DragEvent, destinationColumnId: string) => {
+  const handleDrop = (e: React.DragEvent, destinationColumnId: string, dropIndex?: number) => {
     e.preventDefault();
     
     if (!draggingCardId || !sourceColumnId) return;
     
-    // Don't do anything if dropped in the same column
-    if (sourceColumnId === destinationColumnId) return;
-    
-    moveCard(draggingCardId, sourceColumnId, destinationColumnId);
+    if (sourceColumnId === destinationColumnId) {
+      // Handle reordering within the same column
+      if (dropIndex !== undefined) {
+        reorderCard(destinationColumnId, draggingCardId, dropIndex);
+      }
+    } else {
+      // Handle moving between columns
+      moveCard(draggingCardId, sourceColumnId, destinationColumnId);
+    }
     
     setDraggingCardId(null);
     setSourceColumnId(null);

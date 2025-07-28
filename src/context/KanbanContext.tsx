@@ -30,6 +30,7 @@ interface KanbanContextType {
   columns: KanbanColumn[];
   addCard: (columnId: string, card: Omit<KanbanCard, 'id'>) => void;
   moveCard: (cardId: string, sourceColumnId: string, destinationColumnId: string) => void;
+  reorderCard: (columnId: string, cardId: string, newIndex: number) => void;
   deleteCard: (columnId: string, cardId: string) => void;
   updateCard: (columnId: string, card: KanbanCard) => void;
   getAllTags: () => Tag[];
@@ -140,6 +141,7 @@ export const KanbanContext = createContext<KanbanContextType>({
   columns: [],
   addCard: () => {},
   moveCard: () => {},
+  reorderCard: () => {},
   deleteCard: () => {},
   updateCard: () => {},
   getAllTags: () => [],
@@ -454,6 +456,35 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
     );
   };
 
+  const reorderCard = async (columnId: string, cardId: string, newIndex: number): Promise<void> => {
+    try {
+      setColumns(prevColumns => {
+        return prevColumns.map(column => {
+          if (column.id === columnId) {
+            const cardToMove = column.cards.find(card => card.id === cardId);
+            if (!cardToMove) return column;
+            
+            const filteredCards = column.cards.filter(card => card.id !== cardId);
+            const reorderedCards = [
+              ...filteredCards.slice(0, newIndex),
+              cardToMove,
+              ...filteredCards.slice(newIndex)
+            ];
+            
+            return { ...column, cards: reorderedCards };
+          }
+          return column;
+        });
+      });
+
+      // For now, we don't persist order to database as the column doesn't exist
+      // The reordering is maintained in local state until page refresh
+    } catch (error) {
+      console.error('Error reordering card:', error);
+      loadData();
+    }
+  };
+
   const addTag = (newTag: Tag): void => {
     // This is a no-op function since tags are only stored on cards
     // But we include it for completeness of the API
@@ -469,6 +500,7 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
       columns, 
       addCard, 
       moveCard, 
+      reorderCard,
       deleteCard, 
       updateCard,
       getAllTags,

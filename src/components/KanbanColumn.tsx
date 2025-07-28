@@ -9,7 +9,7 @@ interface KanbanColumnProps {
   title: string;
   cards: KanbanCardType[];
   onDragOver: (e: React.DragEvent) => void;
-  onDrop: (e: React.DragEvent, columnId: string) => void;
+  onDrop: (e: React.DragEvent, columnId: string, dropIndex?: number) => void;
   onDragStart: (e: React.DragEvent, cardId: string, columnId: string) => void;
 }
 
@@ -38,7 +38,29 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
   const handleDrop = (e: React.DragEvent) => {
     const column = e.currentTarget;
     column.classList.remove('drag-over');
-    onDrop(e, id);
+    
+    // Calculate drop position for reordering
+    const rect = column.getBoundingClientRect();
+    const y = e.clientY - rect.top;
+    const cardsContainer = column.querySelector('.cards-container');
+    
+    if (cardsContainer) {
+      const cardElements = Array.from(cardsContainer.children);
+      let dropIndex = cardElements.length;
+      
+      for (let i = 0; i < cardElements.length; i++) {
+        const cardRect = cardElements[i].getBoundingClientRect();
+        const cardY = cardRect.top - rect.top;
+        if (y < cardY + cardRect.height / 2) {
+          dropIndex = i;
+          break;
+        }
+      }
+      
+      onDrop(e, id, dropIndex);
+    } else {
+      onDrop(e, id);
+    }
   };
 
   const handleAddCard = (columnId: string, cardData: { title: string; description?: string; tags?: string[] }) => {
@@ -79,7 +101,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
       </div>
       
       {/* Cards container */}
-      <div className="flex-1 space-y-3">
+      <div className="flex-1 space-y-3 cards-container">
         {cards.map((card) => (
           <KanbanCard
             key={card.id}
