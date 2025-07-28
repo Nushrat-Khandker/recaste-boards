@@ -52,7 +52,7 @@ const KanbanBoard: React.FC = () => {
   return (
     <div>
       {/* Fixed Header */}
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-md border-b px-6 py-2">
+      <div className="sticky top-0 z-10 bg-background backdrop-blur-md border-b px-6 py-4">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold">Kanban Board</h1>
           <div className="flex items-center gap-2">
