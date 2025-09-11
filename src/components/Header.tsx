@@ -2,9 +2,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu";
-import { Tag } from 'lucide-react';
+import { Tag, LogOut, User } from 'lucide-react';
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useKanban } from '../context/KanbanContext';
+import { useAuth } from '../context/AuthContext';
 import { YearWheel } from './YearWheel';
 import TagFilter from './TagFilter';
 
@@ -15,6 +17,12 @@ const Header: React.FC = () => {
     selectedQuarter, 
     setSelectedQuarter 
   } = useKanban();
+  
+  const { user, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+  };
 
   return (
     <header className="border-b">
@@ -58,6 +66,22 @@ const Header: React.FC = () => {
           </Select>
 
           <TagFilter />
+
+          <div className="flex items-center gap-2 ml-4 pl-4 border-l">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <User className="h-4 w-4" />
+              {user?.email}
+            </div>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleSignOut}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <LogOut className="h-4 w-4 mr-1" />
+              Sign Out
+            </Button>
+          </div>
         </div>
       </div>
     </header>
