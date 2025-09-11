@@ -3,11 +3,20 @@ import React, { useState } from 'react';
 import KanbanColumn from './KanbanColumn';
 import { useKanban } from '../context/KanbanContext';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { MessageSquare } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/components/ui/use-toast';
 
 const KanbanBoard: React.FC = () => {
   const { filteredColumns, selectedNumber, selectedQuarter, moveCard, reorderCard, loading } = useKanban();
   const [draggingCardId, setDraggingCardId] = useState<string | null>(null);
   const [sourceColumnId, setSourceColumnId] = useState<string | null>(null);
+  const [showSlackInput, setShowSlackInput] = useState(false);
+  const [slackChannel, setSlackChannel] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   if (loading) {
     return (
@@ -49,6 +58,46 @@ const KanbanBoard: React.FC = () => {
     setSourceColumnId(null);
   };
 
+  const handleSendToSlack = async () => {
+    if (!slackChannel.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a Slack channel",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('slack-integration', {
+        body: {
+          action: 'send_board_summary',
+          channel: slackChannel
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Board summary sent to Slack!",
+      });
+      
+      setShowSlackInput(false);
+      setSlackChannel('');
+    } catch (error) {
+      console.error('Error sending to Slack:', error);
+      toast({
+        title: "Error",
+        description: "Failed to send board summary to Slack",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div>
       {/* Fixed Header */}
@@ -62,8 +111,37 @@ const KanbanBoard: React.FC = () => {
             <Badge variant="outline" className="bg-background">
               {selectedQuarter}
             </Badge>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setShowSlackInput(!showSlackInput)}
+            >
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Send to Slack
+            </Button>
           </div>
         </div>
+        
+        {showSlackInput && (
+          <div className="mt-4 flex gap-2">
+            <Input
+              placeholder="Slack channel (e.g., #general)"
+              value={slackChannel}
+              onChange={(e) => setSlackChannel(e.target.value)}
+              className="max-w-xs"
+            />
+            <Button onClick={handleSendToSlack} disabled={isLoading} size="sm">
+              Send
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowSlackInput(false)} 
+              size="sm"
+            >
+              Cancel
+            </Button>
+          </div>
+        )}
       </div>
       
       {/* Scrollable Content */}

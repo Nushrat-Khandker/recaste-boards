@@ -103,45 +103,26 @@ const SlackIntegration = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Plus className="h-5 w-5" />
-            Create Card from Slack
+            <MessageSquare className="h-5 w-5" />
+            Slack Commands
           </CardTitle>
           <CardDescription>
-            Create a new Kanban card directly from this interface
+            Use these commands in your Slack workspace
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Input
-            placeholder="Card title"
-            value={cardTitle}
-            onChange={(e) => setCardTitle(e.target.value)}
-          />
-          <Textarea
-            placeholder="Card description (optional)"
-            value={cardDescription}
-            onChange={(e) => setCardDescription(e.target.value)}
-            rows={3}
-          />
-          <Select value={selectedColumn} onValueChange={setSelectedColumn}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select column" />
-            </SelectTrigger>
-            <SelectContent>
-              {columns.map((column) => (
-                <SelectItem key={column.id} value={column.id}>
-                  {column.title}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button 
-            onClick={handleCreateCard} 
-            disabled={isLoading}
-            className="w-full"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Create Card
-          </Button>
+          <div className="bg-muted p-4 rounded-lg space-y-2">
+            <p className="font-medium">Available Commands:</p>
+            <div className="space-y-1 text-sm">
+              <p><code className="bg-background px-2 py-1 rounded">/kanban create [title]</code> - Create a new card</p>
+              <p><code className="bg-background px-2 py-1 rounded">/kanban summary</code> - Get board summary</p>
+            </div>
+          </div>
+          <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg">
+            <p className="text-sm text-blue-800 dark:text-blue-200">
+              <strong>Example:</strong> Type <code>/kanban create Fix login bug</code> in Slack to create a new card
+            </p>
+          </div>
         </CardContent>
       </Card>
 
@@ -183,7 +164,7 @@ const SlackIntegration = () => {
           <p>1. Create a Slack App in your workspace</p>
           <p>2. Add the Bot Token to your Supabase secrets</p>
           <p>3. Invite the bot to channels where you want to send summaries</p>
-          <p>4. Use slash commands like <code>/kanban create Task Name</code> or <code>/kanban summary</code></p>
+          <p>4. Set up slash command with URL: <code>https://usdhemikpmbcuwearsob.supabase.co/functions/v1/slack-integration</code></p>
         </CardContent>
       </Card>
     </div>
