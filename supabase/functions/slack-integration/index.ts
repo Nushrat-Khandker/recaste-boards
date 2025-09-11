@@ -122,13 +122,13 @@ serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       } else if (text && text.trim() !== '') {
-        // Parse enhanced command format: title | description | due_date
+        // Parse enhanced command format: title, description, due_date
         // Examples: 
         // "Fix login bug" (title only)
-        // "Fix login bug | Critical authentication issue" (title + description)  
-        // "Fix login bug | Critical authentication issue | 2025-01-20" (title + description + due date)
+        // "Fix login bug, Critical authentication issue" (title + description)  
+        // "Fix login bug, Critical authentication issue, 2025-01-20" (title + description + due date)
         
-        const parts = text.split('|').map(part => part.trim());
+        const parts = text.split(',').map(part => part.trim());
         const cardTitle = parts[0];
         const cardDescription = parts[1] || `Created by ${user_name} from Slack`;
         let dueDate: string | undefined;
@@ -176,7 +176,7 @@ serve(async (req) => {
       
       return new Response(JSON.stringify({ 
         response_type: "ephemeral",
-        text: `📋 *Kanban Slack Commands*\n\n• \`/kanban [title]\` - Create card with title only\n• \`/kanban [title] | [description]\` - Create card with title and description\n• \`/kanban [title] | [description] | [YYYY-MM-DD]\` - Create card with title, description, and due date\n• \`/kanban summary\` - Get board overview\n\n*Examples:*\n• \`/kanban Fix login bug\`\n• \`/kanban Fix login bug | Critical authentication issue\`\n• \`/kanban Fix login bug | Critical authentication issue | 2025-01-20\``
+        text: `📋 *Kanban Slack Commands*\n\n• \`/kanban [title]\` - Create card with title only\n• \`/kanban [title], [description]\` - Create card with title and description\n• \`/kanban [title], [description], [YYYY-MM-DD]\` - Create card with title, description, and due date\n• \`/kanban summary\` - Get board overview\n\n*Examples:*\n• \`/kanban Fix login bug\`\n• \`/kanban Fix login bug, Critical authentication issue\`\n• \`/kanban Fix login bug, Critical authentication issue, 2025-01-20\``
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });

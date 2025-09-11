@@ -115,8 +115,8 @@ const SlackIntegration = () => {
             <p className="font-medium">Available Commands:</p>
             <div className="space-y-1 text-sm">
               <p><code className="bg-background px-2 py-1 rounded">/kanban [title]</code> - Create card with title only</p>
-              <p><code className="bg-background px-2 py-1 rounded">/kanban [title] | [description]</code> - Create card with title and description</p>
-              <p><code className="bg-background px-2 py-1 rounded">/kanban [title] | [description] | [YYYY-MM-DD]</code> - Create complete card</p>
+              <p><code className="bg-background px-2 py-1 rounded">/kanban [title], [description]</code> - Create card with title and description</p>
+              <p><code className="bg-background px-2 py-1 rounded">/kanban [title], [description], [YYYY-MM-DD]</code> - Create complete card</p>
               <p><code className="bg-background px-2 py-1 rounded">/kanban summary</code> - Get board summary</p>
             </div>
           </div>
@@ -126,8 +126,8 @@ const SlackIntegration = () => {
             </p>
             <div className="mt-2 space-y-1 text-xs text-blue-700 dark:text-blue-300 font-mono">
               <p>• <code>/kanban Fix login bug</code></p>
-              <p>• <code>/kanban Fix login bug | Critical authentication issue</code></p>
-              <p>• <code>/kanban Fix login bug | Critical auth issue | 2025-01-20</code></p>
+              <p>• <code>/kanban Fix login bug, Critical authentication issue</code></p>
+              <p>• <code>/kanban Fix login bug, Critical auth issue, 2025-01-20</code></p>
             </div>
           </div>
         </CardContent>
