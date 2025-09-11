@@ -29,16 +29,23 @@ async function sendSlackMessage(channel: string, text: string, blocks?: any[]) {
   return await response.json();
 }
 
-async function createCardFromSlack(title: string, description: string, column_id: string) {
+async function createCardFromSlack(title: string, description: string, column_id: string, due_date?: string) {
+  const cardData: any = {
+    title,
+    description,
+    column_id,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+  
+  // Add due date if provided
+  if (due_date) {
+    cardData.due_date = due_date;
+  }
+
   const { data, error } = await supabase
     .from('kanban_cards')
-    .insert({
-      title,
-      description,
-      column_id,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    })
+    .insert(cardData)
     .select()
     .single();
 
@@ -115,8 +122,32 @@ serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       } else if (text && text.trim() !== '') {
-        // Any other text creates a card
-        const cardTitle = text.trim();
+        // Parse enhanced command format: title | description | due_date
+        // Examples: 
+        // "Fix login bug" (title only)
+        // "Fix login bug | Critical authentication issue" (title + description)  
+        // "Fix login bug | Critical authentication issue | 2025-01-20" (title + description + due date)
+        
+        const parts = text.split('|').map(part => part.trim());
+        const cardTitle = parts[0];
+        const cardDescription = parts[1] || `Created by ${user_name} from Slack`;
+        let dueDate: string | undefined;
+        
+        // Parse due date if provided (support various formats)
+        if (parts[2]) {
+          const dateStr = parts[2];
+          try {
+            // Try parsing the date
+            const parsedDate = new Date(dateStr);
+            if (!isNaN(parsedDate.getTime())) {
+              dueDate = parsedDate.toISOString();
+            }
+          } catch (e) {
+            // If date parsing fails, we'll just ignore it and create the card without due date
+            console.warn('Failed to parse due date:', dateStr);
+          }
+        }
+        
         // Default to first column for simplicity
         const { data: firstColumn } = await supabase
           .from('kanban_columns')
@@ -126,10 +157,17 @@ serve(async (req) => {
           .single();
           
         if (firstColumn) {
-          await createCardFromSlack(cardTitle, `Created by ${user_name} from Slack`, firstColumn.id);
+          await createCardFromSlack(cardTitle, cardDescription, firstColumn.id, dueDate);
+          
+          let responseText = `✅ Card "${cardTitle}" created successfully!`;
+          if (dueDate) {
+            const dueDateFormatted = new Date(dueDate).toLocaleDateString();
+            responseText += `\n📅 Due date: ${dueDateFormatted}`;
+          }
+          
           return new Response(JSON.stringify({ 
             response_type: "in_channel",
-            text: `✅ Card "${cardTitle}" created successfully!`
+            text: responseText
           }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
@@ -138,7 +176,7 @@ serve(async (req) => {
       
       return new Response(JSON.stringify({ 
         response_type: "ephemeral",
-        text: "Usage: `/kanban [title]` to create a card or `/kanban summary` for board overview"
+        text: `📋 *Kanban Slack Commands*\n\n• \`/kanban [title]\` - Create card with title only\n• \`/kanban [title] | [description]\` - Create card with title and description\n• \`/kanban [title] | [description] | [YYYY-MM-DD]\` - Create card with title, description, and due date\n• \`/kanban summary\` - Get board overview\n\n*Examples:*\n• \`/kanban Fix login bug\`\n• \`/kanban Fix login bug | Critical authentication issue\`\n• \`/kanban Fix login bug | Critical authentication issue | 2025-01-20\``
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
