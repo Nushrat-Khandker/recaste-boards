@@ -4,17 +4,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
   
-  const { signIn, signUp, user, loading } = useAuth();
+  const { signInWithMagicLink, user, loading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -25,86 +23,31 @@ const Auth = () => {
     }
   }, [user, loading, navigate]);
 
-  const handleSignIn = async (e: React.FormEvent) => {
+  const handleMagicLink = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
+    if (!email) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Please fill in all fields"
+        description: "Please enter your email address"
       });
       return;
     }
 
     setIsLoading(true);
-    const { error } = await signIn(email, password);
+    const { error } = await signInWithMagicLink(email);
     
     if (error) {
       toast({
         variant: "destructive",
-        title: "Sign in failed",
+        title: "Failed to send magic link",
         description: error.message
       });
     } else {
+      setEmailSent(true);
       toast({
-        title: "Welcome back!",
-        description: "You have been signed in successfully"
-      });
-      navigate('/');
-    }
-    setIsLoading(false);
-  };
-
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email || !password || !confirmPassword) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Please fill in all fields"
-      });
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Passwords do not match"
-      });
-      return;
-    }
-
-    if (password.length < 6) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Password must be at least 6 characters long"
-      });
-      return;
-    }
-
-    setIsLoading(true);
-    const { error } = await signUp(email, password);
-    
-    if (error) {
-      if (error.message.includes('already registered')) {
-        toast({
-          variant: "destructive",
-          title: "Account exists",
-          description: "This email is already registered. Please sign in instead."
-        });
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Sign up failed",
-          description: error.message
-        });
-      }
-    } else {
-      toast({
-        title: "Account created!",
-        description: "Please check your email to confirm your account"
+        title: "Magic link sent!",
+        description: "Check your email for a sign-in link"
       });
     }
     setIsLoading(false);
@@ -127,95 +70,54 @@ const Auth = () => {
             re<span className="text-[#FE446F]">*</span>caste
           </CardTitle>
           <CardDescription>
-            Sign in to access your kanban board
+            {emailSent 
+              ? "Check your email for a sign-in link" 
+              : "Enter your email to receive a magic link"
+            }
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="signin" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="signin">Sign In</TabsTrigger>
-              <TabsTrigger value="signup">Sign Up</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="signin">
-              <form onSubmit={handleSignIn} className="space-y-4">
-                <div>
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter your password"
-                    required
-                  />
-                </div>
-                <Button 
-                  type="submit" 
-                  className="w-full" 
-                  disabled={isLoading}
-                >
-                  {isLoading ? 'Signing in...' : 'Sign In'}
-                </Button>
-              </form>
-            </TabsContent>
-            
-            <TabsContent value="signup">
-              <form onSubmit={handleSignUp} className="space-y-4">
-                <div>
-                  <Label htmlFor="signup-email">Email</Label>
-                  <Input
-                    id="signup-email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="signup-password">Password</Label>
-                  <Input
-                    id="signup-password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Choose a password (min 6 characters)"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="confirm-password">Confirm Password</Label>
-                  <Input
-                    id="confirm-password"
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Confirm your password"
-                    required
-                  />
-                </div>
-                <Button 
-                  type="submit" 
-                  className="w-full" 
-                  disabled={isLoading}
-                >
-                  {isLoading ? 'Creating account...' : 'Sign Up'}
-                </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
+          {!emailSent ? (
+            <form onSubmit={handleMagicLink} className="space-y-4">
+              <div>
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  required
+                />
+              </div>
+              <Button 
+                type="submit" 
+                className="w-full" 
+                disabled={isLoading}
+              >
+                {isLoading ? 'Sending magic link...' : 'Send Magic Link'}
+              </Button>
+            </form>
+          ) : (
+            <div className="text-center space-y-4">
+              <div className="text-sm text-muted-foreground">
+                We've sent a magic link to <strong>{email}</strong>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Click the link in your email to sign in. The link will expire in 1 hour.
+              </div>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setEmailSent(false);
+                  setEmail('');
+                }}
+                className="w-full"
+              >
+                Use different email
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
