@@ -114,13 +114,13 @@ const SlackIntegration = () => {
           <div className="bg-muted p-4 rounded-lg space-y-2">
             <p className="font-medium">Available Commands:</p>
             <div className="space-y-1 text-sm">
-              <p><code className="bg-background px-2 py-1 rounded">/kanban create [title]</code> - Create a new card</p>
+              <p><code className="bg-background px-2 py-1 rounded">/kanban [title]</code> - Create a new card</p>
               <p><code className="bg-background px-2 py-1 rounded">/kanban summary</code> - Get board summary</p>
             </div>
           </div>
           <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg">
             <p className="text-sm text-blue-800 dark:text-blue-200">
-              <strong>Example:</strong> Type <code>/kanban create Fix login bug</code> in Slack to create a new card
+              <strong>Example:</strong> Type <code>/kanban Fix login bug</code> in Slack to create a new card
             </p>
           </div>
         </CardContent>

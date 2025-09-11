@@ -98,8 +98,25 @@ serve(async (req) => {
     if (isSlackWebhook) {
       const { text, channel_id, user_name } = params;
       
-      if (text?.startsWith('create ')) {
-        const cardTitle = text.replace('create ', '').trim();
+      if (text === 'summary') {
+        const { columns, cards } = await getBoardSummary();
+        
+        const summary = columns.map(column => {
+          const columnCards = cards.filter(card => card.column_id === column.id);
+          return `*${column.title}* (${columnCards.length} cards)\n${
+            columnCards.map(card => `• ${card.title}`).join('\n')
+          }`;
+        }).join('\n\n');
+
+        return new Response(JSON.stringify({ 
+          response_type: "in_channel",
+          text: `📋 *Kanban Board Summary*\n\n${summary || "No cards found on the board."}\n\nTotal Cards: ${cards.length} | Columns: ${columns.length}`
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      } else if (text && text.trim() !== '') {
+        // Any other text creates a card
+        const cardTitle = text.trim();
         // Default to first column for simplicity
         const { data: firstColumn } = await supabase
           .from('kanban_columns')
@@ -117,27 +134,11 @@ serve(async (req) => {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
         }
-      } else if (text === 'summary') {
-        const { columns, cards } = await getBoardSummary();
-        
-        const summary = columns.map(column => {
-          const columnCards = cards.filter(card => card.column_id === column.id);
-          return `*${column.title}* (${columnCards.length} cards)\n${
-            columnCards.map(card => `• ${card.title}`).join('\n')
-          }`;
-        }).join('\n\n');
-
-        return new Response(JSON.stringify({ 
-          response_type: "in_channel",
-          text: `📋 *Kanban Board Summary*\n\n${summary || "No cards found on the board."}\n\nTotal Cards: ${cards.length} | Columns: ${columns.length}`
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
       }
       
       return new Response(JSON.stringify({ 
         response_type: "ephemeral",
-        text: "Usage: `/kanban create [title]` or `/kanban summary`"
+        text: "Usage: `/kanban [title]` to create a card or `/kanban summary` for board overview"
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
