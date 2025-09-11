@@ -217,8 +217,17 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
         supabase.from('kanban_cards').select('*').order('created_at')
       ]);
 
-      if (columnsResult.error) throw columnsResult.error;
-      if (cardsResult.error) throw cardsResult.error;
+      if (columnsResult.error) {
+        console.error('Error loading columns:', columnsResult.error);
+        throw columnsResult.error;
+      }
+      if (cardsResult.error) {
+        console.error('Error loading cards:', cardsResult.error); 
+        throw cardsResult.error;
+      }
+
+      console.log('Loaded cards:', cardsResult.data?.length || 0);
+      console.log('Loaded columns:', columnsResult.data?.length || 0);
 
       const convertedColumns = convertSupabaseDataToColumns(
         cardsResult.data || [], 
