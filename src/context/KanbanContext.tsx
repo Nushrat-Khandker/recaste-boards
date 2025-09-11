@@ -206,38 +206,11 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
-  // Load data from Supabase
+  // Since authentication is removed, just use default columns
   const loadData = async () => {
     try {
       setLoading(true);
-      
-      // Load columns and cards
-      const [columnsResult, cardsResult] = await Promise.all([
-        supabase.from('kanban_columns').select('*').order('position'),
-        supabase.from('kanban_cards').select('*').order('created_at')
-      ]);
-
-      if (columnsResult.error) {
-        console.error('Error loading columns:', columnsResult.error);
-        throw columnsResult.error;
-      }
-      if (cardsResult.error) {
-        console.error('Error loading cards:', cardsResult.error); 
-        throw cardsResult.error;
-      }
-
-      console.log('Loaded cards:', cardsResult.data?.length || 0);
-      console.log('Loaded columns:', columnsResult.data?.length || 0);
-
-      const convertedColumns = convertSupabaseDataToColumns(
-        cardsResult.data || [], 
-        columnsResult.data || []
-      );
-      
-      setColumns(convertedColumns);
-    } catch (error) {
-      console.error('Error loading data from Supabase:', error);
-      // Fallback to default columns if loading fails
+      // Use default columns since no authentication
       setColumns(defaultColumns);
     } finally {
       setLoading(false);
