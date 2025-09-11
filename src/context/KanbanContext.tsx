@@ -161,6 +161,18 @@ export const KanbanContext = createContext<KanbanContextType>({
 
 export const useKanban = () => useContext(KanbanContext);
 
+// Helper to safely handle jsonb/text for tags from Supabase
+const toTags = (raw: any) => {
+  if (!raw) return [] as Tag[];
+  try {
+    if (Array.isArray(raw)) return raw as Tag[];
+    if (typeof raw === 'string') return JSON.parse(raw) as Tag[];
+    return [] as Tag[];
+  } catch {
+    return [] as Tag[];
+  }
+};
+
 // Convert Supabase data to KanbanColumn format
 const convertSupabaseDataToColumns = (cards: any[], columns: any[]): KanbanColumn[] => {
   return columns.map(column => ({
@@ -168,21 +180,18 @@ const convertSupabaseDataToColumns = (cards: any[], columns: any[]): KanbanColum
     title: column.title,
     cards: cards
       .filter(card => card.column_id === column.id)
-      .map(card => {
-        console.log('Converting card:', card.title, 'project_name:', card.project_name);
-        return {
-          id: card.id,
-          title: card.title,
-          description: card.description,
-          projectName: card.project_name,
-          tags: card.tags ? JSON.parse(card.tags as string) : [],
-          priority: card.priority as 'low' | 'medium' | 'high',
-          number: card.number,
-          quarter: card.quarter,
-          startDate: card.start_date ? new Date(card.start_date) : undefined,
-          dueDate: card.due_date ? new Date(card.due_date) : undefined,
-        };
-      })
+      .map(card => ({
+        id: card.id,
+        title: card.title,
+        description: card.description,
+        projectName: card.project_name,
+        tags: toTags(card.tags),
+        priority: card.priority as 'low' | 'medium' | 'high',
+        number: card.number,
+        quarter: card.quarter,
+        startDate: card.start_date ? new Date(card.start_date) : undefined,
+        dueDate: card.due_date ? new Date(card.due_date) : undefined,
+      }))
   }));
 };
 
@@ -241,6 +250,23 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
     loadData();
   }, []);
 
+  // Realtime updates for kanban tables
+  useEffect(() => {
+    const channel = supabase
+      .channel('kanban-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'kanban_cards' }, () => {
+        loadData();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'kanban_columns' }, () => {
+        loadData();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   // Filter columns based on selected number, quarter, and tags
   const filteredColumns = React.useMemo(() => {
     return columns.map(column => ({
@@ -287,7 +313,7 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
         title: data.title,
         description: data.description,
         projectName: data.project_name,
-        tags: data.tags ? JSON.parse(data.tags as string) : [],
+        tags: toTags(data.tags),
         priority: data.priority as 'low' | 'medium' | 'high',
         number: data.number,
         quarter: data.quarter,
@@ -481,6 +507,7 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
       // The reordering is maintained in local state until page refresh
     } catch (error) {
       console.error('Error reordering card:', error);
+      // Reload to ensure UI stays consistent with DB
       loadData();
     }
   };
