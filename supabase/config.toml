@@ -1,1 +1,4 @@
 project_id = "usdhemikpmbcuwearsob"
+
+[functions.slack-integration]
+verify_jwt = false
