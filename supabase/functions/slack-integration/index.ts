@@ -73,7 +73,75 @@ serve(async (req) => {
   }
 
   try {
-    const { action, ...params } = await req.json();
+    const contentType = req.headers.get('content-type') || '';
+    let requestData;
+    
+    // Handle Slack webhook (form-encoded) vs API calls (JSON)
+    if (contentType.includes('application/x-www-form-urlencoded')) {
+      // Slack slash command sends form data
+      const formData = await req.formData();
+      requestData = {
+        text: formData.get('text'),
+        channel_id: formData.get('channel_id'),
+        user_name: formData.get('user_name'),
+        command: formData.get('command'),
+        isSlackWebhook: true
+      };
+    } else {
+      // Regular API call
+      requestData = await req.json();
+    }
+    
+    const { action, isSlackWebhook, ...params } = requestData;
+
+    // Handle Slack webhook directly
+    if (isSlackWebhook) {
+      const { text, channel_id, user_name } = params;
+      
+      if (text?.startsWith('create ')) {
+        const cardTitle = text.replace('create ', '').trim();
+        // Default to first column for simplicity
+        const { data: firstColumn } = await supabase
+          .from('kanban_columns')
+          .select('id')
+          .order('position')
+          .limit(1)
+          .single();
+          
+        if (firstColumn) {
+          await createCardFromSlack(cardTitle, `Created by ${user_name} from Slack`, firstColumn.id);
+          return new Response(JSON.stringify({ 
+            response_type: "in_channel",
+            text: `✅ Card "${cardTitle}" created successfully!`
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      } else if (text === 'summary') {
+        const { columns, cards } = await getBoardSummary();
+        
+        const summary = columns.map(column => {
+          const columnCards = cards.filter(card => card.column_id === column.id);
+          return `*${column.title}* (${columnCards.length} cards)\n${
+            columnCards.map(card => `• ${card.title}`).join('\n')
+          }`;
+        }).join('\n\n');
+
+        return new Response(JSON.stringify({ 
+          response_type: "in_channel",
+          text: `📋 *Kanban Board Summary*\n\n${summary || "No cards found on the board."}\n\nTotal Cards: ${cards.length} | Columns: ${columns.length}`
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      return new Response(JSON.stringify({ 
+        response_type: "ephemeral",
+        text: "Usage: `/kanban create [title]` or `/kanban summary`"
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     switch (action) {
       case 'create_card': {
