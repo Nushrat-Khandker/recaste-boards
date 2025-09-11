@@ -2,6 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu";
+import { MessageSquare, Tag } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useKanban } from '../context/KanbanContext';
 import { YearWheel } from './YearWheel';
@@ -24,6 +25,18 @@ const Header: React.FC = () => {
               <NavigationMenuItem>
                 <Link to="/" className={navigationMenuTriggerStyle()}>
                   re<span className="text-[#FE446F]">*</span>caste
+                </Link>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <Link to="/tags" className={navigationMenuTriggerStyle()}>
+                  <Tag className="mr-2 h-4 w-4" />
+                  Tags
+                </Link>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <Link to="/slack" className={navigationMenuTriggerStyle()}>
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                  Slack
                 </Link>
               </NavigationMenuItem>
             </NavigationMenuList>
