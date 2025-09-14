@@ -4,10 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { X, CalendarClock } from "lucide-react"; 
-import { KanbanCard, Tag } from '../context/KanbanContext';
+import { X, CalendarClock, Plus, Check } from "lucide-react"; 
+import { KanbanCard, Tag, useKanban } from '../context/KanbanContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { DatePicker } from './DatePicker';
 import { YearWheel } from './YearWheel';
 import { Separator } from "@/components/ui/separator";
@@ -69,6 +69,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
   onSave,
   isNew = false
 }) => {
+  const { getAllTags } = useKanban();
   const [title, setTitle] = useState(card.title);
   const [description, setDescription] = useState(card.description || '');
   const [projectName, setProjectName] = useState(card.projectName || '');
@@ -80,6 +81,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
   const [dueDate, setDueDate] = useState<Date | undefined>(card.dueDate);
   const [number, setNumber] = useState<string>(card.number || '');
   const [quarter, setQuarter] = useState<string>(card.quarter || '');
+  const [isTagDropdownOpen, setIsTagDropdownOpen] = useState(false);
 
   // Reset form when card changes
   useEffect(() => {
@@ -104,8 +106,26 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
       
       setTags([...tags, newTag]);
       setNewTagText('');
+      setIsTagDropdownOpen(false);
     }
   };
+
+  const handleSelectExistingTag = (existingTag: Tag) => {
+    // Check if tag is already added
+    const tagExists = tags.some(tag => tag.text === existingTag.text);
+    if (!tagExists) {
+      setTags([...tags, existingTag]);
+    }
+    setIsTagDropdownOpen(false);
+  };
+
+  // Get all existing tags from the context
+  const existingTags = getAllTags();
+  
+  // Filter out tags that are already selected
+  const availableTags = existingTags.filter(
+    existingTag => !tags.some(selectedTag => selectedTag.text === existingTag.text)
+  );
 
   const handleRemoveTag = (index: number) => {
     const newTags = [...tags];
@@ -249,56 +269,86 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
             </div>
             
             <div className="flex gap-2">
-              <Input
-                value={newTagText}
-                onChange={(e) => setNewTagText(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Add a tag"
-                className="flex-1"
-              />
-              
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    className="h-10 w-10 p-0 flex items-center justify-center"
-                  >
-                    <div 
-                      className="w-6 h-6 rounded-full border border-gray-200"
-                      style={{ backgroundColor: selectedColor }}
-                    />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56 bg-white" align="end">
-                  <div className="p-2">
-                    <p className="text-sm font-medium mb-2">Rainbow Colors</p>
-                    <div className="flex flex-wrap gap-1">
-                      {rainbowColors.map((color) => (
-                        <button
-                          key={color.value}
-                          onClick={() => setSelectedColor(color.value)}
-                          className="w-8 h-8 rounded-full border border-gray-200"
-                          style={{ backgroundColor: color.value }}
-                          title={color.label}
-                        />
-                      ))}
+              <div className="flex-1 relative">
+                <Input
+                  value={newTagText}
+                  onChange={(e) => setNewTagText(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Type new tag or select existing"
+                  className="pr-10"
+                />
+                
+                <DropdownMenu open={isTagDropdownOpen} onOpenChange={setIsTagDropdownOpen}>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      type="button" 
+                      variant="ghost" 
+                      size="sm"
+                      className="absolute right-1 top-1 h-8 w-8 p-0"
+                    >
+                      <Plus size={14} />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56 bg-background border shadow-md z-50" align="end">
+                    {availableTags.length > 0 && (
+                      <>
+                        <div className="px-2 py-1.5">
+                          <p className="text-sm font-medium text-foreground">Select existing tag</p>
+                        </div>
+                        {availableTags.map((existingTag, index) => {
+                          const isDark = existingTag.customColor ? isColorDark(existingTag.customColor) : false;
+                          return (
+                            <DropdownMenuItem 
+                              key={index}
+                              onClick={() => handleSelectExistingTag(existingTag)}
+                              className="cursor-pointer"
+                            >
+                              <div className="flex items-center gap-2">
+                                <Badge 
+                                  className={`text-xs ${isDark ? 'text-white' : 'text-gray-800'}`}
+                                  style={{ backgroundColor: existingTag.customColor || '#f3f4f6' }}
+                                >
+                                  {existingTag.text}
+                                </Badge>
+                              </div>
+                            </DropdownMenuItem>
+                          );
+                        })}
+                        <DropdownMenuSeparator />
+                      </>
+                    )}
+                    
+                    <div className="px-2 py-1.5">
+                      <p className="text-sm font-medium text-foreground mb-2">Create new tag</p>
+                      <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap gap-1">
+                          {rainbowColors.map((color) => (
+                            <button
+                              key={color.value}
+                              onClick={() => setSelectedColor(color.value)}
+                              className={`w-6 h-6 rounded-full border-2 ${selectedColor === color.value ? 'border-foreground' : 'border-gray-200'}`}
+                              style={{ backgroundColor: color.value }}
+                              title={color.label}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      <Button 
+                        type="button" 
+                        onClick={handleAddTag}
+                        disabled={!newTagText.trim()}
+                        size="sm"
+                        className="w-full mt-2"
+                      >
+                        <Plus size={14} className="mr-1" />
+                        Add "{newTagText.trim()}"
+                      </Button>
                     </div>
-                  </div>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              
-              <Button 
-                type="button" 
-                onClick={handleAddTag}
-                disabled={!newTagText.trim()}
-                variant="outline"
-                className="shrink-0"
-              >
-                Add
-              </Button>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
-            <p className="text-xs text-muted-foreground">Click on a tag to remove it</p>
+            <p className="text-xs text-muted-foreground">Click on a tag to remove it • Click + to see existing tags</p>
           </div>
           
           <div className="grid gap-2">
