@@ -21,27 +21,27 @@ interface EditCardDialogProps {
   isNew?: boolean;
 }
 
-// Expanded color palette for tags
+// Expanded color palette for tags - organized by visual distance
 const tagColors = [
   { label: 'Red', value: '#ef4444' },
-  { label: 'Rose', value: '#f43f5e' },
-  { label: 'Pink', value: '#ec4899' },
-  { label: 'Fuchsia', value: '#d946ef' },
-  { label: 'Purple', value: '#a855f7' },
-  { label: 'Violet', value: '#8b5cf6' },
-  { label: 'Indigo', value: '#6366f1' },
   { label: 'Blue', value: '#3b82f6' },
-  { label: 'Sky', value: '#0ea5e9' },
-  { label: 'Cyan', value: '#06b6d4' },
-  { label: 'Teal', value: '#14b8a6' },
-  { label: 'Emerald', value: '#10b981' },
   { label: 'Green', value: '#22c55e' },
-  { label: 'Lime', value: '#65a30d' },
-  { label: 'Yellow', value: '#eab308' },
-  { label: 'Amber', value: '#f59e0b' },
   { label: 'Orange', value: '#f97316' },
-  { label: 'Stone', value: '#78716c' },
+  { label: 'Purple', value: '#a855f7' },
+  { label: 'Yellow', value: '#eab308' },
+  { label: 'Pink', value: '#ec4899' },
+  { label: 'Teal', value: '#14b8a6' },
+  { label: 'Indigo', value: '#6366f1' },
+  { label: 'Lime', value: '#65a30d' },
+  { label: 'Rose', value: '#f43f5e' },
+  { label: 'Cyan', value: '#06b6d4' },
+  { label: 'Violet', value: '#8b5cf6' },
+  { label: 'Amber', value: '#f59e0b' },
+  { label: 'Fuchsia', value: '#d946ef' },
+  { label: 'Emerald', value: '#10b981' },
+  { label: 'Sky', value: '#0ea5e9' },
   { label: 'Gray', value: '#6b7280' },
+  { label: 'Stone', value: '#78716c' },
   { label: 'Slate', value: '#64748b' },
 ];
 
