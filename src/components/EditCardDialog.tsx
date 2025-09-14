@@ -21,15 +21,28 @@ interface EditCardDialogProps {
   isNew?: boolean;
 }
 
-// Exactly 7 rainbow colors with only one red
-const rainbowColors = [
-  { label: 'Red', value: '#ea384c' },
-  { label: 'Orange', value: '#F97316' },
-  { label: 'Yellow', value: '#f0e04b' },
-  { label: 'Green', value: '#5ec639' },
-  { label: 'Blue', value: '#5293d1' },
-  { label: 'Indigo', value: '#423ec1' },
-  { label: 'Pink', value: '#D946EF' },
+// Expanded color palette for tags
+const tagColors = [
+  { label: 'Red', value: '#ef4444' },
+  { label: 'Rose', value: '#f43f5e' },
+  { label: 'Pink', value: '#ec4899' },
+  { label: 'Fuchsia', value: '#d946ef' },
+  { label: 'Purple', value: '#a855f7' },
+  { label: 'Violet', value: '#8b5cf6' },
+  { label: 'Indigo', value: '#6366f1' },
+  { label: 'Blue', value: '#3b82f6' },
+  { label: 'Sky', value: '#0ea5e9' },
+  { label: 'Cyan', value: '#06b6d4' },
+  { label: 'Teal', value: '#14b8a6' },
+  { label: 'Emerald', value: '#10b981' },
+  { label: 'Green', value: '#22c55e' },
+  { label: 'Lime', value: '#65a30d' },
+  { label: 'Yellow', value: '#eab308' },
+  { label: 'Amber', value: '#f59e0b' },
+  { label: 'Orange', value: '#f97316' },
+  { label: 'Stone', value: '#78716c' },
+  { label: 'Gray', value: '#6b7280' },
+  { label: 'Slate', value: '#64748b' },
 ];
 
 // Available tag colors for selection (keeping as fallback)
@@ -76,7 +89,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
   const [tags, setTags] = useState<Tag[]>(card.tags || []);
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>(card.priority || 'medium');
   const [newTagText, setNewTagText] = useState('');
-  const [selectedColor, setSelectedColor] = useState(rainbowColors[0].value);
+  const [selectedColor, setSelectedColor] = useState(tagColors[0].value);
   const [startDate, setStartDate] = useState<Date | undefined>(card.startDate);
   const [dueDate, setDueDate] = useState<Date | undefined>(card.dueDate);
   const [number, setNumber] = useState<string>(card.number || '');
@@ -90,7 +103,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
     setProjectName(card.projectName || '');
     setTags(card.tags || []);
     setPriority(card.priority || 'medium');
-    setSelectedColor(rainbowColors[0].value);
+    setSelectedColor(tagColors[0].value);
     setStartDate(card.startDate);
     setDueDate(card.dueDate);
     setNumber(card.number || '');
@@ -320,29 +333,44 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
                     
                     <div className="px-2 py-1.5">
                       <p className="text-sm font-medium text-foreground mb-2">Create new tag</p>
-                      <div className="flex items-center gap-2">
-                        <div className="flex flex-wrap gap-1">
-                          {rainbowColors.map((color) => (
-                            <button
-                              key={color.value}
-                              onClick={() => setSelectedColor(color.value)}
-                              className={`w-6 h-6 rounded-full border-2 ${selectedColor === color.value ? 'border-foreground' : 'border-gray-200'}`}
-                              style={{ backgroundColor: color.value }}
-                              title={color.label}
-                            />
-                          ))}
-                        </div>
+                      <div className="space-y-2">
+                        <Select value={selectedColor} onValueChange={setSelectedColor}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue>
+                              <div className="flex items-center gap-2">
+                                <div 
+                                  className="w-4 h-4 rounded-full border" 
+                                  style={{ backgroundColor: selectedColor }}
+                                />
+                                {tagColors.find(c => c.value === selectedColor)?.label}
+                              </div>
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent className="max-h-60 overflow-y-auto">
+                            {tagColors.map((color) => (
+                              <SelectItem key={color.value} value={color.value}>
+                                <div className="flex items-center gap-2">
+                                  <div 
+                                    className="w-4 h-4 rounded-full border" 
+                                    style={{ backgroundColor: color.value }}
+                                  />
+                                  {color.label}
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Button 
+                          type="button" 
+                          onClick={handleAddTag}
+                          disabled={!newTagText.trim()}
+                          size="sm"
+                          className="w-full"
+                        >
+                          <Plus size={14} className="mr-1" />
+                          Add "{newTagText.trim()}"
+                        </Button>
                       </div>
-                      <Button 
-                        type="button" 
-                        onClick={handleAddTag}
-                        disabled={!newTagText.trim()}
-                        size="sm"
-                        className="w-full mt-2"
-                      >
-                        <Plus size={14} className="mr-1" />
-                        Add "{newTagText.trim()}"
-                      </Button>
                     </div>
                   </DropdownMenuContent>
                 </DropdownMenu>
