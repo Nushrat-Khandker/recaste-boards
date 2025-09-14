@@ -249,22 +249,18 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
     };
   }, []);
 
-  // Filter columns based on selected number and tags (show all quarters)
+  // Filter columns based on tags only (show all years and quarters)
   const filteredColumns = React.useMemo(() => {
     return columns.map(column => ({
       ...column,
       cards: column.cards.filter(card => {
-        // Check number filter (backwards compatibility)
-        const matchesNumber = !card.number || card.number === selectedNumber;
-        
-        // Check tag filters - if no tags selected, show all cards; if tags selected, card must have at least one matching tag
+        // If no tags selected, show all cards; if tags selected, card must have at least one matching tag
         const matchesTags = selectedTags.length === 0 || 
           (card.tags && card.tags.some(tag => selectedTags.includes(tag.text)));
-        
-        return matchesNumber && matchesTags;
+        return matchesTags;
       })
     }));
-  }, [columns, selectedNumber, selectedTags]);
+  }, [columns, selectedTags]);
 
   const addCard = async (columnId: string, card: Omit<KanbanCard, 'id'>) => {
     try {
