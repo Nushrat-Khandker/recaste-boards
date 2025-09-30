@@ -238,7 +238,7 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
       // Fetch columns and cards from database
       const [columnsResult, cardsResult] = await Promise.all([
         supabase.from('kanban_columns').select('*').order('position'),
-        supabase.from('kanban_cards').select('*')
+        supabase.from('kanban_cards').select('*').order('created_at', { ascending: false })
       ]);
 
       if (columnsResult.error) throw columnsResult.error;
@@ -376,7 +376,7 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
       setColumns(prevColumns => 
         prevColumns.map(column => 
           column.id === columnId
-            ? { ...column, cards: [...column.cards, newCard] }
+            ? { ...column, cards: [newCard, ...column.cards] }
             : column
         )
       );
@@ -405,12 +405,14 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
 
   const moveCard = async (cardId: string, sourceColumnId: string, destinationColumnId: string) => {
     try {
+      const currentTime = new Date();
+      
       // Update column and set moved_date to current time
       const { error } = await supabase
         .from('kanban_cards')
         .update({ 
           column_id: destinationColumnId,
-          moved_date: new Date().toISOString()
+          moved_date: currentTime.toISOString()
         })
         .eq('id', cardId);
 
@@ -421,6 +423,9 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
       
       if (!card) return;
 
+      // Update the card with the new movedDate
+      const updatedCard = { ...card, movedDate: currentTime };
+
       const updatedSourceColumn = columns.map(column => 
         column.id === sourceColumnId
           ? { ...column, cards: column.cards.filter(c => c.id !== cardId) }
@@ -430,7 +435,7 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
       setColumns(
         updatedSourceColumn.map(column => 
           column.id === destinationColumnId
-            ? { ...column, cards: [...column.cards, card] }
+            ? { ...column, cards: [updatedCard, ...column.cards] }
             : column
         )
       );
