@@ -1,6 +1,17 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { z } from 'zod';
+
+// Validation schemas
+const cardSchema = z.object({
+  title: z.string().trim().min(1, "Title is required").max(200, "Title must be less than 200 characters"),
+  description: z.string().max(2000, "Description must be less than 2000 characters").optional(),
+  projectName: z.string().max(100, "Project name must be less than 100 characters").optional(),
+  priority: z.enum(['low', 'medium', 'high']).optional(),
+  number: z.string().max(50, "Number must be less than 50 characters").optional(),
+  quarter: z.string().max(20, "Quarter must be less than 20 characters").optional(),
+});
 
 export interface Tag {
   text: string;
@@ -315,14 +326,24 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
 
   const addCard = async (columnId: string, card: Omit<KanbanCard, 'id'>) => {
     try {
-      const cardData = {
+      // Validate input
+      const validatedCard = cardSchema.parse({
         title: card.title,
         description: card.description,
-        project_name: card.projectName,
+        projectName: card.projectName,
+        priority: card.priority,
+        number: card.number,
+        quarter: card.quarter,
+      });
+
+      const cardData = {
+        title: validatedCard.title,
+        description: validatedCard.description,
+        project_name: validatedCard.projectName,
         column_id: columnId,
-        priority: card.priority || 'medium',
-        number: card.number || selectedNumber,
-        quarter: card.quarter || selectedQuarter,
+        priority: validatedCard.priority || 'medium',
+        number: validatedCard.number || selectedNumber,
+        quarter: validatedCard.quarter || selectedQuarter,
         tags: card.tags ? JSON.stringify(card.tags) : null,
         start_date: card.startDate?.toISOString(),
         due_date: card.dueDate?.toISOString(),
@@ -363,11 +384,19 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
       });
     } catch (error) {
       console.error('Error adding card:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add card. Please try again.",
-        variant: "destructive",
-      });
+      if (error instanceof z.ZodError) {
+        toast({
+          title: "Validation Error",
+          description: error.errors[0].message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to add card. Please try again.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -426,13 +455,23 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
 
   const updateCard = async (columnId: string, updatedCard: KanbanCard) => {
     try {
-      const cardData = {
+      // Validate input
+      const validatedCard = cardSchema.parse({
         title: updatedCard.title,
         description: updatedCard.description,
-        project_name: updatedCard.projectName,
+        projectName: updatedCard.projectName,
         priority: updatedCard.priority,
         number: updatedCard.number,
         quarter: updatedCard.quarter,
+      });
+
+      const cardData = {
+        title: validatedCard.title,
+        description: validatedCard.description,
+        project_name: validatedCard.projectName,
+        priority: validatedCard.priority,
+        number: validatedCard.number,
+        quarter: validatedCard.quarter,
         tags: updatedCard.tags ? JSON.stringify(updatedCard.tags) : null,
         start_date: updatedCard.startDate?.toISOString(),
         due_date: updatedCard.dueDate?.toISOString(),
@@ -462,6 +501,19 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
       );
     } catch (error) {
       console.error('Error updating card:', error);
+      if (error instanceof z.ZodError) {
+        toast({
+          title: "Validation Error",
+          description: error.errors[0].message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to update card. Please try again.",
+          variant: "destructive",
+        });
+      }
     }
   };
 

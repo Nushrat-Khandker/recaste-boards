@@ -8,6 +8,19 @@ import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useKanban } from '@/context/KanbanContext';
 import { MessageSquare, Send, Plus } from 'lucide-react';
+import { z } from 'zod';
+
+const slackChannelSchema = z.string()
+  .trim()
+  .min(1, "Channel is required")
+  .max(80, "Channel name too long")
+  .regex(/^[#@]?[\w-]+$/, "Invalid channel format");
+
+const cardInputSchema = z.object({
+  title: z.string().trim().min(1, "Title is required").max(200, "Title too long"),
+  description: z.string().max(2000, "Description too long").optional(),
+  column_id: z.string().min(1, "Please select a column"),
+});
 
 const SlackIntegration = () => {
   const [slackChannel, setSlackChannel] = useState('');
@@ -19,23 +32,21 @@ const SlackIntegration = () => {
   const { columns } = useKanban();
 
   const handleCreateCard = async () => {
-    if (!cardTitle.trim() || !selectedColumn) {
-      toast({
-        title: "Error",
-        description: "Please fill in the card title and select a column",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsLoading(true);
     try {
+      // Validate input
+      const validated = cardInputSchema.parse({
+        title: cardTitle,
+        description: cardDescription,
+        column_id: selectedColumn
+      });
+
       const { data, error } = await supabase.functions.invoke('slack-integration', {
         body: {
           action: 'create_card',
-          title: cardTitle,
-          description: cardDescription,
-          column_id: selectedColumn
+          title: validated.title,
+          description: validated.description,
+          column_id: validated.column_id
         }
       });
 
@@ -51,32 +62,34 @@ const SlackIntegration = () => {
       setSelectedColumn('');
     } catch (error) {
       console.error('Error creating card:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create card",
-        variant: "destructive",
-      });
+      if (error instanceof z.ZodError) {
+        toast({
+          title: "Validation Error",
+          description: error.errors[0].message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to create card",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleSendBoardSummary = async () => {
-    if (!slackChannel.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a Slack channel",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsLoading(true);
     try {
+      // Validate input
+      const validatedChannel = slackChannelSchema.parse(slackChannel);
+
       const { data, error } = await supabase.functions.invoke('slack-integration', {
         body: {
           action: 'send_board_summary',
-          channel: slackChannel
+          channel: validatedChannel
         }
       });
 
@@ -88,11 +101,19 @@ const SlackIntegration = () => {
       });
     } catch (error) {
       console.error('Error sending board summary:', error);
-      toast({
-        title: "Error",
-        description: "Failed to send board summary to Slack",
-        variant: "destructive",
-      });
+      if (error instanceof z.ZodError) {
+        toast({
+          title: "Validation Error",
+          description: error.errors[0].message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to send board summary to Slack",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
