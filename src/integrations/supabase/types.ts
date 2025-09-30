@@ -27,6 +27,7 @@ export type Database = {
           format: string | null
           hashtags: string | null
           id: string
+          instagram_account: string | null
           media: string | null
           notes: string | null
           owner: string | null
@@ -50,6 +51,7 @@ export type Database = {
           format?: string | null
           hashtags?: string | null
           id?: string
+          instagram_account?: string | null
           media?: string | null
           notes?: string | null
           owner?: string | null
@@ -73,6 +75,7 @@ export type Database = {
           format?: string | null
           hashtags?: string | null
           id?: string
+          instagram_account?: string | null
           media?: string | null
           notes?: string | null
           owner?: string | null
@@ -85,6 +88,125 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      instagram_accounts: {
+        Row: {
+          access_token: string
+          account_type: string
+          app_id: string | null
+          app_name: string | null
+          app_secret_name: string | null
+          created_at: string
+          follower_count: number | null
+          id: string
+          instagram_user_id: string
+          is_active: boolean | null
+          page_id: string | null
+          profile_picture_url: string | null
+          updated_at: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          access_token: string
+          account_type?: string
+          app_id?: string | null
+          app_name?: string | null
+          app_secret_name?: string | null
+          created_at?: string
+          follower_count?: number | null
+          id?: string
+          instagram_user_id: string
+          is_active?: boolean | null
+          page_id?: string | null
+          profile_picture_url?: string | null
+          updated_at?: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          access_token?: string
+          account_type?: string
+          app_id?: string | null
+          app_name?: string | null
+          app_secret_name?: string | null
+          created_at?: string
+          follower_count?: number | null
+          id?: string
+          instagram_user_id?: string
+          is_active?: boolean | null
+          page_id?: string | null
+          profile_picture_url?: string | null
+          updated_at?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      instagram_posts: {
+        Row: {
+          caption: string | null
+          content_item_id: string
+          created_at: string
+          engagement: Json | null
+          error_message: string | null
+          hashtags: string[] | null
+          id: string
+          instagram_account_id: string
+          instagram_post_id: string | null
+          media_type: string
+          media_urls: string[] | null
+          post_type: string
+          posted_at: string | null
+          scheduled_for: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          caption?: string | null
+          content_item_id: string
+          created_at?: string
+          engagement?: Json | null
+          error_message?: string | null
+          hashtags?: string[] | null
+          id?: string
+          instagram_account_id: string
+          instagram_post_id?: string | null
+          media_type?: string
+          media_urls?: string[] | null
+          post_type?: string
+          posted_at?: string | null
+          scheduled_for?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          caption?: string | null
+          content_item_id?: string
+          created_at?: string
+          engagement?: Json | null
+          error_message?: string | null
+          hashtags?: string[] | null
+          id?: string
+          instagram_account_id?: string
+          instagram_post_id?: string | null
+          media_type?: string
+          media_urls?: string[] | null
+          post_type?: string
+          posted_at?: string | null
+          scheduled_for?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "instagram_posts_instagram_account_id_fkey"
+            columns: ["instagram_account_id"]
+            isOneToOne: false
+            referencedRelation: "instagram_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       kanban_cards: {
         Row: {
@@ -152,6 +274,42 @@ export type Database = {
           id?: string
           position?: number
           title?: string
+        }
+        Relationships: []
+      }
+      make_webhooks: {
+        Row: {
+          created_at: string
+          failure_count: number
+          id: string
+          is_active: boolean
+          last_failure_at: string | null
+          last_success_at: string | null
+          updated_at: string
+          user_id: string
+          webhook_url: string
+        }
+        Insert: {
+          created_at?: string
+          failure_count?: number
+          id?: string
+          is_active?: boolean
+          last_failure_at?: string | null
+          last_success_at?: string | null
+          updated_at?: string
+          user_id: string
+          webhook_url: string
+        }
+        Update: {
+          created_at?: string
+          failure_count?: number
+          id?: string
+          is_active?: boolean
+          last_failure_at?: string | null
+          last_success_at?: string | null
+          updated_at?: string
+          user_id?: string
+          webhook_url?: string
         }
         Relationships: []
       }
@@ -298,6 +456,42 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      zapier_webhooks: {
+        Row: {
+          created_at: string
+          failure_count: number
+          id: string
+          is_active: boolean
+          last_failure_at: string | null
+          last_success_at: string | null
+          updated_at: string
+          user_id: string
+          webhook_url: string
+        }
+        Insert: {
+          created_at?: string
+          failure_count?: number
+          id?: string
+          is_active?: boolean
+          last_failure_at?: string | null
+          last_success_at?: string | null
+          updated_at?: string
+          user_id: string
+          webhook_url: string
+        }
+        Update: {
+          created_at?: string
+          failure_count?: number
+          id?: string
+          is_active?: boolean
+          last_failure_at?: string | null
+          last_success_at?: string | null
+          updated_at?: string
+          user_id?: string
+          webhook_url?: string
         }
         Relationships: []
       }

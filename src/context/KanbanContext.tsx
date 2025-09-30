@@ -365,7 +365,7 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
       console.error('Error adding card:', error);
       toast({
         title: "Error",
-        description: "Failed to add card. Please make sure you're logged in.",
+        description: "Failed to add card. Please try again.",
         variant: "destructive",
       });
     }
