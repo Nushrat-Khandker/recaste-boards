@@ -30,6 +30,7 @@ export interface KanbanCard {
   quarter?: string; // Added quarter field
   startDate?: Date; // New field for start date
   dueDate?: Date;   // New field for due date
+  movedDate?: Date; // Automatically set when card is moved between columns
 }
 
 export interface KanbanColumn {
@@ -209,6 +210,7 @@ const convertSupabaseDataToColumns = (cards: any[], columns: any[]): KanbanColum
         quarter: card.quarter,
         startDate: card.start_date ? new Date(card.start_date) : undefined,
         dueDate: card.due_date ? new Date(card.due_date) : undefined,
+        movedDate: card.moved_date ? new Date(card.moved_date) : undefined,
       }))
   }));
 };
@@ -368,6 +370,7 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
         quarter: data.quarter,
         startDate: data.start_date ? new Date(data.start_date) : undefined,
         dueDate: data.due_date ? new Date(data.due_date) : undefined,
+        movedDate: data.moved_date ? new Date(data.moved_date) : undefined,
       };
 
       setColumns(prevColumns => 
@@ -402,9 +405,13 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
 
   const moveCard = async (cardId: string, sourceColumnId: string, destinationColumnId: string) => {
     try {
+      // Update column and set moved_date to current time
       const { error } = await supabase
         .from('kanban_cards')
-        .update({ column_id: destinationColumnId })
+        .update({ 
+          column_id: destinationColumnId,
+          moved_date: new Date().toISOString()
+        })
         .eq('id', cardId);
 
       if (error) throw error;

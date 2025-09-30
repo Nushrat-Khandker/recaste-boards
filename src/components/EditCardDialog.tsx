@@ -92,6 +92,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
   const [selectedColor, setSelectedColor] = useState(tagColors[0].value);
   const [startDate, setStartDate] = useState<Date | undefined>(card.startDate);
   const [dueDate, setDueDate] = useState<Date | undefined>(card.dueDate);
+  const [movedDate] = useState<Date | undefined>(card.movedDate);
   const [isTagDropdownOpen, setIsTagDropdownOpen] = useState(false);
 
   // Reset form when card changes
@@ -153,7 +154,8 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
       tags: tags.length > 0 ? tags : undefined,
       priority: priority,
       startDate,
-      dueDate
+      dueDate,
+      movedDate: card.movedDate // Preserve movedDate when editing
     };
     
     console.log('Saving card with projectName:', projectName.trim() || undefined);
@@ -252,7 +254,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
           {/* Date picker section */}
           <div className="grid gap-2">
             <label className="text-sm font-medium">Dates</label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               <DatePicker 
                 date={startDate} 
                 setDate={setStartDate} 
@@ -263,7 +265,16 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
                 setDate={setDueDate} 
                 label="Due date" 
               />
+              <DatePicker 
+                date={movedDate} 
+                setDate={() => {}} 
+                label="Moved date"
+                disabled={true}
+              />
             </div>
+            {movedDate && (
+              <p className="text-xs text-muted-foreground">Moved date is automatically set when card is moved between columns</p>
+            )}
           </div>
           
           <Separator />

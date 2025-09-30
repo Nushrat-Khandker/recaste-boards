@@ -115,6 +115,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
             quarter={card.quarter}
             startDate={card.startDate}
             dueDate={card.dueDate}
+            movedDate={card.movedDate}
             onDelete={() => deleteCard(id, card.id)}
             onDragStart={onDragStart}
             columnId={id}

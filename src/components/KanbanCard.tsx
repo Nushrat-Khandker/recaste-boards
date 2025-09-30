@@ -18,6 +18,7 @@ interface KanbanCardProps {
   quarter?: string;
   startDate?: Date;
   dueDate?: Date;
+  movedDate?: Date;
   onDelete: () => void;
   onDragStart: (e: React.DragEvent, cardId: string, columnId: string) => void;
   columnId: string;
@@ -63,6 +64,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
   quarter,
   startDate,
   dueDate,
+  movedDate,
   onDelete,
   onDragStart,
   columnId
@@ -177,7 +179,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
       </Card>
 
       <EditCardDialog
-        card={{ id, title, description, projectName, tags, priority, number, quarter, startDate, dueDate }}
+        card={{ id, title, description, projectName, tags, priority, number, quarter, startDate, dueDate, movedDate }}
         columnId={columnId}
         isOpen={isEditDialogOpen}
         onClose={() => setIsEditDialogOpen(false)}

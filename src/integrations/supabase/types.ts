@@ -215,6 +215,7 @@ export type Database = {
           description: string | null
           due_date: string | null
           id: string
+          moved_date: string | null
           number: string | null
           priority: string | null
           project_name: string | null
@@ -230,6 +231,7 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           id?: string
+          moved_date?: string | null
           number?: string | null
           priority?: string | null
           project_name?: string | null
@@ -245,6 +247,7 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           id?: string
+          moved_date?: string | null
           number?: string | null
           priority?: string | null
           project_name?: string | null
