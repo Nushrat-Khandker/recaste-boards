@@ -83,7 +83,7 @@ const Header: React.FC = () => {
                   </Button>
                 </Badge>
               ) : (
-                <Select value={selectedProject || ""} onValueChange={(value) => setSelectedProject(value || null)}>
+                <Select value={selectedProject || "all"} onValueChange={(value) => setSelectedProject(value === "all" ? null : value)}>
                   <SelectTrigger className="w-[180px]">
                     <div className="flex items-center gap-2">
                       <FolderKanban className="h-4 w-4" />
@@ -91,7 +91,7 @@ const Header: React.FC = () => {
                     </div>
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Projects</SelectItem>
+                    <SelectItem value="all">All Projects</SelectItem>
                     {allProjects.map((project) => (
                       <SelectItem key={project} value={project}>
                         {project}
