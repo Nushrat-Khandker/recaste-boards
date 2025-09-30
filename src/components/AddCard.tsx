@@ -21,9 +21,7 @@ const AddCard: React.FC<AddCardProps> = ({ columnId, onAddCard, variant = 'defau
     description: '',
     projectName: '',
     tags: [],
-    priority: 'medium',
-    number: '',
-    quarter: ''
+    priority: 'medium'
   };
 
   const handleSave = (columnId: string, updatedCard: KanbanCard) => {

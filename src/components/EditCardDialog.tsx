@@ -92,8 +92,6 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
   const [selectedColor, setSelectedColor] = useState(tagColors[0].value);
   const [startDate, setStartDate] = useState<Date | undefined>(card.startDate);
   const [dueDate, setDueDate] = useState<Date | undefined>(card.dueDate);
-  const [number, setNumber] = useState<string>(card.number || '');
-  const [quarter, setQuarter] = useState<string>(card.quarter || '');
   const [isTagDropdownOpen, setIsTagDropdownOpen] = useState(false);
 
   // Reset form when card changes
@@ -106,8 +104,6 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
     setSelectedColor(tagColors[0].value);
     setStartDate(card.startDate);
     setDueDate(card.dueDate);
-    setNumber(card.number || '');
-    setQuarter(card.quarter || '');
   }, [card, isOpen]);
 
   const handleAddTag = () => {
@@ -156,8 +152,6 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
       projectName: projectName.trim() || undefined,
       tags: tags.length > 0 ? tags : undefined,
       priority: priority,
-      number: number.trim() || undefined,
-      quarter: quarter.trim() || undefined,
       startDate,
       dueDate
     };
@@ -394,33 +388,6 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
                 <SelectItem value="high">High</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <div className="grid gap-2">
-              <label htmlFor="number" className="text-sm font-medium">Year</label>
-              <YearWheel 
-                value={number} 
-                onValueChange={setNumber}
-                placeholder="Select year"
-                className="w-full"
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <label htmlFor="quarter" className="text-sm font-medium">Quarter</label>
-              <Select value={quarter} onValueChange={setQuarter}>
-                <SelectTrigger id="quarter">
-                  <SelectValue placeholder="Select quarter" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Q1">Q1</SelectItem>
-                  <SelectItem value="Q2">Q2</SelectItem>
-                  <SelectItem value="Q3">Q3</SelectItem>
-                  <SelectItem value="Q4">Q4</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
           </div>
         </div>
         
