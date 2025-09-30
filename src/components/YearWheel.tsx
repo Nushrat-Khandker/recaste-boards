@@ -14,7 +14,7 @@ export function YearWheel({ value, onValueChange, placeholder = "Select year", c
 
   return (
     <Select value={value} onValueChange={onValueChange}>
-      <SelectTrigger className={className}>
+      <SelectTrigger className={`${className} cursor-default`}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent className="max-h-[200px]">

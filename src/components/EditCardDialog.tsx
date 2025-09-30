@@ -82,7 +82,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
   onSave,
   isNew = false
 }) => {
-  const { getAllTags } = useKanban();
+  const { getAllTags, allProjects } = useKanban();
   const [title, setTitle] = useState(card.title);
   const [description, setDescription] = useState(card.description || '');
   const [projectName, setProjectName] = useState(card.projectName || '');
@@ -230,13 +230,37 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
           
           <div className="grid gap-2">
             <label htmlFor="projectName" className="text-sm font-medium">Project Name</label>
-            <Input
-              id="projectName"
-              value={projectName}
-              onChange={(e) => setProjectName(e.target.value)}
-              onKeyDown={handleInputKeyDown}
-              placeholder="Enter project name (optional)"
-            />
+            <div className="flex gap-2">
+              <Input
+                id="projectName"
+                value={projectName}
+                onChange={(e) => setProjectName(e.target.value)}
+                onKeyDown={handleInputKeyDown}
+                placeholder="Select or enter project name"
+                className="flex-1"
+                list="projects-list"
+              />
+              <datalist id="projects-list">
+                {allProjects.map((project) => (
+                  <option key={project} value={project} />
+                ))}
+              </datalist>
+              {allProjects.length > 0 && (
+                <Select value={projectName || "none"} onValueChange={(value) => value !== "none" && setProjectName(value)}>
+                  <SelectTrigger className="w-[40px] px-2">
+                    <Plus className="h-4 w-4" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {allProjects.map((project) => (
+                      <SelectItem key={project} value={project}>
+                        {project}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">Type to create new or select existing project</p>
           </div>
           
           <div className="grid gap-2">

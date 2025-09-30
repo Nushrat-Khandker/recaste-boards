@@ -10,16 +10,14 @@ import { useKanban } from '../context/KanbanContext';
 
 import { YearWheel } from './YearWheel';
 import TagFilter from './TagFilter';
+import ProjectFilter from './ProjectFilter';
 
 const Header: React.FC = () => {
   const { 
     selectedNumber, 
     setSelectedNumber, 
     selectedQuarter, 
-    setSelectedQuarter,
-    selectedProject,
-    setSelectedProject,
-    allProjects
+    setSelectedQuarter
   } = useKanban();
   
 
@@ -53,7 +51,7 @@ const Header: React.FC = () => {
           />
           
           <Select value={selectedQuarter} onValueChange={setSelectedQuarter}>
-            <SelectTrigger className="w-20">
+            <SelectTrigger className="w-20 cursor-default">
               <SelectValue placeholder="Select" />
             </SelectTrigger>
             <SelectContent>
@@ -65,43 +63,8 @@ const Header: React.FC = () => {
           </Select>
 
           <TagFilter />
-
-          {/* Project Filter */}
-          {allProjects.length > 0 && (
-            <div className="flex items-center gap-2">
-              {selectedProject ? (
-                <Badge variant="secondary" className="gap-2 px-3 py-1">
-                  <FolderKanban className="h-3 w-3" />
-                  {selectedProject}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-4 w-4 p-0 hover:bg-transparent ml-1"
-                    onClick={() => setSelectedProject(null)}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                </Badge>
-              ) : (
-                <Select value={selectedProject || "all"} onValueChange={(value) => setSelectedProject(value === "all" ? null : value)}>
-                  <SelectTrigger className="w-[180px]">
-                    <div className="flex items-center gap-2">
-                      <FolderKanban className="h-4 w-4" />
-                      <SelectValue placeholder="All Projects" />
-                    </div>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Projects</SelectItem>
-                    {allProjects.map((project) => (
-                      <SelectItem key={project} value={project}>
-                        {project}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            </div>
-          )}
+          
+          <ProjectFilter />
         </div>
       </div>
     </header>
