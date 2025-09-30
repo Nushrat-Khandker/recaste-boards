@@ -2,9 +2,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu";
-import { Tag } from 'lucide-react';
+import { Tag, FolderKanban, X } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { useKanban } from '../context/KanbanContext';
 
 import { YearWheel } from './YearWheel';
@@ -15,7 +16,10 @@ const Header: React.FC = () => {
     selectedNumber, 
     setSelectedNumber, 
     selectedQuarter, 
-    setSelectedQuarter 
+    setSelectedQuarter,
+    selectedProject,
+    setSelectedProject,
+    allProjects
   } = useKanban();
   
 
@@ -61,6 +65,43 @@ const Header: React.FC = () => {
           </Select>
 
           <TagFilter />
+
+          {/* Project Filter */}
+          {allProjects.length > 0 && (
+            <div className="flex items-center gap-2">
+              {selectedProject ? (
+                <Badge variant="secondary" className="gap-2 px-3 py-1">
+                  <FolderKanban className="h-3 w-3" />
+                  {selectedProject}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-4 w-4 p-0 hover:bg-transparent ml-1"
+                    onClick={() => setSelectedProject(null)}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </Badge>
+              ) : (
+                <Select value={selectedProject || ""} onValueChange={(value) => setSelectedProject(value || null)}>
+                  <SelectTrigger className="w-[180px]">
+                    <div className="flex items-center gap-2">
+                      <FolderKanban className="h-4 w-4" />
+                      <SelectValue placeholder="All Projects" />
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">All Projects</SelectItem>
+                    {allProjects.map((project) => (
+                      <SelectItem key={project} value={project}>
+                        {project}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </header>

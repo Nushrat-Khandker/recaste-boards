@@ -43,6 +43,9 @@ interface KanbanContextType {
   setSelectedQuarter: (quarter: string) => void;
   selectedTags: string[];
   setSelectedTags: (tags: string[]) => void;
+  selectedProject: string | null;
+  setSelectedProject: (project: string | null) => void;
+  allProjects: string[];
   clearAllFilters: () => void;
   filteredColumns: KanbanColumn[];
   loading: boolean;
@@ -154,6 +157,9 @@ export const KanbanContext = createContext<KanbanContextType>({
   setSelectedQuarter: () => {},
   selectedTags: [],
   setSelectedTags: () => {},
+  selectedProject: null,
+  setSelectedProject: () => {},
+  allProjects: [],
   clearAllFilters: () => {},
   filteredColumns: [],
   loading: false
@@ -204,6 +210,9 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
     return localStorage.getItem('selectedQuarter') || 'Q3';
   });
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedProject, setSelectedProject] = useState<string | null>(() => {
+    return localStorage.getItem('selectedProject') || null;
+  });
   const [loading, setLoading] = useState<boolean>(true);
 
   // Load data from Supabase database
@@ -241,6 +250,15 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
     localStorage.setItem('selectedQuarter', selectedQuarter);
   }, [selectedQuarter]);
 
+  // Persist selectedProject to localStorage
+  useEffect(() => {
+    if (selectedProject) {
+      localStorage.setItem('selectedProject', selectedProject);
+    } else {
+      localStorage.removeItem('selectedProject');
+    }
+  }, [selectedProject]);
+
   // Load data on mount
   useEffect(() => {
     loadData();
@@ -263,7 +281,7 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
     };
   }, []);
 
-  // Filter columns based on tags only (show all years and quarters)
+  // Filter columns based on tags and project
   const filteredColumns = React.useMemo(() => {
     return columns.map(column => ({
       ...column,
@@ -271,10 +289,27 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
         // If no tags selected, show all cards; if tags selected, card must have at least one matching tag
         const matchesTags = selectedTags.length === 0 || 
           (card.tags && card.tags.some(tag => selectedTags.includes(tag.text)));
-        return matchesTags;
+        
+        // If no project selected, show all cards; if project selected, card must match project
+        const matchesProject = !selectedProject || card.projectName === selectedProject;
+        
+        return matchesTags && matchesProject;
       })
     }));
-  }, [columns, selectedTags]);
+  }, [columns, selectedTags, selectedProject]);
+
+  // Get all unique projects from cards
+  const allProjects = React.useMemo(() => {
+    const projects = new Set<string>();
+    columns.forEach(column => {
+      column.cards.forEach(card => {
+        if (card.projectName) {
+          projects.add(card.projectName);
+        }
+      });
+    });
+    return Array.from(projects).sort();
+  }, [columns]);
 
   const addCard = async (columnId: string, card: Omit<KanbanCard, 'id'>) => {
     try {
@@ -511,6 +546,7 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
 
   const clearAllFilters = (): void => {
     setSelectedTags([]);
+    setSelectedProject(null);
   };
 
     return (
@@ -531,6 +567,9 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
       setSelectedQuarter,
       selectedTags,
       setSelectedTags,
+      selectedProject,
+      setSelectedProject,
+      allProjects,
       clearAllFilters,
       filteredColumns,
       loading
