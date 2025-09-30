@@ -22,7 +22,7 @@ const Header: React.FC = () => {
   
 
   return (
-    <header className="border-b">
+    <header className="sticky top-0 z-20 bg-background border-b">
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
         <div className="flex items-center">
           <NavigationMenu>
