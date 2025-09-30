@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 export interface Tag {
   text: string;
@@ -202,6 +203,7 @@ const convertSupabaseDataToColumns = (cards: any[], columns: any[]): KanbanColum
 };
 
 export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) => {
+  const { toast } = useToast();
   const [columns, setColumns] = useState<KanbanColumn[]>([]);
   const [selectedNumber, setSelectedNumber] = useState<string>(() => {
     return localStorage.getItem('selectedNumber') || '1446';
@@ -354,8 +356,18 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
             : column
         )
       );
+
+      toast({
+        title: "Success",
+        description: "Card added successfully",
+      });
     } catch (error) {
       console.error('Error adding card:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add card. Please make sure you're logged in.",
+        variant: "destructive",
+      });
     }
   };
 
