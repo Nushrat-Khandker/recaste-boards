@@ -11,6 +11,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { DatePicker } from './DatePicker';
 import { YearWheel } from './YearWheel';
 import { Separator } from "@/components/ui/separator";
+import { format } from "date-fns";
 
 interface EditCardDialogProps {
   card: KanbanCard;
@@ -289,16 +290,16 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
                 setDate={setDueDate} 
                 label="Due date" 
               />
-              <DatePicker 
-                date={movedDate} 
-                setDate={() => {}} 
-                label="Moved date"
-                disabled={true}
-              />
-            </div>
             {movedDate && (
-              <p className="text-xs text-muted-foreground">Moved date is automatically set when card is moved between columns</p>
-            )}
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">Moved date</label>
+                  <div className="text-sm text-muted-foreground">
+                    {format(movedDate, "dd/MM/yy")}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Automatically set when card is moved between columns</p>
+                </div>
+              )}
+            </div>
           </div>
           
           <Separator />
