@@ -32,12 +32,6 @@ const Header: React.FC = () => {
                   re<span className="text-[#FE446F]">*</span>caste
                 </Link>
               </NavigationMenuItem>
-              <NavigationMenuItem>
-                <Link to="/tags" className={navigationMenuTriggerStyle()}>
-                  <Tag className="mr-2 h-4 w-4" />
-                  Tags
-                </Link>
-              </NavigationMenuItem>
             </NavigationMenuList>
           </NavigationMenu>
         </div>

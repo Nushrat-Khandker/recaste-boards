@@ -105,12 +105,6 @@ const KanbanBoard: React.FC = () => {
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold">Kanban Board</h1>
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="bg-background">
-              {selectedNumber}
-            </Badge>
-            <Badge variant="outline" className="bg-background">
-              {selectedQuarter}
-            </Badge>
             <Button 
               variant="outline" 
               size="sm"
