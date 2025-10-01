@@ -296,7 +296,6 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
                   <div className="text-sm text-muted-foreground">
                     {format(movedDate, "dd/MM/yy")}
                   </div>
-                  <p className="text-xs text-muted-foreground">Automatically set when card is moved between columns</p>
                 </div>
               )}
             </div>
