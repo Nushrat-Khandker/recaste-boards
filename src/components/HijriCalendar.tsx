@@ -43,52 +43,100 @@ const SOLAR_EVENT_EMOJIS: Record<string, string> = {
 };
 
 export function HijriCalendar() {
-  const [currentHijriMonth, setCurrentHijriMonth] = useState(() => {
-    const today = new Date();
-    const hijri = gregorianToHijri(today);
-    return { year: hijri.year, month: hijri.month };
-  });
+  const [newMoons, setNewMoons] = useState<string[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [monthRange, setMonthRange] = useState<{ start: Date; end: Date } | null>(null);
+  const [hijriTitle, setHijriTitle] = useState<{ year: number; monthName: string }>({ year: 1447, monthName: getHijriMonthName(1) });
 
   const [moonPhases, setMoonPhases] = useState<Map<string, string>>(new Map());
   const [solarEvents, setSolarEvents] = useState<Map<string, string>>(new Map());
   const [cards, setCards] = useState<KanbanCard[]>([]);
 
   useEffect(() => {
-    fetchAstronomicalData();
+    loadNewMoons();
     fetchCards();
-  }, [currentHijriMonth]);
+  }, []);
 
-  const fetchAstronomicalData = async () => {
+  // Anchor new moon for 1 Muharram 1447 AH
+  const ANCHOR_NEW_MOON = '2024-06-25';
+
+  function addDays(date: Date, days: number) {
+    const d = new Date(date);
+    d.setDate(d.getDate() + days);
+    return d;
+  }
+
+  function computeHijriFromIndex(index: number) {
+    const anchorIdx = newMoons.findIndex((d) => d === ANCHOR_NEW_MOON);
+    if (anchorIdx === -1) {
+      return { year: 1447, month: 1 };
+    }
+    const offset = index - anchorIdx;
+    const month = ((1 - 1 + offset) % 12 + 12) % 12 + 1; // 1..12
+    const year = 1447 + Math.floor((1 - 1 + offset) / 12);
+    return { year, month };
+  }
+
+  const loadNewMoons = async () => {
     try {
-      // Get first and last day of the Hijri month in Gregorian
-      const firstDay = hijriToGregorian(currentHijriMonth.year, currentHijriMonth.month, 1);
-      const lastDay = hijriToGregorian(currentHijriMonth.year, currentHijriMonth.month, 30);
+      const { data, error } = await supabase
+        .from('moon_phases')
+        .select('date, phase')
+        .eq('phase', 'new_moon')
+        .gte('date', '2024-01-01')
+        .lte('date', '2028-12-31')
+        .order('date', { ascending: true });
 
-      // Fetch moon phases
+      if (error) throw error;
+
+      const dates = (data || []).map((r: any) => r.date as string);
+      if (!dates.length) return;
+      setNewMoons(dates);
+
+      const todayStr = format(new Date(), 'yyyy-MM-dd');
+      let idx = dates.findIndex((d) => d > todayStr) - 1;
+      if (idx < 0) idx = dates.length - 1;
+
+      const start = new Date(dates[idx]);
+      const end = idx + 1 < dates.length ? new Date(dates[idx + 1]) : addDays(start, 30);
+      setMonthRange({ start, end });
+      setCurrentIndex(idx);
+
+      const { year, month } = computeHijriFromIndex(idx);
+      setHijriTitle({ year, monthName: getHijriMonthName(month) });
+
+      await fetchAstronomicalData(start, end);
+    } catch (e) {
+      console.error('Error loading new moons:', e);
+    }
+  };
+
+  const fetchAstronomicalData = async (start: Date, end: Date) => {
+    try {
+      const startStr = format(start, 'yyyy-MM-dd');
+      const endStr = format(end, 'yyyy-MM-dd');
+
       const { data: moonData } = await supabase
         .from('moon_phases')
         .select('date, phase')
-        .gte('date', firstDay.toISOString().split('T')[0])
-        .lte('date', lastDay.toISOString().split('T')[0]);
+        .gte('date', startStr)
+        .lt('date', endStr);
 
-      // Fetch solar events
       const { data: solarData } = await supabase
         .from('solar_events')
         .select('date, type')
-        .gte('date', firstDay.toISOString().split('T')[0])
-        .lte('date', lastDay.toISOString().split('T')[0]);
+        .gte('date', startStr)
+        .lt('date', endStr);
 
-      // Process moon phases
       const moonMap = new Map<string, string>();
-      moonData?.forEach((item) => {
+      moonData?.forEach((item: any) => {
         const emoji = MOON_PHASE_EMOJIS[item.phase] || '';
         if (emoji) moonMap.set(item.date, emoji);
       });
       setMoonPhases(moonMap);
 
-      // Process solar events
       const solarMap = new Map<string, string>();
-      solarData?.forEach((item) => {
+      solarData?.forEach((item: any) => {
         const emoji = SOLAR_EVENT_EMOJIS[item.type] || '';
         if (emoji) solarMap.set(item.date, emoji);
       });
@@ -123,39 +171,26 @@ export function HijriCalendar() {
   };
 
   const getDaysInMonth = () => {
-    const days = [];
-    // Hijri months are typically 29 or 30 days
-    // We'll generate 30 days and check which ones are valid
-    for (let day = 1; day <= 30; day++) {
-      const gregorianDate = hijriToGregorian(currentHijriMonth.year, currentHijriMonth.month, day);
-      const hijriCheck = gregorianToHijri(gregorianDate);
-      
-      // Only include days that belong to this Hijri month
-      if (hijriCheck.month === currentHijriMonth.month && hijriCheck.year === currentHijriMonth.year) {
-        days.push({
-          hijriDay: day,
-          gregorianDate,
-          weekday: gregorianDate.getDay()
-        });
-      }
+    const days: { hijriDay: number; gregorianDate: Date; weekday: number }[] = [];
+    if (!monthRange) return days;
+    for (let d = new Date(monthRange.start), i = 1; d < monthRange.end; d.setDate(d.getDate() + 1), i++) {
+      const g = new Date(d);
+      days.push({ hijriDay: i, gregorianDate: g, weekday: g.getDay() });
     }
     return days;
   };
 
   const navigateMonth = (direction: 'prev' | 'next') => {
-    setCurrentHijriMonth(prev => {
-      let newMonth = prev.month + (direction === 'next' ? 1 : -1);
-      let newYear = prev.year;
-
-      if (newMonth > 12) {
-        newMonth = 1;
-        newYear++;
-      } else if (newMonth < 1) {
-        newMonth = 12;
-        newYear--;
-      }
-
-      return { year: newYear, month: newMonth };
+    setCurrentIndex((prev) => {
+      const newIndex = prev + (direction === 'next' ? 1 : -1);
+      if (newIndex < 0 || newIndex >= newMoons.length) return prev;
+      const start = new Date(newMoons[newIndex]);
+      const end = newIndex + 1 < newMoons.length ? new Date(newMoons[newIndex + 1]) : addDays(start, 30);
+      setMonthRange({ start, end });
+      const { year, month } = computeHijriFromIndex(newIndex);
+      setHijriTitle({ year, monthName: getHijriMonthName(month) });
+      fetchAstronomicalData(start, end);
+      return newIndex;
     });
   };
 
@@ -175,7 +210,7 @@ export function HijriCalendar() {
         </Button>
         
         <h2 className="text-2xl font-bold">
-          {getHijriMonthName(currentHijriMonth.month)} {currentHijriMonth.year}
+          {hijriTitle.monthName} {hijriTitle.year}
         </h2>
         
         <Button variant="outline" size="sm" onClick={() => navigateMonth('next')}>
