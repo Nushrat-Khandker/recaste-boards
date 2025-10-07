@@ -11,11 +11,11 @@ import { supabase } from "@/integrations/supabase/client";
 
 type CalendarProps = React.ComponentProps<typeof DayPicker>;
 // Moon phase emoji mapping
-const MOON_PHASE_EMOJIS = {
-  new: '🌑',             // New Moon
-  first_quarter: '🌓',   // Right half-lit
-  full: '🌕',            // Full Moon
-  last_quarter: '🌗',    // Left half-lit
+const MOON_PHASE_EMOJIS: Record<string, string> = {
+  'new_moon': '🌑',       // New Moon
+  'first_quarter': '🌓',  // First Quarter
+  'full_moon': '🌕',      // Full Moon
+  'last_quarter': '🌗',   // Last Quarter
 };
 
 // Solar event emoji mapping
