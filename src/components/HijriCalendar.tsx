@@ -5,13 +5,14 @@ import { format } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-
+import { useKanban } from '@/context/KanbanContext';
 interface KanbanCard {
   id: string;
   title: string;
   due_date?: string;
   start_date?: string;
   tags?: any;
+  project_name?: string;
 }
 
 interface MoonPhaseData {
@@ -43,6 +44,7 @@ const SOLAR_EVENT_EMOJIS: Record<string, string> = {
 };
 
 export function HijriCalendar() {
+  const { selectedTags, selectedProject } = useKanban();
   const [newMoons, setNewMoons] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [monthRange, setMonthRange] = useState<{ start: Date; end: Date } | null>(null);
@@ -150,7 +152,7 @@ export function HijriCalendar() {
     try {
       const { data } = await supabase
         .from('kanban_cards')
-        .select('id, title, due_date, start_date, tags');
+        .select('id, title, due_date, start_date, tags, project_name');
       
       if (data) {
         setCards(data);
@@ -160,9 +162,37 @@ export function HijriCalendar() {
     }
   };
 
+  const filterCards = (cards: KanbanCard[]) => {
+    return cards.filter(card => {
+      // Filter by project
+      if (selectedProject && card.project_name !== selectedProject) {
+        return false;
+      }
+
+      // Filter by tags
+      if (selectedTags.length > 0) {
+        const cardTags = Array.isArray(card.tags) 
+          ? card.tags.map((t: any) => typeof t === 'string' ? t : t.text)
+          : [];
+        
+        const hasMatchingTag = selectedTags.some(selectedTag => 
+          cardTags.includes(selectedTag)
+        );
+        
+        if (!hasMatchingTag) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  };
+
   const getCardsForDate = (gregorianDate: Date) => {
     const dateKey = format(gregorianDate, 'yyyy-MM-dd');
-    return cards.filter(card => {
+    const filteredCards = filterCards(cards);
+    
+    return filteredCards.filter(card => {
       const cardDate = card.due_date || card.start_date;
       if (!cardDate) return false;
       const cardDateKey = format(new Date(cardDate), 'yyyy-MM-dd');
