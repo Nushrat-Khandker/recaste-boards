@@ -254,9 +254,9 @@ export function HijriCalendar() {
             <div
               key={hijriDay}
               className={cn(
-                "aspect-square border rounded-lg p-2 relative flex flex-col overflow-hidden",
-                weekday === 5 && "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800",
-                weekday === 6 && "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800",
+                "aspect-square border-2 border-border/40 rounded-lg p-2 relative flex flex-col overflow-hidden",
+                weekday === 5 && "bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700",
+                weekday === 6 && "bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700",
                 isToday && "ring-2 ring-primary"
               )}
             >
