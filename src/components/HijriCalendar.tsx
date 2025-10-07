@@ -316,8 +316,8 @@ export function HijriCalendar() {
                     className={cn(
                       "text-xs p-1 rounded border truncate",
                       type === 'start' 
-                        ? "bg-blue-100 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700" 
-                        : "bg-green-100 dark:bg-green-900/30 border-green-300 dark:border-green-700"
+                        ? "bg-purple-100 dark:bg-purple-900/30 border-purple-300 dark:border-purple-700" 
+                        : "bg-amber-100 dark:bg-amber-900/30 border-amber-300 dark:border-amber-700"
                     )}
                     title={`${card.title} (${type === 'start' ? 'Start' : 'Due'})`}
                   >
