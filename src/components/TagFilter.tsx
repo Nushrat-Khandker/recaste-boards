@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Check, X, Plus } from 'lucide-react';
+import { Check, X, Plus, Tag as TagIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -58,7 +58,8 @@ const TagFilter: React.FC = () => {
     <div className="flex items-center gap-2">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="sm" className="h-9">
+          <Button variant="outline" size="sm" className="h-9 gap-2">
+            <TagIcon className="h-4 w-4" />
             Tags ({selectedTags.length})
           </Button>
         </DropdownMenuTrigger>
