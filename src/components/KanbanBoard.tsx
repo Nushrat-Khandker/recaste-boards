@@ -4,10 +4,11 @@ import KanbanColumn from './KanbanColumn';
 import { useKanban } from '../context/KanbanContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare, Calendar as CalendarIcon, LayoutGrid } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
+import { HijriCalendar } from './HijriCalendar';
 
 const KanbanBoard: React.FC = () => {
   const { filteredColumns, selectedNumber, selectedQuarter, moveCard, reorderCard, loading } = useKanban();
@@ -16,6 +17,7 @@ const KanbanBoard: React.FC = () => {
   const [showSlackInput, setShowSlackInput] = useState(false);
   const [slackChannel, setSlackChannel] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [viewMode, setViewMode] = useState<'board' | 'calendar'>('board');
   const { toast } = useToast();
 
   if (loading) {
@@ -103,16 +105,36 @@ const KanbanBoard: React.FC = () => {
       {/* Fixed Header */}
       <div className="sticky top-[57px] z-10 bg-background backdrop-blur-md border-b px-6 py-4">
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Kanban Board</h1>
+          <h1 className="text-2xl font-bold">
+            {viewMode === 'board' ? 'Kanban Board' : 'Calendar View'}
+          </h1>
           <div className="flex items-center gap-2">
             <Button 
-              variant="outline" 
+              variant={viewMode === 'board' ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setShowSlackInput(!showSlackInput)}
+              onClick={() => setViewMode('board')}
             >
-              <MessageSquare className="h-4 w-4 mr-2" />
-              Send to Slack
+              <LayoutGrid className="h-4 w-4 mr-2" />
+              Board
             </Button>
+            <Button 
+              variant={viewMode === 'calendar' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('calendar')}
+            >
+              <CalendarIcon className="h-4 w-4 mr-2" />
+              Calendar
+            </Button>
+            {viewMode === 'board' && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setShowSlackInput(!showSlackInput)}
+              >
+                <MessageSquare className="h-4 w-4 mr-2" />
+                Send to Slack
+              </Button>
+            )}
           </div>
         </div>
         
@@ -140,19 +162,23 @@ const KanbanBoard: React.FC = () => {
       
       {/* Scrollable Content */}
       <div className="px-6 pt-2 pb-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {filteredColumns.map(column => (
-            <KanbanColumn
-              key={column.id}
-              id={column.id}
-              title={column.title}
-              cards={column.cards}
-              onDragOver={handleDragOver}
-              onDrop={handleDrop}
-              onDragStart={handleDragStart}
-            />
-          ))}
-        </div>
+        {viewMode === 'calendar' ? (
+          <HijriCalendar />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {filteredColumns.map(column => (
+              <KanbanColumn
+                key={column.id}
+                id={column.id}
+                title={column.title}
+                cards={column.cards}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+                onDragStart={handleDragStart}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
