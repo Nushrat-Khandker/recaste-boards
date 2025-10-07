@@ -41,11 +41,11 @@ const Header: React.FC = () => {
             value={selectedNumber} 
             onValueChange={setSelectedNumber}
             placeholder="Year"
-            className="w-24"
+            className="w-20"
           />
           
           <Select value={selectedQuarter} onValueChange={setSelectedQuarter}>
-            <SelectTrigger className="w-20 cursor-default">
+            <SelectTrigger className="w-16 cursor-default">
               <SelectValue placeholder="Select" />
             </SelectTrigger>
             <SelectContent>

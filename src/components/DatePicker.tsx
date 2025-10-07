@@ -29,7 +29,7 @@ export function DatePicker({ date, setDate, label, className, disabled = false }
           )}
         >
           <CalendarClock className="mr-2 h-4 w-4" />
-          {date ? format(date, "PPP") : <span>{label || "Pick a date"}</span>}
+          {date ? format(date, "MMM d, yy") : <span>{label || "Pick a date"}</span>}
         </Button>
       </PopoverTrigger>
       {!disabled && (
