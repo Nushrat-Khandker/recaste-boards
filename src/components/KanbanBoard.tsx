@@ -113,26 +113,26 @@ const KanbanBoard: React.FC = () => {
               variant={viewMode === 'board' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setViewMode('board')}
+              className="h-9 w-9 p-0"
             >
-              <LayoutGrid className="h-4 w-4 mr-2" />
-              Board
+              <LayoutGrid className="h-4 w-4" />
             </Button>
             <Button 
               variant={viewMode === 'calendar' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setViewMode('calendar')}
+              className="h-9 w-9 p-0"
             >
-              <CalendarIcon className="h-4 w-4 mr-2" />
-              Calendar
+              <CalendarIcon className="h-4 w-4" />
             </Button>
             {viewMode === 'board' && (
               <Button 
                 variant="outline" 
                 size="sm"
                 onClick={() => setShowSlackInput(!showSlackInput)}
+                className="h-9 w-9 p-0"
               >
-                <MessageSquare className="h-4 w-4 mr-2" />
-                Send to Slack
+                <MessageSquare className="h-4 w-4" />
               </Button>
             )}
           </div>

@@ -46,9 +46,8 @@ const ProjectFilter: React.FC = () => {
       ) : (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="h-9 gap-2">
+            <Button variant="outline" size="sm" className="h-9 w-9 p-0">
               <FolderKanban className="h-4 w-4" />
-              Projects
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-64">
