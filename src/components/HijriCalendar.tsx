@@ -192,12 +192,24 @@ export function HijriCalendar() {
     const dateKey = format(gregorianDate, 'yyyy-MM-dd');
     const filteredCards = filterCards(cards);
     
-    return filteredCards.filter(card => {
-      const cardDate = card.due_date || card.start_date;
-      if (!cardDate) return false;
-      const cardDateKey = format(new Date(cardDate), 'yyyy-MM-dd');
-      return cardDateKey === dateKey;
+    const result: Array<{ card: KanbanCard; type: 'start' | 'due' }> = [];
+    
+    filteredCards.forEach(card => {
+      if (card.start_date) {
+        const startDateKey = format(new Date(card.start_date), 'yyyy-MM-dd');
+        if (startDateKey === dateKey) {
+          result.push({ card, type: 'start' });
+        }
+      }
+      if (card.due_date) {
+        const dueDateKey = format(new Date(card.due_date), 'yyyy-MM-dd');
+        if (dueDateKey === dateKey) {
+          result.push({ card, type: 'due' });
+        }
+      }
     });
+    
+    return result;
   };
 
   const getDaysInMonth = () => {
@@ -298,11 +310,16 @@ export function HijriCalendar() {
 
               {/* Card titles */}
               <div className="flex-1 overflow-y-auto space-y-1">
-                {cardsForDate.map(card => (
+                {cardsForDate.map(({ card, type }) => (
                   <div 
-                    key={card.id}
-                    className="text-xs p-1 bg-background/50 rounded border truncate"
-                    title={card.title}
+                    key={`${card.id}-${type}`}
+                    className={cn(
+                      "text-xs p-1 rounded border truncate",
+                      type === 'start' 
+                        ? "bg-blue-100 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700" 
+                        : "bg-green-100 dark:bg-green-900/30 border-green-300 dark:border-green-700"
+                    )}
+                    title={`${card.title} (${type === 'start' ? 'Start' : 'Due'})`}
                   >
                     {card.title}
                   </div>
