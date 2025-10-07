@@ -6,6 +6,14 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
+interface KanbanCard {
+  id: string;
+  title: string;
+  due_date?: string;
+  start_date?: string;
+  tags?: any;
+}
+
 interface MoonPhaseData {
   date: string;
   emoji: string;
@@ -43,9 +51,11 @@ export function HijriCalendar() {
 
   const [moonPhases, setMoonPhases] = useState<Map<string, string>>(new Map());
   const [solarEvents, setSolarEvents] = useState<Map<string, string>>(new Map());
+  const [cards, setCards] = useState<KanbanCard[]>([]);
 
   useEffect(() => {
     fetchAstronomicalData();
+    fetchCards();
   }, [currentHijriMonth]);
 
   const fetchAstronomicalData = async () => {
@@ -86,6 +96,30 @@ export function HijriCalendar() {
     } catch (error) {
       console.error('Error fetching astronomical data:', error);
     }
+  };
+
+  const fetchCards = async () => {
+    try {
+      const { data } = await supabase
+        .from('kanban_cards')
+        .select('id, title, due_date, start_date, tags');
+      
+      if (data) {
+        setCards(data);
+      }
+    } catch (error) {
+      console.error('Error fetching cards:', error);
+    }
+  };
+
+  const getCardsForDate = (gregorianDate: Date) => {
+    const dateKey = format(gregorianDate, 'yyyy-MM-dd');
+    return cards.filter(card => {
+      const cardDate = card.due_date || card.start_date;
+      if (!cardDate) return false;
+      const cardDateKey = format(new Date(cardDate), 'yyyy-MM-dd');
+      return cardDateKey === dateKey;
+    });
   };
 
   const getDaysInMonth = () => {
@@ -179,32 +213,43 @@ export function HijriCalendar() {
           const moonEmoji = moonPhases.get(dateKey);
           const solarEmoji = solarEvents.get(dateKey);
           const isToday = format(new Date(), 'yyyy-MM-dd') === dateKey;
+          const cardsForDate = getCardsForDate(gregorianDate);
 
           return (
             <div
               key={hijriDay}
               className={cn(
-                "aspect-square border rounded-lg p-2 relative flex flex-col",
+                "aspect-square border rounded-lg p-2 relative flex flex-col overflow-hidden",
                 weekday === 5 && "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800",
                 weekday === 6 && "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800",
                 isToday && "ring-2 ring-primary"
               )}
             >
-              {/* Hijri day number */}
-              <div className="font-medium text-sm mb-1">
-                Day {hijriDay}
-              </div>
-
               {/* Moon phase and solar events */}
               <div className="flex gap-1 mb-1">
                 {moonEmoji && <span className="text-lg">{moonEmoji}</span>}
                 {solarEmoji && <span className="text-lg">{solarEmoji}</span>}
               </div>
 
-              {/* Gregorian date */}
-              <div className="text-xs text-muted-foreground mt-auto">
-                {format(gregorianDate, 'MMM d, yyyy')}
+              {/* Card titles */}
+              <div className="flex-1 overflow-y-auto space-y-1">
+                {cardsForDate.map(card => (
+                  <div 
+                    key={card.id}
+                    className="text-xs p-1 bg-background/50 rounded border truncate"
+                    title={card.title}
+                  >
+                    {card.title}
+                  </div>
+                ))}
               </div>
+
+              {/* Gregorian date - only on Jumuah */}
+              {weekday === 5 && (
+                <div className="text-xs text-muted-foreground mt-auto pt-1 border-t">
+                  {format(gregorianDate, 'MMM d, yyyy')}
+                </div>
+              )}
             </div>
           );
         })}
