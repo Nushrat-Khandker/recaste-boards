@@ -59,6 +59,10 @@ export function HijriCalendar() {
     fetchCards();
   }, []);
 
+  useEffect(() => {
+    fetchCards();
+  }, [selectedTags, selectedProject]);
+
   // Anchor new moon for 1 Muharram 1447 AH
   const ANCHOR_NEW_MOON = '2025-06-25';
 
