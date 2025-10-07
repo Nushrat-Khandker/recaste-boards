@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      calendar_notes: {
+        Row: {
+          color: string
+          created_at: string
+          date: string
+          id: string
+          project_id: string | null
+          text: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          date: string
+          id?: string
+          project_id?: string | null
+          text: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          date?: string
+          id?: string
+          project_id?: string | null
+          text?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_notes_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content_items: {
         Row: {
           campaign: string | null
