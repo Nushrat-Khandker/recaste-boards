@@ -175,13 +175,27 @@ export function HijriCalendar() {
 
       // Filter by tags
       if (selectedTags.length > 0) {
-        const selectedTagTexts = selectedTags.map((t: any) => typeof t === 'string' ? t : t.text);
-        const cardTags = Array.isArray(card.tags) 
-          ? card.tags.map((t: any) => (typeof t === 'string' ? t : t.text))
-          : [];
-        
-        const hasMatchingTag = selectedTagTexts.some((tag: string) => 
-          cardTags.includes(tag)
+        const selectedTagTexts = selectedTags.map((t: any) => (typeof t === 'string' ? t : t.text));
+
+        // Normalize card tags: handle array, stringified JSON, or null
+        let cardTagsArray: any[] = [];
+        if (Array.isArray(card.tags)) {
+          cardTagsArray = card.tags;
+        } else if (typeof card.tags === 'string') {
+          try {
+            const parsed = JSON.parse(card.tags);
+            if (Array.isArray(parsed)) cardTagsArray = parsed;
+          } catch {
+            cardTagsArray = [];
+          }
+        }
+
+        const cardTagTexts = cardTagsArray
+          .map((t: any) => (typeof t === 'string' ? t : t.text))
+          .filter(Boolean);
+
+        const hasMatchingTag = selectedTagTexts.some((tag: string) =>
+          cardTagTexts.includes(tag)
         );
         
         if (!hasMatchingTag) {
