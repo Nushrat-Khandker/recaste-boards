@@ -535,18 +535,18 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
     }
   };
 
-  // Permanent role/department tags that are always available
+  // Permanent role/department tags in hierarchical order with color shades
   const PERMANENT_TAGS: Tag[] = [
-    { text: 'CEO', customColor: '#8b5cf6' },      // Purple
-    { text: 'CTO', customColor: '#3b82f6' },      // Blue
-    { text: 'CMO', customColor: '#f97316' },      // Orange
-    { text: 'CFO', customColor: '#22c55e' },      // Green
-    { text: 'CHRO', customColor: '#ec4899' },     // Pink
-    { text: 'COO', customColor: '#14b8a6' },      // Teal
-    { text: 'CPO', customColor: '#a855f7' },      // Light Purple
-    { text: 'CSO', customColor: '#ef4444' },      // Red
+    { text: 'CEO', customColor: '#ef4444' },      // Red
+    { text: 'COO', customColor: '#f97316' },      // Orange
+    { text: 'CFO', customColor: '#eab308' },      // Yellow
+    { text: 'CMO', customColor: '#22c55e' },      // Green
+    { text: 'CTO', customColor: '#14b8a6' },      // Teal
     { text: 'CIO', customColor: '#06b6d4' },      // Cyan
-    { text: 'CCO', customColor: '#eab308' },      // Yellow
+    { text: 'CPO', customColor: '#3b82f6' },      // Blue
+    { text: 'CHRO', customColor: '#8b5cf6' },     // Purple
+    { text: 'CSO', customColor: '#a855f7' },      // Light Purple
+    { text: 'CCO', customColor: '#ec4899' },      // Pink
   ];
 
   const getAllTags = (): Tag[] => {
