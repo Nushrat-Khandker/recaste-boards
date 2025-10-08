@@ -48,7 +48,7 @@ export function HijriCalendar() {
   const [newMoons, setNewMoons] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [monthRange, setMonthRange] = useState<{ start: Date; end: Date } | null>(null);
-  const [hijriTitle, setHijriTitle] = useState<{ year: number; monthName: string }>({ year: 1447, monthName: getHijriMonthName(1) });
+  const [hijriTitle, setHijriTitle] = useState<{ year: number; month: number; monthName: string }>({ year: 1447, month: 1, monthName: getHijriMonthName(1) });
 
   const [moonPhases, setMoonPhases] = useState<Map<string, string>>(new Map());
   const [solarEvents, setSolarEvents] = useState<Map<string, string>>(new Map());
@@ -109,7 +109,7 @@ export function HijriCalendar() {
       setCurrentIndex(idx);
 
       const { year, month } = computeHijriFromIndex(idx);
-      setHijriTitle({ year, monthName: getHijriMonthName(month) });
+      setHijriTitle({ year, month, monthName: getHijriMonthName(month) });
 
       await fetchAstronomicalData(start, end);
     } catch (e) {
@@ -234,7 +234,7 @@ export function HijriCalendar() {
       const end = newIndex + 1 < newMoons.length ? new Date(newMoons[newIndex + 1]) : addDays(start, 30);
       setMonthRange({ start, end });
       const { year, month } = computeHijriFromIndex(newIndex);
-      setHijriTitle({ year, monthName: getHijriMonthName(month) });
+      setHijriTitle({ year, month, monthName: getHijriMonthName(month) });
       fetchAstronomicalData(start, end);
       return newIndex;
     });
@@ -256,7 +256,7 @@ export function HijriCalendar() {
         </Button>
         
         <h2 className="text-2xl font-bold">
-          {hijriTitle.monthName} {hijriTitle.year}
+          {hijriTitle.month}. {hijriTitle.monthName} {hijriTitle.year}
         </h2>
         
         <Button variant="outline" size="sm" onClick={() => navigateMonth('next')}>
