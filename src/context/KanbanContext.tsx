@@ -535,10 +535,29 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
     }
   };
 
+  // Permanent role/department tags that are always available
+  const PERMANENT_TAGS: Tag[] = [
+    { text: 'CEO', customColor: '#8b5cf6' },      // Purple
+    { text: 'CTO', customColor: '#3b82f6' },      // Blue
+    { text: 'CMO', customColor: '#f97316' },      // Orange
+    { text: 'CFO', customColor: '#22c55e' },      // Green
+    { text: 'CHRO', customColor: '#ec4899' },     // Pink
+    { text: 'COO', customColor: '#14b8a6' },      // Teal
+    { text: 'CPO', customColor: '#a855f7' },      // Light Purple
+    { text: 'CSO', customColor: '#ef4444' },      // Red
+    { text: 'CIO', customColor: '#06b6d4' },      // Cyan
+    { text: 'CCO', customColor: '#eab308' },      // Yellow
+  ];
+
   const getAllTags = (): Tag[] => {
-    const allTags: Tag[] = [];
     const tagMap = new Map<string, Tag>();
 
+    // First add all permanent tags
+    PERMANENT_TAGS.forEach(tag => {
+      tagMap.set(tag.text, tag);
+    });
+
+    // Then add tags from cards (won't overwrite permanent tags due to Map)
     columns.forEach(column => {
       column.cards.forEach(card => {
         if (card.tags) {
