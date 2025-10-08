@@ -11,6 +11,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { DatePicker } from './DatePicker';
 import { YearWheel } from './YearWheel';
 import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { format } from "date-fns";
 
 interface EditCardDialogProps {
@@ -338,26 +339,28 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
                         <div className="px-2 py-1.5">
                           <p className="text-sm font-medium text-foreground">Select existing tag</p>
                         </div>
-                        {availableTags.map((existingTag, index) => {
-                          const tagColor = existingTag.customColor || tagColors[0].value;
-                          const isDark = isColorDark(tagColor);
-                          return (
-                            <DropdownMenuItem 
-                              key={index}
-                              onClick={() => handleSelectExistingTag({ ...existingTag, customColor: tagColor })}
-                              className="cursor-pointer"
-                            >
-                              <div className="flex items-center gap-2">
-                                <Badge 
-                                  className={`text-xs ${isDark ? 'text-white' : 'text-gray-800'}`}
-                                  style={{ backgroundColor: tagColor }}
-                                >
-                                  {existingTag.text}
-                                </Badge>
-                              </div>
-                            </DropdownMenuItem>
-                          );
-                        })}
+                        <ScrollArea className="max-h-[200px]">
+                          {availableTags.map((existingTag, index) => {
+                            const tagColor = existingTag.customColor || tagColors[0].value;
+                            const isDark = isColorDark(tagColor);
+                            return (
+                              <DropdownMenuItem 
+                                key={index}
+                                onClick={() => handleSelectExistingTag({ ...existingTag, customColor: tagColor })}
+                                className="cursor-pointer"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <Badge 
+                                    className={`text-xs ${isDark ? 'text-white' : 'text-gray-800'}`}
+                                    style={{ backgroundColor: tagColor }}
+                                  >
+                                    {existingTag.text}
+                                  </Badge>
+                                </div>
+                              </DropdownMenuItem>
+                            );
+                          })}
+                        </ScrollArea>
                         <DropdownMenuSeparator />
                       </>
                     )}
