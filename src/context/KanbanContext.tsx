@@ -542,8 +542,6 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
     { text: 'CFO', customColor: '#eab308' },      // Yellow
     { text: 'CMO', customColor: '#22c55e' },      // Green
     { text: 'CTO', customColor: '#14b8a6' },      // Teal
-    { text: 'CIO', customColor: '#06b6d4' },      // Cyan
-    { text: 'CPO', customColor: '#3b82f6' },      // Blue
     { text: 'CHRO', customColor: '#8b5cf6' },     // Purple
     { text: 'CSO', customColor: '#a855f7' },      // Light Purple
     { text: 'CCO', customColor: '#ec4899' },      // Pink
