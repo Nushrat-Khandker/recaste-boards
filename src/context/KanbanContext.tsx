@@ -296,7 +296,7 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
     };
   }, []);
 
-  // Filter columns based on tags and project
+  // Filter columns based on tags, project, year, and quarter
   const filteredColumns = React.useMemo(() => {
     return columns.map(column => ({
       ...column,
@@ -308,10 +308,16 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
         // If no project selected, show all cards; if project selected, card must match project
         const matchesProject = !selectedProject || card.projectName === selectedProject;
         
-        return matchesTags && matchesProject;
+        // Filter by selected year (number)
+        const matchesYear = !selectedNumber || card.number === selectedNumber;
+        
+        // Filter by selected quarter
+        const matchesQuarter = !selectedQuarter || card.quarter === selectedQuarter;
+        
+        return matchesTags && matchesProject && matchesYear && matchesQuarter;
       })
     }));
-  }, [columns, selectedTags, selectedProject]);
+  }, [columns, selectedTags, selectedProject, selectedNumber, selectedQuarter]);
 
   // Get all unique projects from cards
   const allProjects = React.useMemo(() => {
