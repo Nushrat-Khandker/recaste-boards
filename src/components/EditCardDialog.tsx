@@ -104,8 +104,9 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
     setTags(card.tags || []);
     setPriority(card.priority || 'medium');
     setSelectedColor(tagColors[0].value);
-    setStartDate(card.startDate);
-    setDueDate(card.dueDate);
+    // Properly convert string dates to Date objects
+    setStartDate(card.startDate ? new Date(card.startDate) : undefined);
+    setDueDate(card.dueDate ? new Date(card.dueDate) : undefined);
   }, [card, isOpen]);
 
   const handleAddTag = () => {
@@ -338,17 +339,18 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
                           <p className="text-sm font-medium text-foreground">Select existing tag</p>
                         </div>
                         {availableTags.map((existingTag, index) => {
-                          const isDark = existingTag.customColor ? isColorDark(existingTag.customColor) : false;
+                          const tagColor = existingTag.customColor || tagColors[0].value;
+                          const isDark = isColorDark(tagColor);
                           return (
                             <DropdownMenuItem 
                               key={index}
-                              onClick={() => handleSelectExistingTag(existingTag)}
+                              onClick={() => handleSelectExistingTag({ ...existingTag, customColor: tagColor })}
                               className="cursor-pointer"
                             >
                               <div className="flex items-center gap-2">
                                 <Badge 
                                   className={`text-xs ${isDark ? 'text-white' : 'text-gray-800'}`}
-                                  style={{ backgroundColor: existingTag.customColor || '#f3f4f6' }}
+                                  style={{ backgroundColor: tagColor }}
                                 >
                                   {existingTag.text}
                                 </Badge>
