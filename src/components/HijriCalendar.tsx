@@ -72,8 +72,8 @@ export function HijriCalendar() {
     return d;
   }
 
-  function computeHijriFromIndex(index: number) {
-    const anchorIdx = newMoons.findIndex((d) => d === ANCHOR_NEW_MOON);
+  function computeHijriFromIndex(index: number, moons: string[]) {
+    const anchorIdx = moons.findIndex((d) => d === ANCHOR_NEW_MOON);
     if (anchorIdx === -1) {
       return { year: 1447, month: 1 };
     }
@@ -108,7 +108,7 @@ export function HijriCalendar() {
       setMonthRange({ start, end });
       setCurrentIndex(idx);
 
-      const { year, month } = computeHijriFromIndex(idx);
+      const { year, month } = computeHijriFromIndex(idx, dates);
       setHijriTitle({ year, month, monthName: getHijriMonthName(month) });
 
       await fetchAstronomicalData(start, end);
@@ -175,12 +175,13 @@ export function HijriCalendar() {
 
       // Filter by tags
       if (selectedTags.length > 0) {
+        const selectedTagTexts = selectedTags.map((t: any) => typeof t === 'string' ? t : t.text);
         const cardTags = Array.isArray(card.tags) 
-          ? card.tags.map((t: any) => typeof t === 'string' ? t : t.text)
+          ? card.tags.map((t: any) => (typeof t === 'string' ? t : t.text))
           : [];
         
-        const hasMatchingTag = selectedTags.some(selectedTag => 
-          cardTags.includes(selectedTag)
+        const hasMatchingTag = selectedTagTexts.some((tag: string) => 
+          cardTags.includes(tag)
         );
         
         if (!hasMatchingTag) {
@@ -233,7 +234,7 @@ export function HijriCalendar() {
       const start = new Date(newMoons[newIndex]);
       const end = newIndex + 1 < newMoons.length ? new Date(newMoons[newIndex + 1]) : addDays(start, 30);
       setMonthRange({ start, end });
-      const { year, month } = computeHijriFromIndex(newIndex);
+      const { year, month } = computeHijriFromIndex(newIndex, newMoons);
       setHijriTitle({ year, month, monthName: getHijriMonthName(month) });
       fetchAstronomicalData(start, end);
       return newIndex;
