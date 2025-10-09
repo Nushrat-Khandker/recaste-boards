@@ -69,39 +69,24 @@ const ProjectsContent = () => {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="mb-6">
-          <Button
-            variant="ghost"
-            onClick={handleBackToProjects}
-            className="mb-4"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Projects
-          </Button>
           <div className="flex items-center gap-3 mb-4">
-            <h1 className="text-3xl font-bold">📂 {viewingProject}</h1>
+            <Button
+              variant="ghost"
+              onClick={handleBackToProjects}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Projects
+            </Button>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => handleStartEdit(viewingProject)}
-            >
-              <Pencil className="h-3 w-3 mr-1" />
-              Rename
-            </Button>
-          </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="text-sm py-1.5 px-3">
-              Filtered by: <span className="font-semibold ml-1">{viewingProject}</span>
-            </Badge>
-            <Button
-              variant="ghost"
-              size="sm"
               onClick={handleBackToProjects}
-              className="h-7"
             >
               <X className="h-3 w-3 mr-1" />
               Clear filter
             </Button>
           </div>
+          <h1 className="text-3xl font-bold">📂 {viewingProject}</h1>
         </div>
         <KanbanBoard />
       </div>
