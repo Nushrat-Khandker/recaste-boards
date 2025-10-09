@@ -375,7 +375,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
                         <div className="px-2 py-1.5">
                           <p className="text-sm font-medium text-foreground">Select existing tag</p>
                         </div>
-                        <ScrollArea className="max-h-[200px]">
+                        <div className="max-h-[200px] overflow-y-auto">
                           {availableTags.map((existingTag, index) => {
                             const tagColor = existingTag.customColor || tagColors[0].value;
                             const isDark = isColorDark(tagColor);
@@ -396,7 +396,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
                               </DropdownMenuItem>
                             );
                           })}
-                        </ScrollArea>
+                        </div>
                         <DropdownMenuSeparator />
                       </>
                     )}
@@ -474,24 +474,25 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
             
             {/* Display existing attachments */}
             {fileAttachments.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-2">
+              <div className="flex flex-col gap-2 mb-2 p-3 bg-muted/50 rounded-md border">
                 {fileAttachments.map((file, index) => (
-                  <div key={index} className="flex items-center gap-1 px-2 py-1 bg-muted rounded-md group">
+                  <div key={index} className="flex items-center justify-between gap-2 group">
                     <a 
                       href={file.url} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="text-sm hover:underline flex items-center gap-1"
+                      className="text-sm hover:underline flex items-center gap-2 flex-1 min-w-0"
                     >
-                      <LinkIcon className="h-3 w-3" />
-                      {file.name}
+                      <LinkIcon className="h-4 w-4 flex-shrink-0" />
+                      <span className="truncate">{file.name}</span>
+                      <ExternalLink className="h-3 w-3 flex-shrink-0 opacity-50" />
                     </a>
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
                       onClick={() => handleRemoveFile(index)}
-                      className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="h-6 w-6 p-0 flex-shrink-0"
                     >
                       <X className="h-3 w-3" />
                     </Button>
