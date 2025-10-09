@@ -88,7 +88,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
   const [title, setTitle] = useState(card.title);
   const [description, setDescription] = useState(card.description || '');
   const [projectName, setProjectName] = useState(card.projectName || '');
-  const [tags, setTags] = useState<Tag[]>(card.tags || []);
+  const [tags, setTags] = useState<Tag[]>(Array.isArray(card.tags) ? card.tags : []);
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>(card.priority || 'medium');
   const [newTagText, setNewTagText] = useState('');
   const [selectedColor, setSelectedColor] = useState(tagColors[0].value);
@@ -106,7 +106,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
     setTitle(card.title);
     setDescription(card.description || '');
     setProjectName(card.projectName || '');
-    setTags(card.tags || []);
+    setTags(Array.isArray(card.tags) ? card.tags : []);
     setPriority(card.priority || 'medium');
     setSelectedColor(tagColors[0].value);
     // Properly convert string dates to Date objects
