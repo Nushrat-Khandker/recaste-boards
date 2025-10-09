@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
-import { X, Move, Pencil, CalendarClock } from 'lucide-react';
+import { X, Move, Pencil, CalendarClock, Link as LinkIcon } from 'lucide-react';
 import EditCardDialog from './EditCardDialog';
 import { useKanban, Tag } from '../context/KanbanContext';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +19,7 @@ interface KanbanCardProps {
   startDate?: Date;
   dueDate?: Date;
   movedDate?: Date;
+  fileAttachments?: Array<{ url: string; type: 'google_doc' | 'txt' | 'html'; name: string }>;
   onDelete: () => void;
   onDragStart: (e: React.DragEvent, cardId: string, columnId: string) => void;
   columnId: string;
@@ -65,6 +66,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
   startDate,
   dueDate,
   movedDate,
+  fileAttachments = [],
   onDelete,
   onDragStart,
   columnId
@@ -164,7 +166,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
         
         {/* Display tags and priority */}
         {(tags.length > 0 || priority) && (
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-1 mb-2">
             {tags.map((tag) => renderTag(tag))}
             
             {priority && (
@@ -176,10 +178,29 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
             )}
           </div>
         )}
+
+        {/* Display file attachments */}
+        {fileAttachments.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-2">
+            {fileAttachments.map((file, index) => (
+              <a
+                key={index}
+                href={file.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 hover:underline"
+              >
+                <LinkIcon size={12} />
+                {file.name}
+              </a>
+            ))}
+          </div>
+        )}
       </Card>
 
       <EditCardDialog
-        card={{ id, title, description, projectName, tags, priority, number, quarter, startDate, dueDate, movedDate }}
+        card={{ id, title, description, projectName, tags, priority, number, quarter, startDate, dueDate, movedDate, fileAttachments }}
         columnId={columnId}
         isOpen={isEditDialogOpen}
         onClose={() => setIsEditDialogOpen(false)}
