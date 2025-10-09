@@ -1,10 +1,12 @@
 import { useKanban, KanbanProvider } from "@/context/KanbanContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 
 const ProjectsContent = () => {
-  const { columns, allProjects } = useKanban();
+  const { columns, allProjects, setSelectedProject } = useKanban();
+  const navigate = useNavigate();
 
   // Get cards grouped by project
   const projectData = allProjects.map(projectName => {
@@ -25,6 +27,11 @@ const ProjectsContent = () => {
     };
   });
 
+  const handleProjectClick = (projectName: string) => {
+    setSelectedProject(projectName);
+    navigate('/');
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">📂 Projects Overview</h1>
@@ -36,10 +43,14 @@ const ProjectsContent = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {projectData.map((project) => (
-            <Card key={project.name} className="hover:shadow-lg transition-shadow">
+            <Card 
+              key={project.name} 
+              className="hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => handleProjectClick(project.name)}
+            >
               <CardHeader>
                 <CardTitle>{project.name}</CardTitle>
-                <CardDescription>{project.totalCards} total tasks</CardDescription>
+                <CardDescription>{project.totalCards} total tasks • Click to view</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">

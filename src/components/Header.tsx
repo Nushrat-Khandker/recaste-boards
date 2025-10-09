@@ -83,6 +83,11 @@ const Header: React.FC = () => {
             re<span className="text-[#FE446F]">*</span>caste
           </Link>
           
+          {/* Center Title */}
+          <div className="absolute left-1/2 transform -translate-x-1/2">
+            <h1 className="text-xl font-semibold text-muted-foreground">Kanban</h1>
+          </div>
+          
           {/* Right Side Controls */}
           <div className="flex items-center gap-2">
             <YearWheel 
