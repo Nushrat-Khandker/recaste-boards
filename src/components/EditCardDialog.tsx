@@ -152,15 +152,15 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
   };
 
   const handleAddFile = () => {
-    if (newFileUrl.trim() && newFileName.trim()) {
+    if (newFileUrl.trim()) {
+      const fileName = newFileName.trim() || new URL(newFileUrl.trim()).pathname.split('/').pop() || 'Link';
       setFileAttachments([...fileAttachments, { 
         url: newFileUrl.trim(), 
-        type: newFileType, 
-        name: newFileName.trim() 
+        type: 'google_doc', 
+        name: fileName 
       }]);
       setNewFileUrl('');
       setNewFileName('');
-      setNewFileType('google_doc');
     }
   };
 
@@ -461,26 +461,24 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
             
             {/* Display existing attachments */}
             {fileAttachments.length > 0 && (
-              <div className="space-y-2 mb-2">
+              <div className="flex flex-wrap gap-2 mb-2">
                 {fileAttachments.map((file, index) => (
-                  <div key={index} className="flex items-center gap-2 p-2 bg-muted rounded-md">
-                    <FileText className="h-4 w-4 text-muted-foreground" />
+                  <div key={index} className="flex items-center gap-1 px-2 py-1 bg-muted rounded-md group">
                     <a 
                       href={file.url} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="flex-1 text-sm hover:underline flex items-center gap-1"
+                      className="text-sm hover:underline flex items-center gap-1"
                     >
+                      <LinkIcon className="h-3 w-3" />
                       {file.name}
-                      <ExternalLink className="h-3 w-3" />
                     </a>
-                    <Badge variant="outline" className="text-xs">{file.type}</Badge>
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
                       onClick={() => handleRemoveFile(index)}
-                      className="h-6 w-6 p-0"
+                      className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
                     >
                       <X className="h-3 w-3" />
                     </Button>
@@ -490,42 +488,28 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
             )}
 
             {/* Add new attachment */}
-            <div className="space-y-2">
+            <div className="flex gap-2">
               <Input
-                placeholder="File URL (Google Docs, .txt, .html)"
+                placeholder="Paste file URL (Google Docs, etc.)"
                 value={newFileUrl}
                 onChange={(e) => setNewFileUrl(e.target.value)}
+                className="flex-1"
               />
-              <div className="flex gap-2">
-                <Input
-                  placeholder="File name"
-                  value={newFileName}
-                  onChange={(e) => setNewFileName(e.target.value)}
-                  className="flex-1"
-                />
-                <Select value={newFileType} onValueChange={(value: any) => setNewFileType(value)}>
-                  <SelectTrigger className="w-32">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="google_doc">Google Doc</SelectItem>
-                    <SelectItem value="txt">Text (.txt)</SelectItem>
-                    <SelectItem value="html">HTML</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button
-                  type="button"
-                  onClick={handleAddFile}
-                  disabled={!newFileUrl.trim() || !newFileName.trim()}
-                  size="sm"
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
+              <Input
+                placeholder="Name (optional)"
+                value={newFileName}
+                onChange={(e) => setNewFileName(e.target.value)}
+                className="w-32"
+              />
+              <Button
+                type="button"
+                onClick={handleAddFile}
+                disabled={!newFileUrl.trim()}
+                size="sm"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Add links to Google Docs, markdown .txt files, or hosted .html files
-            </p>
           </div>
         </div>
         
