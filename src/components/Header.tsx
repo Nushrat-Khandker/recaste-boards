@@ -13,7 +13,6 @@ import { supabase } from '@/integrations/supabase/client';
 
 import { YearWheel } from './YearWheel';
 import TagFilter from './TagFilter';
-import ProjectFilter from './ProjectFilter';
 
 const Header: React.FC = () => {
   const location = useLocation();
@@ -22,7 +21,10 @@ const Header: React.FC = () => {
     selectedNumber, 
     setSelectedNumber, 
     selectedQuarter, 
-    setSelectedQuarter
+    setSelectedQuarter,
+    allProjects,
+    setSelectedProject,
+    selectedProject
   } = useKanban();
   
   const [showSlackInput, setShowSlackInput] = useState(false);
@@ -85,7 +87,7 @@ const Header: React.FC = () => {
           
           {/* Center Title */}
           <div className="absolute left-1/2 transform -translate-x-1/2">
-            <h1 className="text-xl font-semibold text-muted-foreground">Kanban</h1>
+            <h1 className="text-2xl font-bold text-foreground">Kanban</h1>
           </div>
           
           {/* Right Side Controls */}
@@ -121,8 +123,29 @@ const Header: React.FC = () => {
                   <TagFilter />
                 </div>
                 <DropdownMenuSeparator />
-                <div className="px-2 py-2">
-                  <ProjectFilter />
+                <div className="px-2 py-1.5">
+                  <p className="text-sm font-medium text-foreground mb-2">Filter by Project</p>
+                  {selectedProject && (
+                    <DropdownMenuItem 
+                      onClick={() => setSelectedProject(null)}
+                      className="text-xs text-muted-foreground mb-1"
+                    >
+                      ✕ Clear filter
+                    </DropdownMenuItem>
+                  )}
+                  {allProjects.length === 0 ? (
+                    <p className="text-xs text-muted-foreground px-2 py-1">No projects yet</p>
+                  ) : (
+                    allProjects.map((project) => (
+                      <DropdownMenuItem 
+                        key={project}
+                        onClick={() => setSelectedProject(project)}
+                        className={selectedProject === project ? "bg-accent" : ""}
+                      >
+                        {project}
+                      </DropdownMenuItem>
+                    ))
+                  )}
                 </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => setShowSlackInput(!showSlackInput)}>
