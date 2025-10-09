@@ -123,31 +123,6 @@ const Header: React.FC = () => {
                   <TagFilter />
                 </div>
                 <DropdownMenuSeparator />
-                <div className="px-2 py-1.5">
-                  <p className="text-sm font-medium text-foreground mb-2">Filter by Project</p>
-                  {selectedProject && (
-                    <DropdownMenuItem 
-                      onClick={() => setSelectedProject(null)}
-                      className="text-xs text-muted-foreground mb-1"
-                    >
-                      ✕ Clear filter
-                    </DropdownMenuItem>
-                  )}
-                  {allProjects.length === 0 ? (
-                    <p className="text-xs text-muted-foreground px-2 py-1">No projects yet</p>
-                  ) : (
-                    allProjects.map((project) => (
-                      <DropdownMenuItem 
-                        key={project}
-                        onClick={() => setSelectedProject(project)}
-                        className={selectedProject === project ? "bg-accent" : ""}
-                      >
-                        {project}
-                      </DropdownMenuItem>
-                    ))
-                  )}
-                </div>
-                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => setShowSlackInput(!showSlackInput)}>
                   <MessageSquare className="mr-2 h-4 w-4" />
                   Send to Slack
