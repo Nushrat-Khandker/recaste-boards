@@ -21,10 +21,7 @@ const Header: React.FC = () => {
     selectedNumber, 
     setSelectedNumber, 
     selectedQuarter, 
-    setSelectedQuarter,
-    allProjects,
-    setSelectedProject,
-    selectedProject
+    setSelectedQuarter
   } = useKanban();
   
   const [showSlackInput, setShowSlackInput] = useState(false);
