@@ -2,14 +2,17 @@ import { useKanban, KanbanProvider } from "@/context/KanbanContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import Header from "@/components/Header";
 import KanbanBoard from "@/components/KanbanBoard";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, X, Pencil, Check, XCircle } from "lucide-react";
 import { useState } from "react";
 
 const ProjectsContent = () => {
-  const { columns, allProjects, setSelectedProject, selectedProject } = useKanban();
+  const { columns, allProjects, setSelectedProject, selectedProject, renameProject } = useKanban();
   const [viewingProject, setViewingProject] = useState<string | null>(null);
+  const [editingProject, setEditingProject] = useState<string | null>(null);
+  const [newProjectName, setNewProjectName] = useState("");
 
   // Get cards grouped by project
   const projectData = allProjects.map(projectName => {
@@ -40,6 +43,27 @@ const ProjectsContent = () => {
     setViewingProject(null);
   };
 
+  const handleStartEdit = (projectName: string) => {
+    setEditingProject(projectName);
+    setNewProjectName(projectName);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingProject(null);
+    setNewProjectName("");
+  };
+
+  const handleSaveEdit = async () => {
+    if (editingProject && newProjectName.trim() && newProjectName !== editingProject) {
+      await renameProject(editingProject, newProjectName.trim());
+      if (viewingProject === editingProject) {
+        setViewingProject(newProjectName.trim());
+      }
+    }
+    setEditingProject(null);
+    setNewProjectName("");
+  };
+
   // If viewing a specific project, show the kanban board
   if (viewingProject) {
     return (
@@ -53,7 +77,31 @@ const ProjectsContent = () => {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Projects
           </Button>
-          <h1 className="text-3xl font-bold">📂 {viewingProject}</h1>
+          <div className="flex items-center gap-3 mb-4">
+            <h1 className="text-3xl font-bold">📂 {viewingProject}</h1>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleStartEdit(viewingProject)}
+            >
+              <Pencil className="h-3 w-3 mr-1" />
+              Rename
+            </Button>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="text-sm py-1.5 px-3">
+              Filtered by: <span className="font-semibold ml-1">{viewingProject}</span>
+            </Badge>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleBackToProjects}
+              className="h-7"
+            >
+              <X className="h-3 w-3 mr-1" />
+              Clear filter
+            </Button>
+          </div>
         </div>
         <KanbanBoard />
       </div>
@@ -73,11 +121,53 @@ const ProjectsContent = () => {
           {projectData.map((project) => (
             <Card 
               key={project.name} 
-              className="hover:shadow-lg transition-shadow cursor-pointer"
+              className="group hover:shadow-lg transition-shadow cursor-pointer"
               onClick={() => handleProjectClick(project.name)}
             >
               <CardHeader>
-                <CardTitle>{project.name}</CardTitle>
+                {editingProject === project.name ? (
+                  <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                    <Input
+                      value={newProjectName}
+                      onChange={(e) => setNewProjectName(e.target.value)}
+                      className="flex-1"
+                      autoFocus
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleSaveEdit();
+                        if (e.key === 'Escape') handleCancelEdit();
+                      }}
+                    />
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={handleSaveEdit}
+                    >
+                      <Check className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={handleCancelEdit}
+                    >
+                      <XCircle className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <CardTitle>{project.name}</CardTitle>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleStartEdit(project.name);
+                      }}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Pencil className="h-3 w-3" />
+                    </Button>
+                  </div>
+                )}
                 <CardDescription>{project.totalCards} total tasks • Click to view</CardDescription>
               </CardHeader>
               <CardContent>

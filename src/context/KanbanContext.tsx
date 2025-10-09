@@ -63,6 +63,7 @@ interface KanbanContextType {
   clearAllFilters: () => void;
   filteredColumns: KanbanColumn[];
   loading: boolean;
+  renameProject: (oldName: string, newName: string) => Promise<void>;
 }
 
 const tagColors: Record<string, string> = {
@@ -176,7 +177,8 @@ export const KanbanContext = createContext<KanbanContextType>({
   allProjects: [],
   clearAllFilters: () => {},
   filteredColumns: [],
-  loading: false
+  loading: false,
+  renameProject: async () => {}
 });
 
 export const useKanban = () => useContext(KanbanContext);
@@ -653,6 +655,47 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
     setSelectedProject(null);
   };
 
+  const renameProject = async (oldName: string, newName: string): Promise<void> => {
+    try {
+      // Update all cards with the old project name to the new project name
+      const { error } = await supabase
+        .from('kanban_cards')
+        .update({ project_name: newName })
+        .eq('project_name', oldName);
+
+      if (error) throw error;
+
+      // Update local state
+      setColumns(prevColumns =>
+        prevColumns.map(column => ({
+          ...column,
+          cards: column.cards.map(card =>
+            card.projectName === oldName
+              ? { ...card, projectName: newName }
+              : card
+          )
+        }))
+      );
+
+      // Update selected project if it matches the old name
+      if (selectedProject === oldName) {
+        setSelectedProject(newName);
+      }
+
+      toast({
+        title: "Success",
+        description: "Project renamed successfully",
+      });
+    } catch (error) {
+      console.error('Error renaming project:', error);
+      toast({
+        title: "Error",
+        description: "Failed to rename project. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
     return (
     <KanbanContext.Provider value={{ 
       columns, 
@@ -676,7 +719,8 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
       allProjects,
       clearAllFilters,
       filteredColumns,
-      loading
+      loading,
+      renameProject
     }}>
       {children}
     </KanbanContext.Provider>
