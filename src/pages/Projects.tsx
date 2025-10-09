@@ -1,8 +1,9 @@
-import { useKanban } from "@/context/KanbanContext";
+import { useKanban, KanbanProvider } from "@/context/KanbanContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import Header from "@/components/Header";
 
-const Projects = () => {
+const ProjectsContent = () => {
   const { columns, allProjects } = useKanban();
 
   // Get cards grouped by project
@@ -60,6 +61,19 @@ const Projects = () => {
           ))}
         </div>
       )}
+    </div>
+  );
+};
+
+const Projects = () => {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+      <KanbanProvider>
+        <Header />
+        <main>
+          <ProjectsContent />
+        </main>
+      </KanbanProvider>
     </div>
   );
 };

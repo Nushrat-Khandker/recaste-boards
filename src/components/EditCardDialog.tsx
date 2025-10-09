@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { X, CalendarClock, Plus, Check } from "lucide-react"; 
+import { X, CalendarClock, Plus, Check, Link as LinkIcon, ExternalLink, FileText } from "lucide-react"; 
 import { KanbanCard, Tag, useKanban } from '../context/KanbanContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
@@ -96,6 +96,10 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
   const [dueDate, setDueDate] = useState<Date | undefined>(card.dueDate);
   const [movedDate] = useState<Date | undefined>(card.movedDate);
   const [isTagDropdownOpen, setIsTagDropdownOpen] = useState(false);
+  const [fileAttachments, setFileAttachments] = useState<Array<{ url: string; type: 'google_doc' | 'txt' | 'html'; name: string }>>(card.fileAttachments || []);
+  const [newFileUrl, setNewFileUrl] = useState('');
+  const [newFileName, setNewFileName] = useState('');
+  const [newFileType, setNewFileType] = useState<'google_doc' | 'txt' | 'html'>('google_doc');
 
   // Reset form when card changes
   useEffect(() => {
@@ -108,6 +112,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
     // Properly convert string dates to Date objects
     setStartDate(card.startDate ? new Date(card.startDate) : undefined);
     setDueDate(card.dueDate ? new Date(card.dueDate) : undefined);
+    setFileAttachments(card.fileAttachments || []);
   }, [card, isOpen]);
 
   const handleAddTag = () => {
@@ -146,6 +151,23 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
     setTags(newTags);
   };
 
+  const handleAddFile = () => {
+    if (newFileUrl.trim() && newFileName.trim()) {
+      setFileAttachments([...fileAttachments, { 
+        url: newFileUrl.trim(), 
+        type: newFileType, 
+        name: newFileName.trim() 
+      }]);
+      setNewFileUrl('');
+      setNewFileName('');
+      setNewFileType('google_doc');
+    }
+  };
+
+  const handleRemoveFile = (index: number) => {
+    setFileAttachments(fileAttachments.filter((_, i) => i !== index));
+  };
+
   const handleSave = () => {
     if (!title.trim()) return;
     
@@ -158,7 +180,8 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
       priority: priority,
       startDate,
       dueDate,
-      movedDate: card.movedDate // Preserve movedDate when editing
+      movedDate: card.movedDate, // Preserve movedDate when editing
+      fileAttachments: fileAttachments.length > 0 ? fileAttachments : undefined,
     };
     
     console.log('Saving card with projectName:', projectName.trim() || undefined);
@@ -428,6 +451,81 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
                 <SelectItem value="high">High</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <Separator />
+
+          {/* File Attachments Section */}
+          <div className="grid gap-2">
+            <label className="text-sm font-medium">File Attachments</label>
+            
+            {/* Display existing attachments */}
+            {fileAttachments.length > 0 && (
+              <div className="space-y-2 mb-2">
+                {fileAttachments.map((file, index) => (
+                  <div key={index} className="flex items-center gap-2 p-2 bg-muted rounded-md">
+                    <FileText className="h-4 w-4 text-muted-foreground" />
+                    <a 
+                      href={file.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex-1 text-sm hover:underline flex items-center gap-1"
+                    >
+                      {file.name}
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                    <Badge variant="outline" className="text-xs">{file.type}</Badge>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRemoveFile(index)}
+                      className="h-6 w-6 p-0"
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Add new attachment */}
+            <div className="space-y-2">
+              <Input
+                placeholder="File URL (Google Docs, .txt, .html)"
+                value={newFileUrl}
+                onChange={(e) => setNewFileUrl(e.target.value)}
+              />
+              <div className="flex gap-2">
+                <Input
+                  placeholder="File name"
+                  value={newFileName}
+                  onChange={(e) => setNewFileName(e.target.value)}
+                  className="flex-1"
+                />
+                <Select value={newFileType} onValueChange={(value: any) => setNewFileType(value)}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="google_doc">Google Doc</SelectItem>
+                    <SelectItem value="txt">Text (.txt)</SelectItem>
+                    <SelectItem value="html">HTML</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  type="button"
+                  onClick={handleAddFile}
+                  disabled={!newFileUrl.trim() || !newFileName.trim()}
+                  size="sm"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Add links to Google Docs, markdown .txt files, or hosted .html files
+            </p>
           </div>
         </div>
         

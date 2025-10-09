@@ -255,6 +255,7 @@ export type Database = {
           created_at: string
           description: string | null
           due_date: string | null
+          file_attachments: Json | null
           id: string
           moved_date: string | null
           number: string | null
@@ -271,6 +272,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           due_date?: string | null
+          file_attachments?: Json | null
           id?: string
           moved_date?: string | null
           number?: string | null
@@ -287,6 +289,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           due_date?: string | null
+          file_attachments?: Json | null
           id?: string
           moved_date?: string | null
           number?: string | null

@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useKanban } from '@/context/KanbanContext';
+import EditCardDialog from '@/components/EditCardDialog';
 interface KanbanCard {
   id: string;
   title: string;
@@ -44,7 +45,7 @@ const SOLAR_EVENT_EMOJIS: Record<string, string> = {
 };
 
 export function HijriCalendar() {
-  const { selectedTags, selectedProject } = useKanban();
+  const { selectedTags, selectedProject, updateCard, columns } = useKanban();
   const [newMoons, setNewMoons] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [monthRange, setMonthRange] = useState<{ start: Date; end: Date } | null>(null);
@@ -53,6 +54,7 @@ export function HijriCalendar() {
   const [moonPhases, setMoonPhases] = useState<Map<string, string>>(new Map());
   const [solarEvents, setSolarEvents] = useState<Map<string, string>>(new Map());
   const [cards, setCards] = useState<KanbanCard[]>([]);
+  const [selectedCard, setSelectedCard] = useState<{ card: KanbanCard; columnId: string } | null>(null);
 
   useEffect(() => {
     loadNewMoons();
@@ -329,20 +331,28 @@ export function HijriCalendar() {
 
               {/* Card titles */}
               <div className="flex-1 overflow-y-auto space-y-1">
-                {cardsForDate.map(({ card, type }) => (
-                  <div 
-                    key={`${card.id}-${type}`}
-                    className={cn(
-                      "text-xs p-1 rounded border truncate",
-                      type === 'start' 
-                        ? "bg-purple-100 dark:bg-purple-900/30 border-purple-300 dark:border-purple-700" 
-                        : "bg-amber-100 dark:bg-amber-900/30 border-amber-300 dark:border-amber-700"
-                    )}
-                    title={`${card.title} (${type === 'start' ? 'Start' : 'Due'})`}
-                  >
-                    {card.title}
-                  </div>
-                ))}
+                {cardsForDate.map(({ card, type }) => {
+                  // Find which column the card belongs to
+                  const cardColumn = columns.find(col => 
+                    col.cards.some(c => c.id === card.id)
+                  );
+                  
+                  return (
+                    <div 
+                      key={`${card.id}-${type}`}
+                      className={cn(
+                        "text-xs p-1 rounded border truncate cursor-pointer hover:opacity-80 transition-opacity",
+                        type === 'start' 
+                          ? "bg-purple-100 dark:bg-purple-900/30 border-purple-300 dark:border-purple-700" 
+                          : "bg-amber-100 dark:bg-amber-900/30 border-amber-300 dark:border-amber-700"
+                      )}
+                      title={`${card.title} (${type === 'start' ? 'Start' : 'Due'})`}
+                      onClick={() => cardColumn && setSelectedCard({ card, columnId: cardColumn.id })}
+                    >
+                      {card.title}
+                    </div>
+                  );
+                })}
               </div>
 
               {/* Gregorian date - only on Jumuah */}
@@ -355,6 +365,20 @@ export function HijriCalendar() {
           );
         })}
       </div>
+
+      {/* Edit Card Dialog */}
+      {selectedCard && (
+        <EditCardDialog
+          card={selectedCard.card}
+          columnId={selectedCard.columnId}
+          isOpen={!!selectedCard}
+          onClose={() => setSelectedCard(null)}
+          onSave={(columnId, updatedCard) => {
+            updateCard(columnId, updatedCard);
+            setSelectedCard(null);
+          }}
+        />
+      )}
     </div>
   );
 }

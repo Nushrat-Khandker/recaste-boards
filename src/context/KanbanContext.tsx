@@ -212,7 +212,7 @@ const convertSupabaseDataToColumns = (cards: any[], columns: any[]): KanbanColum
         startDate: card.start_date ? new Date(card.start_date) : undefined,
         dueDate: card.due_date ? new Date(card.due_date) : undefined,
         movedDate: card.moved_date ? new Date(card.moved_date) : undefined,
-        fileAttachments: card.file_attachments ? JSON.parse(card.file_attachments) : undefined,
+        fileAttachments: card.file_attachments ? (typeof card.file_attachments === 'string' ? JSON.parse(card.file_attachments) : card.file_attachments) : undefined,
       }))
   }));
 };
@@ -380,7 +380,7 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
         startDate: data.start_date ? new Date(data.start_date) : undefined,
         dueDate: data.due_date ? new Date(data.due_date) : undefined,
         movedDate: data.moved_date ? new Date(data.moved_date) : undefined,
-        fileAttachments: data.file_attachments ? JSON.parse(data.file_attachments) : undefined,
+        fileAttachments: data.file_attachments ? (typeof data.file_attachments === 'string' ? JSON.parse(data.file_attachments) : data.file_attachments) : undefined,
       };
 
       setColumns(prevColumns => 
