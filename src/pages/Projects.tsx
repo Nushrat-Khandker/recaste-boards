@@ -1,12 +1,15 @@
 import { useKanban, KanbanProvider } from "@/context/KanbanContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
+import KanbanBoard from "@/components/KanbanBoard";
+import { ArrowLeft } from "lucide-react";
+import { useState } from "react";
 
 const ProjectsContent = () => {
-  const { columns, allProjects, setSelectedProject } = useKanban();
-  const navigate = useNavigate();
+  const { columns, allProjects, setSelectedProject, selectedProject } = useKanban();
+  const [viewingProject, setViewingProject] = useState<string | null>(null);
 
   // Get cards grouped by project
   const projectData = allProjects.map(projectName => {
@@ -29,8 +32,33 @@ const ProjectsContent = () => {
 
   const handleProjectClick = (projectName: string) => {
     setSelectedProject(projectName);
-    navigate('/');
+    setViewingProject(projectName);
   };
+
+  const handleBackToProjects = () => {
+    setSelectedProject(null);
+    setViewingProject(null);
+  };
+
+  // If viewing a specific project, show the kanban board
+  if (viewingProject) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-6">
+          <Button
+            variant="ghost"
+            onClick={handleBackToProjects}
+            className="mb-4"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Projects
+          </Button>
+          <h1 className="text-3xl font-bold">📂 {viewingProject}</h1>
+        </div>
+        <KanbanBoard />
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
