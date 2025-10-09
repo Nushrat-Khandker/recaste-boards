@@ -98,8 +98,6 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
   const [isTagDropdownOpen, setIsTagDropdownOpen] = useState(false);
   const [fileAttachments, setFileAttachments] = useState<Array<{ url: string; type: 'google_doc' | 'txt' | 'html'; name: string }>>(card.fileAttachments || []);
   const [newFileUrl, setNewFileUrl] = useState('');
-  const [newFileName, setNewFileName] = useState('');
-  const [newFileType, setNewFileType] = useState<'google_doc' | 'txt' | 'html'>('google_doc');
 
   // Reset form when card changes
   useEffect(() => {
@@ -153,14 +151,24 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
 
   const handleAddFile = () => {
     if (newFileUrl.trim()) {
-      const fileName = newFileName.trim() || new URL(newFileUrl.trim()).pathname.split('/').pop() || 'Link';
-      setFileAttachments([...fileAttachments, { 
-        url: newFileUrl.trim(), 
-        type: 'google_doc', 
-        name: fileName 
-      }]);
-      setNewFileUrl('');
-      setNewFileName('');
+      try {
+        const url = new URL(newFileUrl.trim());
+        const fileName = url.pathname.split('/').pop() || url.hostname || 'Link';
+        setFileAttachments([...fileAttachments, { 
+          url: newFileUrl.trim(), 
+          type: 'google_doc', 
+          name: fileName 
+        }]);
+        setNewFileUrl('');
+      } catch {
+        // If not a valid URL, just use the text as name
+        setFileAttachments([...fileAttachments, { 
+          url: newFileUrl.trim(), 
+          type: 'google_doc', 
+          name: 'Link'
+        }]);
+        setNewFileUrl('');
+      }
     }
   };
 
@@ -495,16 +503,16 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
             {/* Add new attachment */}
             <div className="flex gap-2">
               <Input
-                placeholder="Paste file URL (Google Docs, etc.)"
+                placeholder="Paste file URL and press Add"
                 value={newFileUrl}
                 onChange={(e) => setNewFileUrl(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && newFileUrl.trim()) {
+                    e.preventDefault();
+                    handleAddFile();
+                  }
+                }}
                 className="flex-1"
-              />
-              <Input
-                placeholder="Name (optional)"
-                value={newFileName}
-                onChange={(e) => setNewFileName(e.target.value)}
-                className="w-32"
               />
               <Button
                 type="button"
@@ -515,6 +523,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
+            <p className="text-xs text-muted-foreground">Paste any URL and click Add to attach multiple files</p>
           </div>
         </div>
         
