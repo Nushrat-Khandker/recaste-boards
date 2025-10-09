@@ -1,6 +1,5 @@
 
 import * as React from "react"
-import { CalendarClock } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
@@ -23,12 +22,11 @@ export function DatePicker({ date, setDate, label, className, disabled = false }
           variant={"outline"}
           disabled={disabled}
           className={cn(
-            "w-full justify-start text-left font-normal",
+            "w-full justify-center text-left font-normal",
             !date && "text-muted-foreground",
             className
           )}
         >
-          <CalendarClock className="mr-2 h-4 w-4" />
           {date ? format(date, "MMM d, yy") : <span>{label || "Pick a date"}</span>}
         </Button>
       </PopoverTrigger>

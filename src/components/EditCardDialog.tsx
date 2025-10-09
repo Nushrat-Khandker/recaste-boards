@@ -302,28 +302,33 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
           </div>
           
           {/* Date picker section */}
-          <div className="grid gap-2">
-            <label className="text-sm font-medium">Dates</label>
-            <div className="grid grid-cols-3 gap-2">
-              <DatePicker 
-                date={startDate} 
-                setDate={setStartDate} 
-                label="Start date" 
-              />
-              <DatePicker 
-                date={dueDate} 
-                setDate={setDueDate} 
-                label="Due date" 
-              />
-            {movedDate && (
-                <div className="space-y-1">
-                  <label className="text-sm font-medium">Moved date</label>
-                  <div className="text-sm text-muted-foreground">
-                    {format(movedDate, "dd/MM/yy")}
-                  </div>
-                </div>
-              )}
+          <div className="grid gap-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Start date</label>
+                <DatePicker 
+                  date={startDate} 
+                  setDate={setStartDate} 
+                  label="Pick date" 
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Due date</label>
+                <DatePicker 
+                  date={dueDate} 
+                  setDate={setDueDate} 
+                  label="Pick date" 
+                />
+              </div>
             </div>
+            {movedDate && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Moved date</label>
+                <div className="flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm">
+                  {format(movedDate, "MMM d, yy")}
+                </div>
+              </div>
+            )}
           </div>
           
           <Separator />
