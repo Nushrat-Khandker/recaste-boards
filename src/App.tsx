@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Tags from "./pages/Tags";
 import SlackIntegrationPage from "./pages/SlackIntegration";
+import Projects from "./pages/Projects";
 
 const queryClient = new QueryClient();
 
@@ -21,6 +22,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/projects" element={<Projects />} />
             <Route path="/tags" element={<Tags />} />
             <Route path="/slack" element={<SlackIntegrationPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

@@ -101,85 +101,18 @@ const KanbanBoard: React.FC = () => {
   };
 
   return (
-    <div>
-      {/* Fixed Header */}
-      <div className="sticky top-[57px] z-10 bg-background backdrop-blur-md border-b px-6 py-4">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold">
-            {viewMode === 'board' ? 'Kanban Board' : 'Calendar View'}
-          </h1>
-          <div className="flex items-center gap-2">
-            <Button 
-              variant={viewMode === 'board' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setViewMode('board')}
-              className="h-9 w-9 p-0"
-            >
-              <LayoutGrid className="h-4 w-4" />
-            </Button>
-            <Button 
-              variant={viewMode === 'calendar' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setViewMode('calendar')}
-              className="h-9 w-9 p-0"
-            >
-              <CalendarIcon className="h-4 w-4" />
-            </Button>
-            {viewMode === 'board' && (
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => setShowSlackInput(!showSlackInput)}
-                className="h-9 w-9 p-0"
-              >
-                <MessageSquare className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
-        </div>
-        
-        {showSlackInput && (
-          <div className="mt-4 flex gap-2">
-            <Input
-              placeholder="Slack channel (e.g., #general)"
-              value={slackChannel}
-              onChange={(e) => setSlackChannel(e.target.value)}
-              className="max-w-xs"
-            />
-            <Button onClick={handleSendToSlack} disabled={isLoading} size="sm">
-              Send
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => setShowSlackInput(false)} 
-              size="sm"
-            >
-              Cancel
-            </Button>
-          </div>
-        )}
-      </div>
-      
-      {/* Scrollable Content */}
-      <div className="px-6 pt-2 pb-4">
-        {viewMode === 'calendar' ? (
-          <HijriCalendar />
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {filteredColumns.map(column => (
-              <KanbanColumn
-                key={column.id}
-                id={column.id}
-                title={column.title}
-                cards={column.cards}
-                onDragOver={handleDragOver}
-                onDrop={handleDrop}
-                onDragStart={handleDragStart}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {filteredColumns.map(column => (
+        <KanbanColumn
+          key={column.id}
+          id={column.id}
+          title={column.title}
+          cards={column.cards}
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
+          onDragStart={handleDragStart}
+        />
+      ))}
     </div>
   );
 };

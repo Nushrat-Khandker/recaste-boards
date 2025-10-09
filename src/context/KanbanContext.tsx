@@ -31,6 +31,7 @@ export interface KanbanCard {
   startDate?: Date; // New field for start date
   dueDate?: Date;   // New field for due date
   movedDate?: Date; // Automatically set when card is moved between columns
+  fileAttachments?: Array<{ url: string; type: 'google_doc' | 'txt' | 'html'; name: string }>; // File attachments
 }
 
 export interface KanbanColumn {
@@ -211,6 +212,7 @@ const convertSupabaseDataToColumns = (cards: any[], columns: any[]): KanbanColum
         startDate: card.start_date ? new Date(card.start_date) : undefined,
         dueDate: card.due_date ? new Date(card.due_date) : undefined,
         movedDate: card.moved_date ? new Date(card.moved_date) : undefined,
+        fileAttachments: card.file_attachments ? JSON.parse(card.file_attachments) : undefined,
       }))
   }));
 };
@@ -355,6 +357,7 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
         tags: card.tags ? JSON.stringify(card.tags) : null,
         start_date: card.startDate?.toISOString(),
         due_date: card.dueDate?.toISOString(),
+        file_attachments: card.fileAttachments ? JSON.stringify(card.fileAttachments) : null,
       };
 
       const { data, error } = await supabase
@@ -377,6 +380,7 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
         startDate: data.start_date ? new Date(data.start_date) : undefined,
         dueDate: data.due_date ? new Date(data.due_date) : undefined,
         movedDate: data.moved_date ? new Date(data.moved_date) : undefined,
+        fileAttachments: data.file_attachments ? JSON.parse(data.file_attachments) : undefined,
       };
 
       setColumns(prevColumns => 
@@ -493,6 +497,7 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
         tags: updatedCard.tags ? JSON.stringify(updatedCard.tags) : null,
         start_date: updatedCard.startDate?.toISOString(),
         due_date: updatedCard.dueDate?.toISOString(),
+        file_attachments: updatedCard.fileAttachments ? JSON.stringify(updatedCard.fileAttachments) : null,
       };
 
       const { error } = await supabase
