@@ -287,13 +287,17 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
   useEffect(() => {
     const channel = supabase
       .channel('kanban-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'kanban_cards' }, () => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'kanban_cards' }, (payload) => {
+        console.log('Realtime card change:', payload);
         loadData();
       })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'kanban_columns' }, () => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'kanban_columns' }, (payload) => {
+        console.log('Realtime column change:', payload);
         loadData();
       })
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Realtime subscription status:', status);
+      });
 
     return () => {
       supabase.removeChannel(channel);
