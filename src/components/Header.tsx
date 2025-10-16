@@ -75,29 +75,29 @@ const Header: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-20 bg-background border-b">
-      <div className="container mx-auto px-4 py-3">
-        <div className="flex justify-between items-center mb-3">
+      <div className="container mx-auto px-2 sm:px-4 py-2 sm:py-3">
+        <div className="flex justify-between items-center mb-2 sm:mb-3">
           {/* Logo */}
-          <Link to="/" className="text-xl font-bold hover:opacity-80 transition-opacity">
+          <Link to="/" className="text-lg sm:text-xl font-bold hover:opacity-80 transition-opacity">
             re<span className="text-[#FE446F]">*</span>caste
           </Link>
           
-          {/* Center Title */}
-          <div className="absolute left-1/2 transform -translate-x-1/2">
+          {/* Center Title - Hidden on mobile */}
+          <div className="hidden sm:block absolute left-1/2 transform -translate-x-1/2">
             <h1 className="text-2xl font-bold text-foreground">Kanban</h1>
           </div>
           
           {/* Right Side Controls */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             <YearWheel 
               value={selectedNumber} 
               onValueChange={setSelectedNumber}
               placeholder="Year"
-              className="w-20"
+              className="w-16 sm:w-20"
             />
             
             <Select value={selectedQuarter} onValueChange={setSelectedQuarter}>
-              <SelectTrigger className="w-16">
+              <SelectTrigger className="w-12 sm:w-16">
                 <SelectValue placeholder="Q" />
               </SelectTrigger>
               <SelectContent>
@@ -111,7 +111,7 @@ const Header: React.FC = () => {
             {/* More Options Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon">
+                <Button variant="outline" size="icon" className="h-8 w-8 sm:h-10 sm:w-10">
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -132,19 +132,19 @@ const Header: React.FC = () => {
         {/* Navigation Tabs */}
         <Tabs value={currentView} className="w-full">
           <TabsList className="w-full justify-start">
-            <TabsTrigger value="projects" asChild>
-              <Link to="/projects" className="gap-2">
-                📂 Projects
+            <TabsTrigger value="projects" asChild className="text-xs sm:text-sm">
+              <Link to="/projects" className="gap-1 sm:gap-2">
+                <span className="hidden sm:inline">📂</span> Projects
               </Link>
             </TabsTrigger>
-            <TabsTrigger value="tasks" asChild>
-              <Link to="/" className="gap-2">
-                ✅ Tasks
+            <TabsTrigger value="tasks" asChild className="text-xs sm:text-sm">
+              <Link to="/" className="gap-1 sm:gap-2">
+                <span className="hidden sm:inline">✅</span> Tasks
               </Link>
             </TabsTrigger>
-            <TabsTrigger value="calendar" asChild>
-              <Link to="/#calendar" className="gap-2">
-                📅 Calendar
+            <TabsTrigger value="calendar" asChild className="text-xs sm:text-sm">
+              <Link to="/#calendar" className="gap-1 sm:gap-2">
+                <span className="hidden sm:inline">📅</span> Calendar
               </Link>
             </TabsTrigger>
           </TabsList>
@@ -152,23 +152,26 @@ const Header: React.FC = () => {
 
         {/* Slack Input (when shown) */}
         {showSlackInput && (
-          <div className="mt-3 flex gap-2">
+          <div className="mt-3 flex flex-col sm:flex-row gap-2">
             <Input
               placeholder="Slack channel (e.g., #general)"
               value={slackChannel}
               onChange={(e) => setSlackChannel(e.target.value)}
-              className="max-w-xs"
+              className="w-full sm:max-w-xs"
             />
-            <Button onClick={handleSendToSlack} disabled={isLoading} size="sm">
-              Send
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => setShowSlackInput(false)} 
-              size="sm"
-            >
-              Cancel
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={handleSendToSlack} disabled={isLoading} size="sm" className="flex-1 sm:flex-none">
+                Send
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setShowSlackInput(false)} 
+                size="sm"
+                className="flex-1 sm:flex-none"
+              >
+                Cancel
+              </Button>
+            </div>
           </div>
         )}
       </div>
