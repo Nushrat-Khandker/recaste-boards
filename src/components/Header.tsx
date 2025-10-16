@@ -82,9 +82,9 @@ const Header: React.FC = () => {
             re<span className="text-[#FE446F]">*</span>caste
           </Link>
           
-          {/* Center Title - Hidden on mobile */}
-          <div className="hidden sm:block absolute left-1/2 transform -translate-x-1/2">
-            <h1 className="text-2xl font-bold text-foreground">Kanban</h1>
+          {/* Center Title */}
+          <div className="absolute left-1/2 transform -translate-x-1/2">
+            <h1 className="text-lg sm:text-2xl font-bold text-foreground">Kanban</h1>
           </div>
           
           {/* Right Side Controls */}
