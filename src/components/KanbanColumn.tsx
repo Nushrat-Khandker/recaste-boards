@@ -84,7 +84,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
       data-column-id={id}
     >
       {/* Sticky column header */}
-      <div className="sticky top-[100px] sm:top-[129px] z-40 bg-card backdrop-blur-md border-b py-2 mb-2 -mx-3 px-3">
+      <div className="sticky top-[100px] sm:top-[129px] z-40 bg-card/95 backdrop-blur-xl border-b py-3 mb-2 -mx-3 px-3 shadow-sm">
         <div className="flex items-center justify-between mb-2">
           <h2 className="font-medium text-sm tracking-wide uppercase">{title}</h2>
           <div className="flex items-center gap-2">
