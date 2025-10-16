@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { MessageSquare, MoreVertical } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,17 @@ const Header: React.FC = () => {
   const [showSlackInput, setShowSlackInput] = useState(false);
   const [slackChannel, setSlackChannel] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  const headerRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    const updateVar = () => {
+      const h = headerRef.current?.offsetHeight ?? 0;
+      document.documentElement.style.setProperty('--header-height', `${h}px`);
+    };
+    updateVar();
+    window.addEventListener('resize', updateVar);
+    return () => window.removeEventListener('resize', updateVar);
+  }, []);
 
   // Determine current view from route
   const currentView = location.pathname === '/projects' ? 'projects' 
@@ -74,7 +85,7 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="sticky top-0 z-20 bg-background border-b">
+    <header ref={headerRef} className="sticky top-0 z-50 bg-background border-b">
       <div className="container mx-auto px-4 py-3">
         <div className="flex justify-between items-center mb-3">
           {/* Logo */}
