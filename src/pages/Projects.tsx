@@ -105,17 +105,17 @@ const ProjectsContent = () => {
                 <Button size="sm" variant="ghost" onClick={handleCancelEdit}>Cancel</Button>
               </div>
             ) : (
-              <>
+              <div className="flex items-center gap-2 group">
                 <h1 className="text-3xl font-bold">📂 {viewingProject}</h1>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="opacity-60 hover:opacity-100"
+                  className="opacity-0 group-hover:opacity-100 transition-opacity"
                   onClick={() => handleStartEdit(viewingProject)}
                 >
                   <Pencil className="h-4 w-4" />
                 </Button>
-              </>
+              </div>
             )}
           </div>
         </div>
