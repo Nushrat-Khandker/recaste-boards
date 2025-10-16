@@ -102,6 +102,11 @@ const KanbanBoard: React.FC = () => {
 
   return (
     <div className="relative">
+      {/* Global sticky overlay under header tabs to fully blur background across all columns */}
+      <div
+        className="sticky z-30 -mx-2 sm:-mx-4 h-11 bg-background/90 backdrop-blur-xl border-b pointer-events-none"
+        style={{ top: 'var(--header-height, 112px)' }}
+      />
 
       {/* Columns */}
       <div className="flex gap-4 md:gap-6 overflow-x-auto pb-4 snap-x snap-mandatory md:snap-none">
