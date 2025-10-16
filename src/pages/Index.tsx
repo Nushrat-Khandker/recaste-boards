@@ -25,7 +25,7 @@ const IndexContent = () => {
   return (
     <>
       <Header />
-      <main className="container mx-auto px-4 pt-4">
+      <main className="container mx-auto px-2 sm:px-4 pt-4 max-w-7xl">
         {selectedProject && viewMode === 'board' && (
           <div className="mb-4 flex items-center gap-2">
             <Badge variant="secondary" className="text-sm py-1.5 px-3">
