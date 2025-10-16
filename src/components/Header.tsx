@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { MessageSquare, MoreVertical } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,18 @@ const Header: React.FC = () => {
   const currentView = location.pathname === '/projects' ? 'projects' 
                     : location.pathname === '/' && location.hash === '#calendar' ? 'calendar'
                     : 'tasks';
+
+  // Expose sticky offset for column headers
+  const headerRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    const updateVar = () => {
+      const h = headerRef.current?.offsetHeight ?? 112;
+      document.documentElement.style.setProperty('--header-height', `${h}px`);
+    };
+    updateVar();
+    window.addEventListener('resize', updateVar);
+    return () => window.removeEventListener('resize', updateVar);
+  }, []);
 
   const handleSendToSlack = async () => {
     if (!slackChannel.trim()) {
@@ -74,7 +86,7 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="sticky top-0 z-20 bg-background border-b">
+    <header ref={headerRef} className="sticky top-0 z-20 bg-background border-b">
       <div className="container mx-auto px-2 sm:px-4 py-2 sm:py-3">
         <div className="flex justify-between items-center mb-2 sm:mb-3">
           {/* Logo */}
