@@ -264,42 +264,43 @@ export function HijriCalendar() {
   const firstDayWeekday = days[0]?.weekday || 0;
 
   return (
-    <div className="w-full max-w-6xl mx-auto p-6">
+    <div className="w-full max-w-6xl mx-auto p-2 sm:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <Button variant="outline" size="sm" onClick={() => navigateMonth('prev')}>
-          <ChevronLeft className="h-4 w-4" />
-          Previous
+      <div className="flex items-center justify-between mb-3 sm:mb-6">
+        <Button variant="outline" size="sm" onClick={() => navigateMonth('prev')} className="text-xs sm:text-sm px-2 sm:px-3">
+          <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
+          <span className="hidden sm:inline">Previous</span>
         </Button>
         
-        <h2 className="text-2xl font-bold">
+        <h2 className="text-base sm:text-2xl font-bold text-center">
           {hijriTitle.month}. {hijriTitle.monthName} {hijriTitle.year}
         </h2>
         
-        <Button variant="outline" size="sm" onClick={() => navigateMonth('next')}>
-          Next
-          <ChevronRight className="h-4 w-4" />
+        <Button variant="outline" size="sm" onClick={() => navigateMonth('next')} className="text-xs sm:text-sm px-2 sm:px-3">
+          <span className="hidden sm:inline">Next</span>
+          <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
         </Button>
       </div>
 
       {/* Weekday headers */}
-      <div className="grid grid-cols-7 gap-2 mb-2">
+      <div className="grid grid-cols-7 gap-1 sm:gap-2 mb-2">
         {weekdays.map((day, index) => (
           <div
             key={day}
             className={cn(
-              "text-center font-semibold py-2 rounded-lg text-sm",
+              "text-center font-semibold py-1 sm:py-2 rounded-lg text-[10px] sm:text-sm",
               index === 5 && "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300", // Jumuah
               index === 6 && "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300" // As-sabt
             )}
           >
-            {index === 5 ? 'Jumuah' : index === 6 ? 'As-sabt' : `Day ${index + 1}`}
+            <span className="hidden sm:inline">{index === 5 ? 'Jumuah' : index === 6 ? 'As-sabt' : `Day ${index + 1}`}</span>
+            <span className="sm:hidden">{index === 5 ? 'Jum' : index === 6 ? 'Sab' : `D${index + 1}`}</span>
           </div>
         ))}
       </div>
 
       {/* Calendar grid */}
-      <div className="grid grid-cols-7 gap-2">
+      <div className="grid grid-cols-7 gap-1 sm:gap-2">
         {/* Empty cells for offset */}
         {Array.from({ length: firstDayWeekday }).map((_, i) => (
           <div key={`empty-${i}`} className="aspect-square" />
@@ -317,20 +318,20 @@ export function HijriCalendar() {
             <div
               key={hijriDay}
               className={cn(
-                "aspect-square border-2 border-border/70 rounded-lg p-2 relative flex flex-col overflow-hidden bg-white dark:bg-slate-800",
+                "aspect-square border border-border/70 sm:border-2 rounded-sm sm:rounded-lg p-0.5 sm:p-2 relative flex flex-col overflow-hidden bg-white dark:bg-slate-800",
                 weekday === 5 && "bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700",
                 weekday === 6 && "bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700",
-                isToday && "ring-2 ring-primary"
+                isToday && "ring-1 sm:ring-2 ring-primary"
               )}
             >
               {/* Moon phase and solar events */}
-              <div className="flex gap-1 mb-1">
-                {moonEmoji && <span className="text-lg">{moonEmoji}</span>}
-                {solarEmoji && <span className="text-lg">{solarEmoji}</span>}
+              <div className="flex gap-0.5 sm:gap-1 mb-0.5 sm:mb-1">
+                {moonEmoji && <span className="text-[10px] sm:text-base leading-none">{moonEmoji}</span>}
+                {solarEmoji && <span className="text-[10px] sm:text-base leading-none">{solarEmoji}</span>}
               </div>
 
               {/* Card titles */}
-              <div className="flex-1 overflow-y-auto space-y-1">
+              <div className="flex-1 overflow-y-auto space-y-0.5 sm:space-y-1">
                 {cardsForDate.map(({ card, type }) => {
                   // Find which column the card belongs to
                   const cardColumn = columns.find(col => 
@@ -341,7 +342,7 @@ export function HijriCalendar() {
                     <div 
                       key={`${card.id}-${type}`}
                       className={cn(
-                        "text-xs p-1 rounded border truncate cursor-pointer hover:opacity-80 transition-opacity",
+                        "text-[8px] sm:text-xs p-0.5 sm:p-1 rounded border truncate cursor-pointer hover:opacity-80 transition-opacity",
                         type === 'start' 
                           ? "bg-purple-100 dark:bg-purple-900/30 border-purple-300 dark:border-purple-700" 
                           : "bg-amber-100 dark:bg-amber-900/30 border-amber-300 dark:border-amber-700"
@@ -357,7 +358,7 @@ export function HijriCalendar() {
 
               {/* Gregorian date - only on Jumuah */}
               {weekday === 5 && (
-                <div className="text-xs text-muted-foreground mt-auto pt-1 border-t">
+                <div className="text-[8px] sm:text-xs text-muted-foreground mt-auto pt-0.5 sm:pt-1 border-t hidden sm:block">
                   {format(gregorianDate, 'MMM d, yyyy')}
                 </div>
               )}
