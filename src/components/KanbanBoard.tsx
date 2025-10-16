@@ -20,7 +20,7 @@ const KanbanBoard: React.FC = () => {
   const [viewMode, setViewMode] = useState<'board' | 'calendar'>('board');
   const { toast } = useToast();
 
-  if (loading) {
+  if (loading && filteredColumns.length === 0) {
     return (
       <div className="px-6 py-4 flex items-center justify-center min-h-[400px]">
         <div className="text-center">
@@ -102,9 +102,9 @@ const KanbanBoard: React.FC = () => {
 
   return (
     <div className="relative">
-      {/* Global sticky overlay under header tabs to fully blur background across all columns */}
+      {/* Global fixed overlay under header tabs to fully blur background across all columns */}
       <div
-        className="sticky z-30 -mx-2 sm:-mx-4 h-11 bg-background/90 backdrop-blur-xl border-b pointer-events-none"
+        className="fixed inset-x-0 z-30 h-12 bg-background/90 backdrop-blur-2xl border-b pointer-events-none"
         style={{ top: 'var(--header-height, 112px)' }}
       />
 
