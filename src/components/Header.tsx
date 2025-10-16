@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { MessageSquare, MoreVertical } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -32,18 +32,6 @@ const Header: React.FC = () => {
   const currentView = location.pathname === '/projects' ? 'projects' 
                     : location.pathname === '/' && location.hash === '#calendar' ? 'calendar'
                     : 'tasks';
-
-  // Expose sticky offset for column headers
-  const headerRef = useRef<HTMLElement | null>(null);
-  useEffect(() => {
-    const updateVar = () => {
-      const h = headerRef.current?.offsetHeight ?? 112;
-      document.documentElement.style.setProperty('--header-height', `${h}px`);
-    };
-    updateVar();
-    window.addEventListener('resize', updateVar);
-    return () => window.removeEventListener('resize', updateVar);
-  }, []);
 
   const handleSendToSlack = async () => {
     if (!slackChannel.trim()) {
@@ -86,30 +74,30 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header ref={headerRef} className="sticky top-0 z-20 bg-background border-b">
-      <div className="container mx-auto px-2 sm:px-4 py-2 sm:py-3">
-        <div className="flex justify-between items-center mb-2 sm:mb-3">
+    <header className="sticky top-0 z-20 bg-background border-b">
+      <div className="container mx-auto px-4 py-3">
+        <div className="flex justify-between items-center mb-3">
           {/* Logo */}
-          <Link to="/" className="text-lg sm:text-xl font-bold hover:opacity-80 transition-opacity">
+          <Link to="/" className="text-xl font-bold hover:opacity-80 transition-opacity">
             re<span className="text-[#FE446F]">*</span>caste
           </Link>
           
           {/* Center Title */}
           <div className="absolute left-1/2 transform -translate-x-1/2">
-            <h1 className="text-lg sm:text-2xl font-bold text-foreground">Kanban</h1>
+            <h1 className="text-2xl font-bold text-foreground">Kanban</h1>
           </div>
           
           {/* Right Side Controls */}
-          <div className="flex items-center gap-1 sm:gap-2">
+          <div className="flex items-center gap-2">
             <YearWheel 
               value={selectedNumber} 
               onValueChange={setSelectedNumber}
               placeholder="Year"
-              className="w-16 sm:w-20"
+              className="w-20"
             />
             
             <Select value={selectedQuarter} onValueChange={setSelectedQuarter}>
-              <SelectTrigger className="w-12 sm:w-16">
+              <SelectTrigger className="w-16">
                 <SelectValue placeholder="Q" />
               </SelectTrigger>
               <SelectContent>
@@ -123,7 +111,7 @@ const Header: React.FC = () => {
             {/* More Options Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" className="h-8 w-8 sm:h-10 sm:w-10">
+                <Button variant="outline" size="icon">
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -144,19 +132,19 @@ const Header: React.FC = () => {
         {/* Navigation Tabs */}
         <Tabs value={currentView} className="w-full">
           <TabsList className="w-full justify-start">
-            <TabsTrigger value="projects" asChild className="text-xs sm:text-sm">
-              <Link to="/projects" className="gap-1 sm:gap-2">
-                <span className="hidden sm:inline">📂</span> Projects
+            <TabsTrigger value="projects" asChild>
+              <Link to="/projects" className="gap-2">
+                📂 Projects
               </Link>
             </TabsTrigger>
-            <TabsTrigger value="tasks" asChild className="text-xs sm:text-sm">
-              <Link to="/" className="gap-1 sm:gap-2">
-                <span className="hidden sm:inline">✅</span> Tasks
+            <TabsTrigger value="tasks" asChild>
+              <Link to="/" className="gap-2">
+                ✅ Tasks
               </Link>
             </TabsTrigger>
-            <TabsTrigger value="calendar" asChild className="text-xs sm:text-sm">
-              <Link to="/#calendar" className="gap-1 sm:gap-2">
-                <span className="hidden sm:inline">📅</span> Calendar
+            <TabsTrigger value="calendar" asChild>
+              <Link to="/#calendar" className="gap-2">
+                📅 Calendar
               </Link>
             </TabsTrigger>
           </TabsList>
@@ -164,26 +152,23 @@ const Header: React.FC = () => {
 
         {/* Slack Input (when shown) */}
         {showSlackInput && (
-          <div className="mt-3 flex flex-col sm:flex-row gap-2">
+          <div className="mt-3 flex gap-2">
             <Input
               placeholder="Slack channel (e.g., #general)"
               value={slackChannel}
               onChange={(e) => setSlackChannel(e.target.value)}
-              className="w-full sm:max-w-xs"
+              className="max-w-xs"
             />
-            <div className="flex gap-2">
-              <Button onClick={handleSendToSlack} disabled={isLoading} size="sm" className="flex-1 sm:flex-none">
-                Send
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => setShowSlackInput(false)} 
-                size="sm"
-                className="flex-1 sm:flex-none"
-              >
-                Cancel
-              </Button>
-            </div>
+            <Button onClick={handleSendToSlack} disabled={isLoading} size="sm">
+              Send
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowSlackInput(false)} 
+              size="sm"
+            >
+              Cancel
+            </Button>
           </div>
         )}
       </div>

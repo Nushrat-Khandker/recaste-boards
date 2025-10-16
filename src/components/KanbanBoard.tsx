@@ -20,7 +20,7 @@ const KanbanBoard: React.FC = () => {
   const [viewMode, setViewMode] = useState<'board' | 'calendar'>('board');
   const { toast } = useToast();
 
-  if (loading && filteredColumns.length === 0) {
+  if (loading) {
     return (
       <div className="px-6 py-4 flex items-center justify-center min-h-[400px]">
         <div className="text-center">
@@ -101,28 +101,18 @@ const KanbanBoard: React.FC = () => {
   };
 
   return (
-    <div className="relative">
-      {/* Global fixed overlay under header tabs to fully blur background across all columns */}
-      <div
-        className="fixed inset-x-0 z-30 h-12 bg-background/90 backdrop-blur-2xl border-b pointer-events-none"
-        style={{ top: 'var(--header-height, 112px)' }}
-      />
-
-      {/* Columns */}
-      <div className="flex gap-4 md:gap-6 overflow-x-auto pb-4 snap-x snap-mandatory md:snap-none">
-        {filteredColumns.map(column => (
-          <div key={column.id} className="flex-shrink-0 w-[85vw] md:w-[calc(33.333%-1rem)] snap-center">
-            <KanbanColumn
-              id={column.id}
-              title={column.title}
-              cards={column.cards}
-              onDragOver={handleDragOver}
-              onDrop={handleDrop}
-              onDragStart={handleDragStart}
-            />
-          </div>
-        ))}
-      </div>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {filteredColumns.map(column => (
+        <KanbanColumn
+          key={column.id}
+          id={column.id}
+          title={column.title}
+          cards={column.cards}
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
+          onDragStart={handleDragStart}
+        />
+      ))}
     </div>
   );
 };

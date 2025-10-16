@@ -67,9 +67,9 @@ const ProjectsContent = () => {
   // If viewing a specific project, show the kanban board
   if (viewingProject) {
     return (
-      <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
-        <div className="mb-4 sm:mb-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 mb-4">
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-6">
+          <div className="flex items-center gap-3 mb-4">
             <Button
               variant="ghost"
               onClick={handleBackToProjects}
@@ -125,8 +125,8 @@ const ProjectsContent = () => {
   }
 
   return (
-    <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
-      <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">📂 Projects Overview</h1>
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-6">📂 Projects Overview</h1>
       
       {projectData.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">

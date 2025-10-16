@@ -84,23 +84,18 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
       data-column-id={id}
     >
       {/* Sticky column header */}
-      <div
-        className="sticky z-40 -mx-3 px-3 bg-background border-b"
-        style={{ top: 'calc(var(--header-height, 112px) + 48px)' }}
-      >
-        <div className="py-2">
-          <div className="flex items-center justify-between">
-            <h2 className="font-medium text-sm tracking-wide uppercase">{title}</h2>
-            <div className="flex items-center gap-2">
-              <span className="bg-muted text-muted-foreground text-xs px-2 py-1 rounded-full min-w-[20px] text-center">
-                {cards.length}
-              </span>
-              <AddCard 
-                columnId={id} 
-                onAddCard={handleAddCard}
-                variant="compact"
-              />
-            </div>
+      <div className="sticky top-[129px] z-40 bg-card backdrop-blur-md border-b py-2 mb-2 -mx-3 px-3">
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="font-medium text-sm tracking-wide uppercase">{title}</h2>
+          <div className="flex items-center gap-2">
+            <span className="bg-muted text-muted-foreground text-xs px-2 py-1 rounded-full min-w-[20px] text-center">
+              {cards.length}
+            </span>
+            <AddCard 
+              columnId={id} 
+              onAddCard={handleAddCard}
+              variant="compact"
+            />
           </div>
         </div>
       </div>

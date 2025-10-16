@@ -221,7 +221,7 @@ const convertSupabaseDataToColumns = (cards: any[], columns: any[]): KanbanColum
 
 export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) => {
   const { toast } = useToast();
-  const [columns, setColumns] = useState<KanbanColumn[]>(defaultColumns);
+  const [columns, setColumns] = useState<KanbanColumn[]>([]);
   const [selectedNumber, setSelectedNumber] = useState<string>(() => {
     return localStorage.getItem('selectedNumber') || '1446';
   });
@@ -232,7 +232,7 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
   const [selectedProject, setSelectedProject] = useState<string | null>(() => {
     return localStorage.getItem('selectedProject') || null;
   });
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
 
   // Load data from Supabase database
   const loadData = async () => {
