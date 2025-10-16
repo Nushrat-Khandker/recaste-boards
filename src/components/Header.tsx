@@ -89,13 +89,13 @@ const Header: React.FC = () => {
       <div className="container mx-auto px-2 sm:px-4 py-2 sm:py-3">
         <div className="flex justify-between items-center mb-2 sm:mb-3">
           {/* Logo */}
-          <Link to="/" className="text-lg sm:text-xl font-bold hover:opacity-80 transition-opacity flex-shrink-0">
+          <Link to="/" className="text-sm sm:text-xl font-bold hover:opacity-80 transition-opacity flex-shrink-0">
             re<span className="text-[#FE446F]">*</span>caste
           </Link>
           
           {/* Center Title */}
           <div className="absolute left-1/2 transform -translate-x-1/2 pointer-events-none">
-            <h1 className="text-sm sm:text-2xl font-bold text-foreground whitespace-nowrap">Kanban</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground whitespace-nowrap">Kanban</h1>
           </div>
           
           {/* Right Side Controls */}
