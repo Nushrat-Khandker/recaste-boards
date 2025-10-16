@@ -86,7 +86,38 @@ const ProjectsContent = () => {
               Clear filter
             </Button>
           </div>
-          <h1 className="text-3xl font-bold">📂 {viewingProject}</h1>
+          <div className="flex items-center gap-2">
+            {editingProject === viewingProject ? (
+              <div className="flex items-center gap-2">
+                <span className="text-3xl">📂</span>
+                <input
+                  type="text"
+                  value={newProjectName}
+                  onChange={(e) => setNewProjectName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSaveEdit();
+                    if (e.key === 'Escape') handleCancelEdit();
+                  }}
+                  className="text-3xl font-bold bg-transparent border-b-2 border-primary focus:outline-none"
+                  autoFocus
+                />
+                <Button size="sm" onClick={handleSaveEdit}>Save</Button>
+                <Button size="sm" variant="ghost" onClick={handleCancelEdit}>Cancel</Button>
+              </div>
+            ) : (
+              <>
+                <h1 className="text-3xl font-bold">📂 {viewingProject}</h1>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="opacity-60 hover:opacity-100"
+                  onClick={() => handleStartEdit(viewingProject)}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              </>
+            )}
+          </div>
         </div>
         <KanbanBoard />
       </div>

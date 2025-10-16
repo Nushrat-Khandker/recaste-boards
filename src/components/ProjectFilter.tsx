@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FolderKanban, X, Plus } from 'lucide-react';
+import { FolderKanban, X, Plus, Pencil, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -13,8 +13,10 @@ import {
 import { useKanban } from '../context/KanbanContext';
 
 const ProjectFilter: React.FC = () => {
-  const { allProjects, selectedProject, setSelectedProject } = useKanban();
+  const { allProjects, selectedProject, setSelectedProject, renameProject } = useKanban();
   const [newProjectName, setNewProjectName] = useState('');
+  const [editingProject, setEditingProject] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState('');
 
   const handleAddProject = () => {
     if (newProjectName.trim()) {
@@ -59,13 +61,67 @@ const ProjectFilter: React.FC = () => {
             </DropdownMenuCheckboxItem>
             
             {allProjects.map((project) => (
-              <DropdownMenuCheckboxItem
-                key={project}
-                checked={selectedProject === project}
-                onCheckedChange={() => setSelectedProject(project)}
-              >
-                {project}
-              </DropdownMenuCheckboxItem>
+              <div key={project} className="flex items-center gap-1 px-2 py-1.5 hover:bg-accent group/item">
+                {editingProject === project ? (
+                  <>
+                    <Input
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onKeyDown={async (e) => {
+                        if (e.key === 'Enter' && editValue.trim()) {
+                          await renameProject(project, editValue.trim());
+                          setEditingProject(null);
+                          setEditValue('');
+                        }
+                        if (e.key === 'Escape') {
+                          setEditingProject(null);
+                          setEditValue('');
+                        }
+                      }}
+                      className="h-6 text-sm flex-1"
+                      autoFocus
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 w-6 p-0"
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        if (editValue.trim()) {
+                          await renameProject(project, editValue.trim());
+                          setEditingProject(null);
+                          setEditValue('');
+                        }
+                      }}
+                    >
+                      <Check className="h-3 w-3" />
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <DropdownMenuCheckboxItem
+                      checked={selectedProject === project}
+                      onCheckedChange={() => setSelectedProject(project)}
+                      className="flex-1"
+                    >
+                      {project}
+                    </DropdownMenuCheckboxItem>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 w-6 p-0 opacity-0 group-hover/item:opacity-100"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingProject(project);
+                        setEditValue(project);
+                      }}
+                    >
+                      <Pencil className="h-3 w-3" />
+                    </Button>
+                  </>
+                )}
+              </div>
             ))}
             
             <DropdownMenuSeparator />
