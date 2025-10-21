@@ -8,7 +8,7 @@ import Header from "@/components/Header";
 import KanbanBoard from "@/components/KanbanBoard";
 import { ChatView } from "@/components/board/ChatView";
 import { FilesView } from "@/components/board/FilesView";
-import { CheckSquare, MessageSquare, Files, Pencil, Check, XCircle } from "lucide-react";
+import { CheckSquare, MessageSquare, Files, Pencil, Check, XCircle, ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -80,10 +80,16 @@ const ProjectsContent = () => {
         <header className="sticky top-0 z-50 bg-background border-b">
           <div className="container mx-auto px-4 py-3">
             <div className="flex items-center justify-between mb-3">
-              {/* Logo */}
-              <Link to="/" className="text-xl font-bold hover:opacity-80 transition-opacity">
-                re<span className="text-[#FE446F]">*</span>caste
-              </Link>
+              {/* Back Arrow */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleBackToProjects}
+                className="gap-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to Boards
+              </Button>
               
               {/* Board Title with Edit */}
               <div className="flex items-center gap-2">
