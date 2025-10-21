@@ -3,14 +3,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Header from "@/components/Header";
 import KanbanBoard from "@/components/KanbanBoard";
+import { ChatView } from "@/components/board/ChatView";
+import { FilesView } from "@/components/board/FilesView";
 import { ArrowLeft, X, Pencil, Check, XCircle } from "lucide-react";
 import { useState } from "react";
+
+type BoardView = 'tasks' | 'chat' | 'files';
 
 const ProjectsContent = () => {
   const { columns, allProjects, setSelectedProject, selectedProject, renameProject } = useKanban();
   const [viewingProject, setViewingProject] = useState<string | null>(null);
+  const [boardView, setBoardView] = useState<BoardView>('tasks');
   const [editingProject, setEditingProject] = useState<string | null>(null);
   const [newProjectName, setNewProjectName] = useState("");
 
@@ -64,29 +70,41 @@ const ProjectsContent = () => {
     setNewProjectName("");
   };
 
-  // If viewing a specific project, show the kanban board
+  // If viewing a specific project, show the board with tabs
   if (viewingProject) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="mb-6">
-          <div className="flex items-center gap-3 mb-4">
-            <Button
-              variant="ghost"
-              onClick={handleBackToProjects}
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Projects
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleBackToProjects}
-            >
-              <X className="h-3 w-3 mr-1" />
-              Clear filter
-            </Button>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                onClick={handleBackToProjects}
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Boards
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleBackToProjects}
+              >
+                <X className="h-3 w-3 mr-1" />
+                Clear filter
+              </Button>
+            </div>
+            
+            {/* Board View Tabs - Right Side */}
+            <Tabs value={boardView} onValueChange={(v) => setBoardView(v as BoardView)}>
+              <TabsList>
+                <TabsTrigger value="tasks">📋 Tasks</TabsTrigger>
+                <TabsTrigger value="chat">💬 Chat</TabsTrigger>
+                <TabsTrigger value="files">📎 Files</TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
-          <div className="flex items-center gap-2">
+          
+          <div className="flex items-center gap-2 justify-center">
             {editingProject === viewingProject ? (
               <div className="flex items-center gap-2">
                 <span className="text-3xl">📂</span>
@@ -119,18 +137,22 @@ const ProjectsContent = () => {
             )}
           </div>
         </div>
-        <KanbanBoard />
+        
+        {/* Render different views based on selected tab */}
+        {boardView === 'tasks' && <KanbanBoard />}
+        {boardView === 'chat' && <ChatView boardName={viewingProject} />}
+        {boardView === 'files' && <FilesView boardName={viewingProject} />}
       </div>
     );
   }
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">📂 Projects Overview</h1>
+      <h1 className="text-3xl font-bold mb-6">📂 Boards Overview</h1>
       
       {projectData.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
-          <p>No projects yet. Create a card with a project name to get started!</p>
+          <p>No boards yet. Create a card with a project name to get started!</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
