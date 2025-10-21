@@ -13,6 +13,7 @@ import { YearWheel } from './YearWheel';
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { format } from "date-fns";
+import { useToast } from "@/components/ui/use-toast";
 
 interface EditCardDialogProps {
   card: KanbanCard;
@@ -85,6 +86,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
   isNew = false
 }) => {
   const { getAllTags, allProjects } = useKanban();
+  const { toast } = useToast();
   const [title, setTitle] = useState(card.title);
   const [description, setDescription] = useState(card.description || '');
   const [projectName, setProjectName] = useState(card.projectName || '');
@@ -177,23 +179,27 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
   };
 
   const handleSave = () => {
-    if (!title.trim()) return;
+    if (!title.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Title is required",
+        variant: "destructive",
+      });
+      return;
+    }
     
     const updatedCard: KanbanCard = {
       ...card,
-      title,
+      title: title.trim(),
       description: description.trim() || undefined,
       projectName: projectName.trim() || undefined,
       tags: tags.length > 0 ? tags : undefined,
       priority: priority,
       startDate,
       dueDate,
-      movedDate: card.movedDate, // Preserve movedDate when editing
+      movedDate: card.movedDate,
       fileAttachments: fileAttachments.length > 0 ? fileAttachments : undefined,
     };
-    
-    console.log('Saving card with projectName:', projectName.trim() || undefined);
-    console.log('Updated card data:', updatedCard);
     
     onSave(columnId, updatedCard);
     onClose();

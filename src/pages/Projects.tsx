@@ -8,8 +8,9 @@ import Header from "@/components/Header";
 import KanbanBoard from "@/components/KanbanBoard";
 import { ChatView } from "@/components/board/ChatView";
 import { FilesView } from "@/components/board/FilesView";
-import { ArrowLeft, X, Pencil, Check, XCircle } from "lucide-react";
+import { CheckSquare, MessageSquare, Files, Pencil, Check, XCircle } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 type BoardView = 'tasks' | 'chat' | 'files';
 
@@ -71,78 +72,92 @@ const ProjectsContent = () => {
     setNewProjectName("");
   };
 
-  // If viewing a specific project, show the board with tabs
+  // If viewing a specific project, show clean board page without Header
   if (viewingProject) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                onClick={handleBackToProjects}
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Boards
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleBackToProjects}
-              >
-                <X className="h-3 w-3 mr-1" />
-                Clear filter
-              </Button>
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+        {/* Custom minimal navigation bar */}
+        <header className="sticky top-0 z-50 bg-background border-b">
+          <div className="container mx-auto px-4 py-3">
+            <div className="flex items-center justify-between mb-3">
+              {/* Logo */}
+              <Link to="/" className="text-xl font-bold hover:opacity-80 transition-opacity">
+                re<span className="text-[#FE446F]">*</span>caste
+              </Link>
+              
+              {/* Board Title with Edit */}
+              <div className="flex items-center gap-2">
+                {editingProject === viewingProject ? (
+                  <>
+                    <span className="text-2xl">📂</span>
+                    <input
+                      type="text"
+                      value={newProjectName}
+                      onChange={(e) => setNewProjectName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleSaveEdit();
+                        if (e.key === 'Escape') handleCancelEdit();
+                      }}
+                      className="text-2xl font-bold bg-transparent border-b-2 border-primary focus:outline-none"
+                      autoFocus
+                    />
+                    <Button size="sm" onClick={handleSaveEdit}><Check className="h-4 w-4" /></Button>
+                    <Button size="sm" variant="ghost" onClick={handleCancelEdit}><XCircle className="h-4 w-4" /></Button>
+                  </>
+                ) : (
+                  <div className="flex items-center gap-2 group">
+                    <h1 className="text-2xl font-bold">📂 {viewingProject}</h1>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => handleStartEdit(viewingProject)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              {/* Board View Tabs (Icon Only) */}
+              <Tabs value={boardView} onValueChange={(v) => setBoardView(v as BoardView)}>
+                <TabsList>
+                  <TabsTrigger value="tasks" title="Tasks">
+                    <CheckSquare className="h-4 w-4" />
+                  </TabsTrigger>
+                  <TabsTrigger value="chat" title="Chat">
+                    <MessageSquare className="h-4 w-4" />
+                  </TabsTrigger>
+                  <TabsTrigger value="files" title="Files">
+                    <Files className="h-4 w-4" />
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
             </div>
-            
-            {/* Board View Tabs - Right Side */}
-            <Tabs value={boardView} onValueChange={(v) => setBoardView(v as BoardView)}>
-              <TabsList>
-                <TabsTrigger value="tasks">📋 Tasks</TabsTrigger>
-                <TabsTrigger value="chat">💬 Chat</TabsTrigger>
-                <TabsTrigger value="files">📎 Files</TabsTrigger>
+
+            {/* Main Navigation */}
+            <Tabs value="projects" className="w-full">
+              <TabsList className="w-full justify-start">
+                <TabsTrigger value="projects" asChild>
+                  <Link to="/projects">📂 Boards</Link>
+                </TabsTrigger>
+                <TabsTrigger value="tasks" asChild>
+                  <Link to="/">✅ Tasks</Link>
+                </TabsTrigger>
+                <TabsTrigger value="calendar" asChild>
+                  <Link to="/#calendar">📅 Calendar</Link>
+                </TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
-          
-          <div className="flex items-center gap-2 justify-center">
-            {editingProject === viewingProject ? (
-              <div className="flex items-center gap-2">
-                <span className="text-3xl">📂</span>
-                <input
-                  type="text"
-                  value={newProjectName}
-                  onChange={(e) => setNewProjectName(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleSaveEdit();
-                    if (e.key === 'Escape') handleCancelEdit();
-                  }}
-                  className="text-3xl font-bold bg-transparent border-b-2 border-primary focus:outline-none"
-                  autoFocus
-                />
-                <Button size="sm" onClick={handleSaveEdit}>Save</Button>
-                <Button size="sm" variant="ghost" onClick={handleCancelEdit}>Cancel</Button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2 group">
-                <h1 className="text-3xl font-bold">📂 {viewingProject}</h1>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={() => handleStartEdit(viewingProject)}
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-              </div>
-            )}
-          </div>
-        </div>
-        
-        {/* Render different views based on selected tab */}
-        {boardView === 'tasks' && <KanbanBoard />}
-        {boardView === 'chat' && <ChatView boardName={viewingProject} />}
-        {boardView === 'files' && <FilesView boardName={viewingProject} />}
+        </header>
+
+        {/* Board Content */}
+        <main className="flex-1 container mx-auto px-4 py-6">
+          {boardView === 'tasks' && <KanbanBoard />}
+          {boardView === 'chat' && <ChatView boardName={viewingProject} />}
+          {boardView === 'files' && <FilesView boardName={viewingProject} />}
+        </main>
       </div>
     );
   }
