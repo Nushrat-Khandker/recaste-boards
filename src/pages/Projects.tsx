@@ -163,8 +163,10 @@ const ProjectsContent = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">📂 Boards Overview</h1>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+      <Header />
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold mb-6">📂 Boards Overview</h1>
       
       {projectData.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
@@ -244,20 +246,16 @@ const ProjectsContent = () => {
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 };
 
 const Projects = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-      <KanbanProvider>
-        <Header />
-        <main>
-          <ProjectsContent />
-        </main>
-      </KanbanProvider>
-    </div>
+    <KanbanProvider>
+      <ProjectsContent />
+    </KanbanProvider>
   );
 };
 
