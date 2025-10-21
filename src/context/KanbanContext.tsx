@@ -323,21 +323,17 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
     }));
   }, [columns, selectedTags, selectedProject, selectedNumber, selectedQuarter]);
 
-  // Get all unique projects from cards (include Unassigned when missing project)
+  // Get all unique projects from cards (only named projects)
   const allProjects = React.useMemo(() => {
     const projects = new Set<string>();
-    let hasUnassigned = false;
     columns.forEach(column => {
       column.cards.forEach(card => {
         if (card.projectName && card.projectName.trim().length > 0) {
           projects.add(card.projectName);
-        } else {
-          hasUnassigned = true;
         }
       });
     });
-    const list = Array.from(projects).sort();
-    return hasUnassigned ? ['Unassigned', ...list] : list;
+    return Array.from(projects).sort();
   }, [columns]);
 
   // Auto-clear filters if they hide all cards but data exists
