@@ -140,21 +140,6 @@ const ProjectsContent = () => {
                 </TabsList>
               </Tabs>
             </div>
-
-            {/* Main Navigation */}
-            <Tabs value="projects" className="w-full">
-              <TabsList className="w-full justify-start">
-                <TabsTrigger value="projects" asChild>
-                  <Link to="/projects">📂 Boards</Link>
-                </TabsTrigger>
-                <TabsTrigger value="tasks" asChild>
-                  <Link to="/">✅ Tasks</Link>
-                </TabsTrigger>
-                <TabsTrigger value="calendar" asChild>
-                  <Link to="/#calendar">📅 Calendar</Link>
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
           </div>
         </header>
 
@@ -179,9 +164,9 @@ const ProjectsContent = () => {
             </Link>
           </div>
           <Tabs value="projects" className="w-full">
-            <TabsList className="w-full justify-start">
+            <TabsList className="w-full justify-center">
               <TabsTrigger value="projects" asChild>
-                <Link to="/projects">📂 Boards</Link>
+                <Link to="/projects">📂 Overview</Link>
               </TabsTrigger>
               <TabsTrigger value="tasks" asChild>
                 <Link to="/">✅ Tasks</Link>
