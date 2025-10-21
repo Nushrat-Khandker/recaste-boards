@@ -164,7 +164,30 @@ const ProjectsContent = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-      <Header />
+      {/* Simple Navigation Bar */}
+      <header className="sticky top-0 z-50 bg-background border-b">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center justify-between mb-3">
+            <Link to="/" className="text-xl font-bold hover:opacity-80 transition-opacity">
+              re<span className="text-[#FE446F]">*</span>caste
+            </Link>
+          </div>
+          <Tabs value="projects" className="w-full">
+            <TabsList className="w-full justify-start">
+              <TabsTrigger value="projects" asChild>
+                <Link to="/projects">📂 Boards</Link>
+              </TabsTrigger>
+              <TabsTrigger value="tasks" asChild>
+                <Link to="/">✅ Tasks</Link>
+              </TabsTrigger>
+              <TabsTrigger value="calendar" asChild>
+                <Link to="/#calendar">📅 Calendar</Link>
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+      </header>
+      
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-6">📂 Boards Overview</h1>
       
