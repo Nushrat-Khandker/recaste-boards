@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
-import { Send, Paperclip, Mic, Video, X, Pause, Square } from 'lucide-react';
+import { Send, Paperclip, Mic, Video, Square, Plus, Smile, AtSign, Code, Image as ImageIcon } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface ChatMessage {
@@ -308,14 +308,14 @@ export const ChatView = ({ boardName }: ChatViewProps) => {
         <div ref={messagesEndRef} />
       </div>
       
-      <div className="border-t p-4">
-        <div className="flex flex-col gap-2">
-          <div className="flex gap-2">
+      <div className="border-t bg-background">
+        <div className="px-4 py-3">
+          <div className="border rounded-lg bg-background">
             <Textarea
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Type a message..."
-              className="min-h-[60px] resize-none"
+              placeholder={`Message #${boardName}`}
+              className="min-h-[80px] resize-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
@@ -323,62 +323,115 @@ export const ChatView = ({ boardName }: ChatViewProps) => {
                 }
               }}
             />
-            <div className="flex flex-col gap-2">
-              <Button onClick={sendMessage} disabled={isLoading || !newMessage.trim()} size="icon">
+            
+            <div className="flex items-center justify-between px-2 pb-2 pt-1 border-t">
+              <div className="flex items-center gap-1">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => handleFileUpload(e.target.files)}
+                />
+                
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isLoading}
+                  title="Attach files"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  disabled={isLoading}
+                  title="Format text"
+                >
+                  <ImageIcon className="h-4 w-4" />
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  disabled={isLoading}
+                  title="Add emoji"
+                >
+                  <Smile className="h-4 w-4" />
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  disabled={isLoading}
+                  title="Mention someone"
+                >
+                  <AtSign className="h-4 w-4" />
+                </Button>
+
+                {!isRecording ? (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => startRecording('video')}
+                      disabled={isLoading}
+                      title="Record video"
+                    >
+                      <Video className="h-4 w-4" />
+                    </Button>
+
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => startRecording('audio')}
+                      disabled={isLoading}
+                      title="Record audio"
+                    >
+                      <Mic className="h-4 w-4" />
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-destructive"
+                    onClick={stopRecording}
+                    title={`Stop ${recordingType} recording`}
+                  >
+                    <Square className="h-4 w-4 fill-current" />
+                  </Button>
+                )}
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  disabled={isLoading}
+                  title="Code snippet"
+                >
+                  <Code className="h-4 w-4" />
+                </Button>
+              </div>
+
+              <Button
+                size="icon"
+                className="h-8 w-8"
+                onClick={sendMessage}
+                disabled={isLoading || !newMessage.trim()}
+                title="Send message"
+              >
                 <Send className="h-4 w-4" />
               </Button>
             </div>
-          </div>
-
-          <div className="flex gap-2">
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              className="hidden"
-              onChange={(e) => handleFileUpload(e.target.files)}
-            />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isLoading}
-            >
-              <Paperclip className="h-4 w-4 mr-2" />
-              Attach Files
-            </Button>
-
-            {!isRecording ? (
-              <>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => startRecording('audio')}
-                  disabled={isLoading}
-                >
-                  <Mic className="h-4 w-4 mr-2" />
-                  Record Audio
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => startRecording('video')}
-                  disabled={isLoading}
-                >
-                  <Video className="h-4 w-4 mr-2" />
-                  Record Video
-                </Button>
-              </>
-            ) : (
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={stopRecording}
-              >
-                <Square className="h-4 w-4 mr-2 fill-current" />
-                Stop {recordingType === 'video' ? 'Video' : 'Audio'}
-              </Button>
-            )}
           </div>
         </div>
       </div>
