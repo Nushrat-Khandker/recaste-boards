@@ -14,6 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      board_files: {
+        Row: {
+          board_name: string
+          created_at: string | null
+          file_name: string
+          file_size: number | null
+          file_type: string | null
+          file_url: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          board_name: string
+          created_at?: string | null
+          file_name: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          board_name?: string
+          created_at?: string | null
+          file_name?: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      board_members: {
+        Row: {
+          board_name: string
+          created_at: string | null
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          board_name: string
+          created_at?: string | null
+          id?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          board_name?: string
+          created_at?: string | null
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       calendar_notes: {
         Row: {
           color: string
@@ -54,6 +111,69 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      call_history: {
+        Row: {
+          board_name: string
+          call_type: string
+          created_at: string | null
+          duration_seconds: number | null
+          id: string
+          initiated_by: string
+          participants: string[]
+        }
+        Insert: {
+          board_name: string
+          call_type: string
+          created_at?: string | null
+          duration_seconds?: number | null
+          id?: string
+          initiated_by: string
+          participants: string[]
+        }
+        Update: {
+          board_name?: string
+          call_type?: string
+          created_at?: string | null
+          duration_seconds?: number | null
+          id?: string
+          initiated_by?: string
+          participants?: string[]
+        }
+        Relationships: []
+      }
+      chat_messages: {
+        Row: {
+          board_name: string
+          content: string | null
+          created_at: string | null
+          file_name: string | null
+          file_url: string | null
+          id: string
+          message_type: string
+          user_id: string
+        }
+        Insert: {
+          board_name: string
+          content?: string | null
+          created_at?: string | null
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          message_type?: string
+          user_id: string
+        }
+        Update: {
+          board_name?: string
+          content?: string | null
+          created_at?: string | null
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          message_type?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       content_items: {
         Row: {
@@ -259,6 +379,7 @@ export type Database = {
           id: string
           moved_date: string | null
           number: string | null
+          owner_id: string | null
           priority: string | null
           project_name: string | null
           quarter: string | null
@@ -276,6 +397,7 @@ export type Database = {
           id?: string
           moved_date?: string | null
           number?: string | null
+          owner_id?: string | null
           priority?: string | null
           project_name?: string | null
           quarter?: string | null
@@ -293,6 +415,7 @@ export type Database = {
           id?: string
           moved_date?: string | null
           number?: string | null
+          owner_id?: string | null
           priority?: string | null
           project_name?: string | null
           quarter?: string | null
@@ -421,20 +544,26 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
           created_at: string
           email: string | null
+          full_name: string | null
           id: string
           updated_at: string
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string
           email?: string | null
+          full_name?: string | null
           id: string
           updated_at?: string
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string
           email?: string | null
+          full_name?: string | null
           id?: string
           updated_at?: string
         }
@@ -547,10 +676,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      has_board_role: {
+        Args: { _board_name: string; _role: string; _user_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args:
           | { _role: Database["public"]["Enums"]["app_role"]; _user_id: string }
           | { role_name: string; user_id: string }
+        Returns: boolean
+      }
+      is_board_member: {
+        Args: { _board_name: string; _user_id: string }
         Returns: boolean
       }
     }
