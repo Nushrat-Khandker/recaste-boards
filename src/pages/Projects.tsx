@@ -166,7 +166,7 @@ const ProjectsContent = () => {
           <Tabs value="projects" className="w-full">
             <TabsList className="w-full justify-center">
               <TabsTrigger value="projects" asChild>
-                <Link to="/projects">📂 Overview</Link>
+                <Link to="/projects">📂 Projects</Link>
               </TabsTrigger>
               <TabsTrigger value="tasks" asChild>
                 <Link to="/">✅ Tasks</Link>
