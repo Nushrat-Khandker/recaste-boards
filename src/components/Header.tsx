@@ -145,7 +145,7 @@ const Header: React.FC = () => {
           <TabsList className="w-full justify-start h-8 sm:h-10">
             <TabsTrigger value="projects" asChild className="text-xs sm:text-sm px-2 sm:px-3">
               <Link to="/projects" className="gap-1 sm:gap-2">
-                <span className="hidden sm:inline">📂</span> Projects
+                <span className="hidden sm:inline">📂</span> Boards
               </Link>
             </TabsTrigger>
             <TabsTrigger value="tasks" asChild className="text-xs sm:text-sm px-2 sm:px-3">
