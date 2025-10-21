@@ -157,8 +157,6 @@ const ProjectsContent = () => {
       <Header />
       
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-6 text-center">📂 Overview</h1>
-      
       {projectData.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
           <p>No boards yet. Create a card with a project name to get started!</p>
