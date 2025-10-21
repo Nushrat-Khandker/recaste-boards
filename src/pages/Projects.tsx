@@ -20,15 +20,16 @@ const ProjectsContent = () => {
   const [editingProject, setEditingProject] = useState<string | null>(null);
   const [newProjectName, setNewProjectName] = useState("");
 
-  // Get cards grouped by project
+  // Get cards grouped by project (handle Unassigned)
   const projectData = allProjects.map(projectName => {
+    const isUnassigned = projectName === 'Unassigned';
     const projectCards = columns.flatMap(column => 
-      column.cards.filter(card => card.projectName === projectName)
+      column.cards.filter(card => isUnassigned ? !card.projectName : card.projectName === projectName)
     );
     
-    const todoCount = columns.find(c => c.id === 'todo')?.cards.filter(card => card.projectName === projectName).length || 0;
-    const inProgressCount = columns.find(c => c.id === 'in-progress')?.cards.filter(card => card.projectName === projectName).length || 0;
-    const doneCount = columns.find(c => c.id === 'done')?.cards.filter(card => card.projectName === projectName).length || 0;
+    const todoCount = columns.find(c => c.id === 'todo')?.cards.filter(card => isUnassigned ? !card.projectName : card.projectName === projectName).length || 0;
+    const inProgressCount = columns.find(c => c.id === 'in-progress')?.cards.filter(card => isUnassigned ? !card.projectName : card.projectName === projectName).length || 0;
+    const doneCount = columns.find(c => c.id === 'done')?.cards.filter(card => isUnassigned ? !card.projectName : card.projectName === projectName).length || 0;
     
     return {
       name: projectName,

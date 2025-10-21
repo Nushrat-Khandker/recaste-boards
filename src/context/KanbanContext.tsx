@@ -222,12 +222,8 @@ const convertSupabaseDataToColumns = (cards: any[], columns: any[]): KanbanColum
 export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) => {
   const { toast } = useToast();
   const [columns, setColumns] = useState<KanbanColumn[]>([]);
-  const [selectedNumber, setSelectedNumber] = useState<string>(() => {
-    return localStorage.getItem('selectedNumber') || '1446';
-  });
-  const [selectedQuarter, setSelectedQuarter] = useState<string>(() => {
-    return localStorage.getItem('selectedQuarter') || 'Q3';
-  });
+  const [selectedNumber, setSelectedNumber] = useState<string>('');
+  const [selectedQuarter, setSelectedQuarter] = useState<string>('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedProject, setSelectedProject] = useState<string | null>(() => {
     return localStorage.getItem('selectedProject') || null;
@@ -314,7 +310,7 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
           (card.tags && card.tags.some(tag => selectedTags.includes(tag.text)));
         
         // If no project selected, show all cards; if project selected, card must match project
-        const matchesProject = !selectedProject || card.projectName === selectedProject;
+        const matchesProject = !selectedProject || (selectedProject === 'Unassigned' ? !card.projectName : card.projectName === selectedProject);
         
         // Filter by selected year (number)
         const matchesYear = !selectedNumber || card.number === selectedNumber;
@@ -327,18 +323,38 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
     }));
   }, [columns, selectedTags, selectedProject, selectedNumber, selectedQuarter]);
 
-  // Get all unique projects from cards
+  // Get all unique projects from cards (include Unassigned when missing project)
   const allProjects = React.useMemo(() => {
     const projects = new Set<string>();
+    let hasUnassigned = false;
     columns.forEach(column => {
       column.cards.forEach(card => {
-        if (card.projectName) {
+        if (card.projectName && card.projectName.trim().length > 0) {
           projects.add(card.projectName);
+        } else {
+          hasUnassigned = true;
         }
       });
     });
-    return Array.from(projects).sort();
+    const list = Array.from(projects).sort();
+    return hasUnassigned ? ['Unassigned', ...list] : list;
   }, [columns]);
+
+  // Auto-clear filters if they hide all cards but data exists
+  useEffect(() => {
+    const totalAll = columns.reduce((sum, c) => sum + c.cards.length, 0);
+    const totalFiltered = filteredColumns.reduce((sum, c) => sum + c.cards.length, 0);
+    if (
+      totalAll > 0 &&
+      totalFiltered === 0 &&
+      (selectedNumber || selectedQuarter || selectedTags.length > 0 || selectedProject)
+    ) {
+      setSelectedNumber('');
+      setSelectedQuarter('');
+      setSelectedTags([]);
+      setSelectedProject(null);
+    }
+  }, [columns, filteredColumns]);
 
   const addCard = async (columnId: string, card: Omit<KanbanCard, 'id'>) => {
     try {
