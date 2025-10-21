@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Upload, FileText, Trash2, MessageSquare } from 'lucide-react';
+import { FileText, Trash2, MessageSquare } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 
@@ -24,7 +24,6 @@ interface FilesViewProps {
 
 export const FilesView = ({ boardName }: FilesViewProps) => {
   const [files, setFiles] = useState<BoardFile[]>([]);
-  const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -74,69 +73,6 @@ export const FilesView = ({ boardName }: FilesViewProps) => {
     }
   };
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    setIsUploading(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      toast({
-        title: 'Error',
-        description: 'You must be logged in to upload files',
-        variant: 'destructive',
-      });
-      setIsUploading(false);
-      return;
-    }
-
-    try {
-      // Upload to storage
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${boardName}/${Date.now()}.${fileExt}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from('board-files')
-        .upload(fileName, file);
-
-      if (uploadError) throw uploadError;
-
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('board-files')
-        .getPublicUrl(fileName);
-
-      // Save to database
-      const { error: dbError } = await (supabase as any).from('board_files').insert({
-        board_name: boardName,
-        user_id: user.id,
-        file_name: file.name,
-        file_url: publicUrl,
-        file_type: file.type,
-        file_size: file.size,
-      });
-
-      if (dbError) throw dbError;
-
-      toast({
-        title: 'Success',
-        description: 'File uploaded successfully',
-      });
-
-      loadFiles();
-    } catch (error) {
-      console.error('Error uploading file:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to upload file',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
   const handleDeleteFile = async (file: BoardFile) => {
     // Only allow deletion of uploaded files, not chat files
     if (file.source === 'chat') {
@@ -178,27 +114,10 @@ export const FilesView = ({ boardName }: FilesViewProps) => {
 
   return (
     <div className="p-4">
-      <div className="mb-6">
-        <label htmlFor="file-upload">
-          <Button asChild disabled={isUploading}>
-            <span className="cursor-pointer">
-              <Upload className="h-4 w-4 mr-2" />
-              {isUploading ? 'Uploading...' : 'Upload File'}
-            </span>
-          </Button>
-        </label>
-        <input
-          id="file-upload"
-          type="file"
-          className="hidden"
-          onChange={handleFileUpload}
-          disabled={isUploading}
-        />
-      </div>
-
       {files.length === 0 ? (
         <div className="text-center text-muted-foreground py-12">
-          No files yet. Upload files or share them in chat!
+          <p className="text-lg font-medium mb-2">No files yet</p>
+          <p className="text-sm">Share files in the chat to see them here!</p>
         </div>
       ) : (
         <div className="grid gap-4">

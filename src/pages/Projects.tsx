@@ -8,7 +8,7 @@ import Header from "@/components/Header";
 import KanbanBoard from "@/components/KanbanBoard";
 import { ChatView } from "@/components/board/ChatView";
 import { FilesView } from "@/components/board/FilesView";
-import { CheckSquare, MessageSquare, Files, Pencil, Check, XCircle, ArrowLeft } from "lucide-react";
+import { CheckSquare, MessageSquare, FileText, Pencil, Check, XCircle, ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -134,7 +134,7 @@ const ProjectsContent = () => {
                     <MessageSquare className="h-4 w-4" />
                   </TabsTrigger>
                   <TabsTrigger value="files" title="Files">
-                    <Files className="h-4 w-4" />
+                    <FileText className="h-4 w-4" />
                   </TabsTrigger>
                 </TabsList>
               </Tabs>

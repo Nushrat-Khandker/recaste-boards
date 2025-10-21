@@ -3,8 +3,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
-import { Send, Paperclip } from 'lucide-react';
+import { Send, Paperclip, Mic, Video, X, Pause, Square } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface ChatMessage {
@@ -25,8 +26,14 @@ export const ChatView = ({ boardName }: ChatViewProps) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingType, setRecordingType] = useState<'audio' | 'video' | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -118,8 +125,156 @@ export const ChatView = ({ boardName }: ChatViewProps) => {
     setIsLoading(false);
   };
 
+  const handleFileUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast({
+        title: 'Error',
+        description: 'You must be logged in to upload files',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsLoading(true);
+
+    for (const file of Array.from(files)) {
+      try {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${boardName}/${Date.now()}-${file.name}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('board-files')
+          .upload(fileName, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('board-files')
+          .getPublicUrl(fileName);
+
+        const { error: dbError } = await (supabase as any).from('chat_messages').insert({
+          board_name: boardName,
+          user_id: user.id,
+          message_type: 'file',
+          file_url: publicUrl,
+          file_name: file.name,
+        });
+
+        if (dbError) throw dbError;
+
+        toast({
+          title: 'Success',
+          description: `${file.name} uploaded successfully`,
+        });
+      } catch (error) {
+        console.error('Error uploading file:', error);
+        toast({
+          title: 'Error',
+          description: `Failed to upload ${file.name}`,
+          variant: 'destructive',
+        });
+      }
+    }
+
+    setIsLoading(false);
+  };
+
+  const startRecording = async (type: 'audio' | 'video') => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: type === 'video',
+      });
+
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      recordedChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          recordedChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        const blob = new Blob(recordedChunksRef.current, {
+          type: type === 'video' ? 'video/webm' : 'audio/webm',
+        });
+        
+        stream.getTracks().forEach(track => track.stop());
+        
+        const file = new File(
+          [blob],
+          `${type}-${Date.now()}.webm`,
+          { type: blob.type }
+        );
+        
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        await handleFileUpload(dataTransfer.files);
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+      setRecordingType(type);
+
+      toast({
+        title: 'Recording started',
+        description: `${type === 'video' ? 'Video' : 'Audio'} recording in progress`,
+      });
+    } catch (error) {
+      console.error('Error starting recording:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to start recording. Please check your permissions.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      setRecordingType(null);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    await handleFileUpload(e.dataTransfer.files);
+  };
+
   return (
-    <div className="flex flex-col h-[calc(100vh-200px)]">
+    <div 
+      className="flex flex-col h-[calc(100vh-200px)]"
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      {isDragging && (
+        <div className="absolute inset-0 bg-primary/10 border-2 border-dashed border-primary z-50 flex items-center justify-center">
+          <div className="text-center">
+            <Paperclip className="h-12 w-12 mx-auto mb-2 text-primary" />
+            <p className="text-lg font-medium">Drop files to upload</p>
+          </div>
+        </div>
+      )}
+
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 ? (
           <div className="text-center text-muted-foreground py-12">
@@ -136,7 +291,7 @@ export const ChatView = ({ boardName }: ChatViewProps) => {
                   </span>
                 </div>
                 {message.message_type === 'text' && message.content && (
-                  <p className="text-sm">{message.content}</p>
+                  <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                 )}
                 {message.message_type === 'file' && message.file_url && (
                   <div className="flex items-center gap-2 text-sm text-primary">
@@ -154,21 +309,77 @@ export const ChatView = ({ boardName }: ChatViewProps) => {
       </div>
       
       <div className="border-t p-4">
-        <div className="flex gap-2">
-          <Input
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Type a message..."
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
-              }
-            }}
-          />
-          <Button onClick={sendMessage} disabled={isLoading || !newMessage.trim()}>
-            <Send className="h-4 w-4" />
-          </Button>
+        <div className="flex flex-col gap-2">
+          <div className="flex gap-2">
+            <Textarea
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              placeholder="Type a message..."
+              className="min-h-[60px] resize-none"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  sendMessage();
+                }
+              }}
+            />
+            <div className="flex flex-col gap-2">
+              <Button onClick={sendMessage} disabled={isLoading || !newMessage.trim()} size="icon">
+                <Send className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              className="hidden"
+              onChange={(e) => handleFileUpload(e.target.files)}
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isLoading}
+            >
+              <Paperclip className="h-4 w-4 mr-2" />
+              Attach Files
+            </Button>
+
+            {!isRecording ? (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => startRecording('audio')}
+                  disabled={isLoading}
+                >
+                  <Mic className="h-4 w-4 mr-2" />
+                  Record Audio
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => startRecording('video')}
+                  disabled={isLoading}
+                >
+                  <Video className="h-4 w-4 mr-2" />
+                  Record Video
+                </Button>
+              </>
+            ) : (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={stopRecording}
+              >
+                <Square className="h-4 w-4 mr-2 fill-current" />
+                Stop {recordingType === 'video' ? 'Video' : 'Audio'}
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </div>
