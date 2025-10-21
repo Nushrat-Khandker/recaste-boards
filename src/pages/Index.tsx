@@ -11,6 +11,11 @@ const IndexContent = () => {
   const [viewMode, setViewMode] = useState<'board' | 'calendar'>('board');
   const { selectedProject, setSelectedProject } = useKanban();
 
+  // Clear any project filter when navigating to main tasks view
+  useEffect(() => {
+    setSelectedProject(null);
+  }, [setSelectedProject]);
+
   // Check URL hash to determine view
   useEffect(() => {
     const handleHashChange = () => {
