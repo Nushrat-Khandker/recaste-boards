@@ -5,6 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Header from "@/components/Header";
 import KanbanBoard from "@/components/KanbanBoard";
+import { BoardNavigation, BoardView } from "@/components/BoardNavigation";
+import { ChatView } from "@/components/board/ChatView";
+import { FilesView } from "@/components/board/FilesView";
+import { CallsView } from "@/components/board/CallsView";
 import { ArrowLeft, X, Pencil, Check, XCircle } from "lucide-react";
 import { useState } from "react";
 
@@ -13,6 +17,7 @@ const ProjectsContent = () => {
   const [viewingProject, setViewingProject] = useState<string | null>(null);
   const [editingProject, setEditingProject] = useState<string | null>(null);
   const [newProjectName, setNewProjectName] = useState("");
+  const [boardView, setBoardView] = useState<BoardView>('tasks');
 
   // Get cards grouped by project
   const projectData = allProjects.map(projectName => {
@@ -64,7 +69,7 @@ const ProjectsContent = () => {
     setNewProjectName("");
   };
 
-  // If viewing a specific project, show the kanban board
+  // If viewing a specific project, show the board with navigation
   if (viewingProject) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -86,40 +91,47 @@ const ProjectsContent = () => {
               Clear filter
             </Button>
           </div>
-          <div className="flex items-center gap-2">
-            {editingProject === viewingProject ? (
-              <div className="flex items-center gap-2">
-                <span className="text-3xl">📂</span>
-                <input
-                  type="text"
-                  value={newProjectName}
-                  onChange={(e) => setNewProjectName(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleSaveEdit();
-                    if (e.key === 'Escape') handleCancelEdit();
-                  }}
-                  className="text-3xl font-bold bg-transparent border-b-2 border-primary focus:outline-none"
-                  autoFocus
-                />
-                <Button size="sm" onClick={handleSaveEdit}>Save</Button>
-                <Button size="sm" variant="ghost" onClick={handleCancelEdit}>Cancel</Button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2 group">
-                <h1 className="text-3xl font-bold">📂 {viewingProject}</h1>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={() => handleStartEdit(viewingProject)}
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-              </div>
-            )}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              {editingProject === viewingProject ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-3xl">📂</span>
+                  <input
+                    type="text"
+                    value={newProjectName}
+                    onChange={(e) => setNewProjectName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleSaveEdit();
+                      if (e.key === 'Escape') handleCancelEdit();
+                    }}
+                    className="text-3xl font-bold bg-transparent border-b-2 border-primary focus:outline-none"
+                    autoFocus
+                  />
+                  <Button size="sm" onClick={handleSaveEdit}>Save</Button>
+                  <Button size="sm" variant="ghost" onClick={handleCancelEdit}>Cancel</Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 group">
+                  <h1 className="text-3xl font-bold">📂 {viewingProject}</h1>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => handleStartEdit(viewingProject)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
+            <BoardNavigation currentView={boardView} onViewChange={setBoardView} />
           </div>
         </div>
-        <KanbanBoard />
+        
+        {boardView === 'tasks' && <KanbanBoard />}
+        {boardView === 'chat' && <ChatView boardName={viewingProject} />}
+        {boardView === 'files' && <FilesView boardName={viewingProject} />}
+        {boardView === 'calls' && <CallsView boardName={viewingProject} />}
       </div>
     );
   }
