@@ -243,6 +243,81 @@ serve(async (req) => {
         });
       }
 
+      case 'send_invite_link': {
+        const { email, channel } = params;
+
+        // Validate @recaste.com email
+        if (!email || !email.endsWith("@recaste.com")) {
+          return new Response(
+            JSON.stringify({ error: "Only @recaste.com emails are allowed" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Generate invite link using admin client
+        const { data, error } = await supabase.auth.admin.generateLink({
+          type: 'invite',
+          email: email,
+          options: {
+            redirectTo: `${supabaseUrl.replace('https://usdhemikpmbcuwearsob.supabase.co', 'https://usdhemikpmbcuwearsob.lovable.app')}/`,
+          }
+        });
+
+        if (error) {
+          console.error("Error generating invite:", error);
+          return new Response(
+            JSON.stringify({ error: error.message }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        const inviteLink = data.properties.action_link;
+
+        // Send invite link to Slack
+        const blocks = [
+          {
+            type: "header",
+            text: {
+              type: "plain_text",
+              text: "🎟️ Team Invite Link"
+            }
+          },
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: `An invite link has been generated for *${email}*`
+            }
+          },
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: `🔗 *Invite Link:*\n${inviteLink}`
+            }
+          },
+          {
+            type: "context",
+            elements: [
+              {
+                type: "mrkdwn",
+                text: "Share this link with the new team member to get started."
+              }
+            ]
+          }
+        ];
+
+        await sendSlackMessage(channel, `Invite link for ${email}`, blocks);
+        
+        return new Response(JSON.stringify({ 
+          success: true,
+          message: `Invite link sent to ${channel}!`,
+          inviteLink
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
       case 'webhook_handler': {
         // Handle Slack slash commands or interactive components
         const { text, channel_id, user_name } = params;

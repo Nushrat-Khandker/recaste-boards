@@ -27,6 +27,8 @@ const SlackIntegration = () => {
   const [cardTitle, setCardTitle] = useState('');
   const [cardDescription, setCardDescription] = useState('');
   const [selectedColumn, setSelectedColumn] = useState('');
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteSlackChannel, setInviteSlackChannel] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { columns } = useKanban();
@@ -119,6 +121,57 @@ const SlackIntegration = () => {
     }
   };
 
+  const handleSendInviteLink = async () => {
+    if (!inviteEmail.endsWith("@recaste.com")) {
+      toast({
+        title: "Invalid email",
+        description: "Only @recaste.com emails can be invited",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const validatedChannel = slackChannelSchema.parse(inviteSlackChannel);
+
+      const { data, error } = await supabase.functions.invoke('slack-integration', {
+        body: {
+          action: 'send_invite_link',
+          email: inviteEmail,
+          channel: validatedChannel
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: data.message,
+      });
+
+      setInviteEmail('');
+      setInviteSlackChannel('');
+    } catch (error) {
+      console.error('Error sending invite link:', error);
+      if (error instanceof z.ZodError) {
+        toast({
+          title: "Validation Error",
+          description: error.errors[0].message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to send invite link to Slack",
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -177,6 +230,39 @@ const SlackIntegration = () => {
           >
             <Send className="h-4 w-4 mr-2" />
             Send Summary
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Send className="h-5 w-5" />
+            Send Invite Link to Slack
+          </CardTitle>
+          <CardDescription>
+            Generate and send an invite link to a Slack channel
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Input
+            type="email"
+            placeholder="Email (e.g., name@recaste.com)"
+            value={inviteEmail}
+            onChange={(e) => setInviteEmail(e.target.value)}
+          />
+          <Input
+            placeholder="Slack channel (e.g., #general or @username)"
+            value={inviteSlackChannel}
+            onChange={(e) => setInviteSlackChannel(e.target.value)}
+          />
+          <Button 
+            onClick={handleSendInviteLink} 
+            disabled={isLoading}
+            className="w-full"
+          >
+            <Send className="h-4 w-4 mr-2" />
+            Send Invite Link
           </Button>
         </CardContent>
       </Card>
