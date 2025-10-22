@@ -34,9 +34,13 @@ serve(async (req) => {
       }
     );
 
-    // Generate invite link
-    const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-      redirectTo: `${req.headers.get("origin") || "http://localhost:8080"}/`,
+    // Generate invite link (without sending email)
+    const { data, error } = await supabaseAdmin.auth.admin.generateLink({
+      type: 'invite',
+      email: email,
+      options: {
+        redirectTo: `${req.headers.get("origin") || "http://localhost:8080"}/`,
+      }
     });
 
     if (error) {
@@ -50,7 +54,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: `Invite link sent to ${email}`,
+        message: `Invite link generated for ${email}`,
+        inviteLink: data.properties.action_link,
         user: data.user 
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
