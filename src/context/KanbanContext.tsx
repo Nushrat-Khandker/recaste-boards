@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/context/AuthContext";
+import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 
 // Validation schemas
@@ -223,6 +224,7 @@ const convertSupabaseDataToColumns = (cards: any[], columns: any[]): KanbanColum
 export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) => {
   const { toast } = useToast();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [columns, setColumns] = useState<KanbanColumn[]>([]);
   const [selectedNumber, setSelectedNumber] = useState<string>('');
   const [selectedQuarter, setSelectedQuarter] = useState<string>('');
@@ -356,6 +358,16 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
 
   const addCard = async (columnId: string, card: Omit<KanbanCard, 'id'>) => {
     try {
+      if (!user?.id) {
+        toast({
+          title: "Please sign in",
+          description: "You must be signed in to add a card.",
+          variant: "destructive",
+        });
+        navigate("/auth");
+        return;
+      }
+
       // Validate input
       const validatedCard = cardSchema.parse({
         title: card.title,
@@ -378,7 +390,7 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
         start_date: card.startDate?.toISOString(),
         due_date: card.dueDate?.toISOString(),
         file_attachments: card.fileAttachments ? JSON.stringify(card.fileAttachments) : null,
-        owner_id: user?.id,
+        owner_id: user.id,
       };
 
       const { data, error } = await supabase
