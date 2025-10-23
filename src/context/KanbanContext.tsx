@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/context/AuthContext";
 import { z } from 'zod';
 
 // Validation schemas
@@ -221,6 +222,7 @@ const convertSupabaseDataToColumns = (cards: any[], columns: any[]): KanbanColum
 
 export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [columns, setColumns] = useState<KanbanColumn[]>([]);
   const [selectedNumber, setSelectedNumber] = useState<string>('');
   const [selectedQuarter, setSelectedQuarter] = useState<string>('');
@@ -376,6 +378,7 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
         start_date: card.startDate?.toISOString(),
         due_date: card.dueDate?.toISOString(),
         file_attachments: card.fileAttachments ? JSON.stringify(card.fileAttachments) : null,
+        owner_id: user?.id,
       };
 
       const { data, error } = await supabase
