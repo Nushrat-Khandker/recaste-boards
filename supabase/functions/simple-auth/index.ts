@@ -27,12 +27,8 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    // Extract first name from email
-    const firstName = email.split('@')[0]
-      .replace(/[._-]/g, ' ')
-      .split(' ')
-      .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+    // Extract first name from email (e.g., nushrat@recaste.com -> Nushrat)
+    const firstName = email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1);
 
     // Generate a magic link that auto-signs the user in
     const { data, error } = await supabaseAdmin.auth.admin.generateLink({
