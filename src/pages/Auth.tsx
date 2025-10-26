@@ -7,12 +7,11 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 
 const Auth = () => {
-  const { user, loading, signInWithMagicLink } = useAuth();
+  const { user, loading, signInWithEmail } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
 
   useEffect(() => {
     if (!loading && user) {
@@ -33,7 +32,7 @@ const Auth = () => {
     }
 
     setIsSubmitting(true);
-    const { error } = await signInWithMagicLink(email);
+    const { error } = await signInWithEmail(email);
     setIsSubmitting(false);
 
     if (error) {
@@ -43,11 +42,11 @@ const Auth = () => {
         variant: "destructive",
       });
     } else {
-      setEmailSent(true);
       toast({
-        title: "Check your email",
-        description: "We sent you a magic link to sign in.",
+        title: "Welcome!",
+        description: "You're now signed in.",
       });
+      navigate("/");
     }
   };
 
@@ -65,35 +64,24 @@ const Auth = () => {
         <CardHeader className="text-center">
           <CardTitle>Welcome to Kanban Board</CardTitle>
           <CardDescription>
-            {emailSent ? "Check your email for the magic link" : "Sign in with your @recaste.com email"}
+            Sign in with your @recaste.com email
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {!emailSent ? (
-            <form onSubmit={handleSignIn} className="space-y-4">
-              <div className="space-y-2">
-                <Input
-                  type="email"
-                  placeholder="your.name@recaste.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
-                {isSubmitting ? "Sending..." : "Send Magic Link"}
-              </Button>
-            </form>
-          ) : (
-            <div className="text-center space-y-4">
-              <p className="text-sm text-muted-foreground">
-                We sent a magic link to <strong>{email}</strong>
-              </p>
-              <Button variant="outline" onClick={() => setEmailSent(false)}>
-                Try another email
-              </Button>
+          <form onSubmit={handleSignIn} className="space-y-4">
+            <div className="space-y-2">
+              <Input
+                type="email"
+                placeholder="your.name@recaste.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
             </div>
-          )}
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? "Signing in..." : "Sign In"}
+            </Button>
+          </form>
         </CardContent>
       </Card>
     </div>

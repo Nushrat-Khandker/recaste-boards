@@ -6,7 +6,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signInWithMagicLink: (email: string) => Promise<{ error: any }>;
+  signInWithEmail: (email: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
 }
 
@@ -49,22 +49,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signInWithMagicLink = async (email: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-    const firstName = email.split('@')[0].replace(/[._-]/g, ' ').split(' ').map(word => 
-      word.charAt(0).toUpperCase() + word.slice(1)
-    ).join(' ');
-    
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: {
-          full_name: firstName
-        }
+  const signInWithEmail = async (email: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('simple-auth', {
+        body: { email }
+      });
+
+      if (error) {
+        return { error };
       }
-    });
-    return { error };
+
+      if (data.error) {
+        return { error: { message: data.error } };
+      }
+
+      // Use the token to establish a session
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token: data.access_token,
+        refresh_token: data.access_token, // Using same token for both
+      });
+
+      if (sessionError) {
+        return { error: sessionError };
+      }
+
+      return { error: null };
+    } catch (err) {
+      return { error: { message: err instanceof Error ? err.message : 'Unknown error' } };
+    }
   };
 
   const signOut = async () => {
@@ -75,7 +87,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     user,
     session,
     loading,
-    signInWithMagicLink,
+    signInWithEmail,
     signOut,
   };
 
