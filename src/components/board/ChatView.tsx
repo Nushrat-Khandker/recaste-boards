@@ -16,6 +16,9 @@ interface ChatMessage {
   file_name: string | null;
   created_at: string;
   user_id: string;
+  profiles?: {
+    full_name: string | null;
+  };
 }
 
 interface ChatViewProps {
@@ -72,7 +75,7 @@ export const ChatView = ({ boardName }: ChatViewProps) => {
   const loadMessages = async () => {
     const { data, error } = await (supabase as any)
       .from('chat_messages')
-      .select('*')
+      .select('*, profiles:user_id(full_name)')
       .eq('board_name', boardName)
       .order('created_at', { ascending: true });
 
@@ -285,7 +288,9 @@ export const ChatView = ({ boardName }: ChatViewProps) => {
             <Card key={message.id} className="p-3">
               <div className="flex flex-col gap-1">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">User {message.user_id.slice(0, 8)}</span>
+                  <span className="text-sm font-medium">
+                    {message.profiles?.full_name || message.user_id.slice(0, 8)}
+                  </span>
                   <span className="text-xs text-muted-foreground">
                     {format(new Date(message.created_at), 'MMM d, HH:mm')}
                   </span>
