@@ -1,17 +1,55 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
 
 const Auth = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, signInWithMagicLink } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [email, setEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
 
   useEffect(() => {
     if (!loading && user) {
       navigate("/");
     }
   }, [user, loading, navigate]);
+
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email.endsWith("@recaste.com")) {
+      toast({
+        title: "Invalid email",
+        description: "Only @recaste.com emails are allowed.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    const { error } = await signInWithMagicLink(email);
+    setIsSubmitting(false);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      setEmailSent(true);
+      toast({
+        title: "Check your email",
+        description: "We sent you a magic link to sign in.",
+      });
+    }
+  };
 
   if (loading) {
     return (
@@ -27,12 +65,35 @@ const Auth = () => {
         <CardHeader className="text-center">
           <CardTitle>Welcome to Kanban Board</CardTitle>
           <CardDescription>
-            Check your email for the invite link to sign in
+            {emailSent ? "Check your email for the magic link" : "Sign in with your @recaste.com email"}
           </CardDescription>
         </CardHeader>
-        <CardContent className="text-center text-sm text-muted-foreground">
-          <p>Only @recaste.com team members can access this board.</p>
-          <p className="mt-2">Ask an admin to send you an invite link.</p>
+        <CardContent>
+          {!emailSent ? (
+            <form onSubmit={handleSignIn} className="space-y-4">
+              <div className="space-y-2">
+                <Input
+                  type="email"
+                  placeholder="your.name@recaste.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? "Sending..." : "Send Magic Link"}
+              </Button>
+            </form>
+          ) : (
+            <div className="text-center space-y-4">
+              <p className="text-sm text-muted-foreground">
+                We sent a magic link to <strong>{email}</strong>
+              </p>
+              <Button variant="outline" onClick={() => setEmailSent(false)}>
+                Try another email
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

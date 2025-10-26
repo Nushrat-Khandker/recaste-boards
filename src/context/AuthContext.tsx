@@ -51,11 +51,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const signInWithMagicLink = async (email: string) => {
     const redirectUrl = `${window.location.origin}/`;
+    const firstName = email.split('@')[0].replace(/[._-]/g, ' ').split(' ').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
     
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: redirectUrl
+        emailRedirectTo: redirectUrl,
+        data: {
+          full_name: firstName
+        }
       }
     });
     return { error };
