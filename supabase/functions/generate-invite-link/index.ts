@@ -14,6 +14,21 @@ serve(async (req) => {
   try {
     const { email } = await req.json();
 
+    // Validate input
+    if (!email || typeof email !== 'string') {
+      return new Response(
+        JSON.stringify({ error: "Email is required and must be a string" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (email.length > 255) {
+      return new Response(
+        JSON.stringify({ error: "Email is too long" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Validate @recaste.com email
     if (!email || !email.endsWith("@recaste.com")) {
       return new Response(

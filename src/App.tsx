@@ -11,7 +11,7 @@ import Tags from "./pages/Tags";
 import SlackIntegrationPage from "./pages/SlackIntegration";
 import Projects from "./pages/Projects";
 import Auth from "./pages/Auth";
-import Admin from "./pages/Admin";
+import AdminProtected from "./pages/AdminProtected";
 
 const queryClient = new QueryClient();
 
@@ -28,7 +28,7 @@ const App = () => (
             <Route path="/tags" element={<Tags />} />
             <Route path="/slack" element={<SlackIntegrationPage />} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/admin" element={<Admin />} />
+            <Route path="/admin" element={<AdminProtected />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

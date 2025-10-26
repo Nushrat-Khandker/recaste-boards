@@ -30,30 +30,42 @@ serve(async (req) => {
     // Extract first name from email (e.g., nushrat@recaste.com -> Nushrat)
     const firstName = email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1);
 
-    // Generate a magic link that auto-signs the user in
-    const { data, error } = await supabaseAdmin.auth.admin.generateLink({
-      type: 'magiclink',
+    // Create or update user with confirmed email
+    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.createUser({
       email: email,
-      options: {
-        data: {
-          full_name: firstName
-        }
+      email_confirm: true,
+      user_metadata: {
+        full_name: firstName
       }
     });
 
+    if (userError && !userError.message.includes('already registered')) {
+      console.error("User creation error:", userError);
+      return new Response(
+        JSON.stringify({ error: userError.message }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Generate OTP token hash for session
+    const { data, error } = await supabaseAdmin.auth.admin.generateLink({
+      type: 'magiclink',
+      email: email
+    });
+
     if (error) {
-      console.error("Auth error:", error);
+      console.error("Link generation error:", error);
       return new Response(
         JSON.stringify({ error: error.message }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Extract the access and refresh tokens from the hashed token
+    // Return token hash for client to verify via verifyOtp
     return new Response(
       JSON.stringify({ 
-        access_token: data.properties.hashed_token,
-        user: data.user,
+        token_hash: data.properties.hashed_token,
+        type: 'magiclink'
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

@@ -63,14 +63,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return { error: { message: data.error } };
       }
 
-      // Use the token to establish a session
-      const { error: sessionError } = await supabase.auth.setSession({
-        access_token: data.access_token,
-        refresh_token: data.access_token, // Using same token for both
+      // Verify the OTP token hash to establish session
+      const { error: verifyError } = await supabase.auth.verifyOtp({
+        token_hash: data.token_hash,
+        type: 'magiclink'
       });
 
-      if (sessionError) {
-        return { error: sessionError };
+      if (verifyError) {
+        return { error: verifyError };
       }
 
       return { error: null };
