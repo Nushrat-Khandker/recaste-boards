@@ -131,16 +131,12 @@ export const ChatView = ({ boardName }: ChatViewProps) => {
       return;
     }
 
-    const { data: inserted, error } = await (supabase as any)
-      .from('chat_messages')
-      .insert({
-        board_name: boardName,
-        user_id: user.id,
-        content: newMessage,
-        message_type: 'text',
-      })
-      .select('*')
-      .single();
+    const { error } = await (supabase as any).from('chat_messages').insert({
+      board_name: boardName,
+      user_id: user.id,
+      content: newMessage,
+      message_type: 'text',
+    });
 
     if (error) {
       console.error('Error sending message:', error);
@@ -151,20 +147,6 @@ export const ChatView = ({ boardName }: ChatViewProps) => {
       });
     } else {
       setNewMessage('');
-      if (inserted) {
-        setMessages((prev) => [...prev, inserted as ChatMessage]);
-        const uid = user.id as string;
-        if (!(uid in profilesMap)) {
-          const { data: prof } = await (supabase as any)
-            .from('profiles')
-            .select('id, full_name')
-            .eq('id', uid)
-            .single();
-          if (prof) {
-            setProfilesMap((prev) => ({ ...prev, [prof.id]: prof.full_name }));
-          }
-        }
-      }
     }
     
     setIsLoading(false);
