@@ -8,8 +8,6 @@ import { X, CalendarClock, Plus, Check, Link as LinkIcon, ExternalLink, FileText
 import { KanbanCard, Tag, useKanban } from '../context/KanbanContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
 import { DatePicker } from './DatePicker';
 import { YearWheel } from './YearWheel';
 import { Separator } from "@/components/ui/separator";
@@ -323,110 +321,31 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
             />
           </div>
           
-          {/* Date and planning section */}
+          {/* Date picker section */}
           <div className="grid gap-3">
-            <div className="flex items-center gap-2">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 px-3 text-xs font-medium"
-                  >
-                    {startDate ? format(startDate, "MMM d") : "Start"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={startDate}
-                    onSelect={setStartDate}
-                    initialFocus
-                    className="p-3 pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
-
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 px-3 text-xs font-medium"
-                  >
-                    {dueDate ? format(dueDate, "MMM d") : "Due"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={dueDate}
-                    onSelect={setDueDate}
-                    initialFocus
-                    className="p-3 pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
-
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 px-3 text-xs font-medium"
-                  >
-                    {number || "Year"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-3" align="start">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Select Year</label>
-                    <Select value={number || "none"} onValueChange={(value) => setNumber(value === "none" ? "" : value)}>
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Select year" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">No Year</SelectItem>
-                        <SelectItem value="1447">1447</SelectItem>
-                        <SelectItem value="1448">1448</SelectItem>
-                        <SelectItem value="1449">1449</SelectItem>
-                        <SelectItem value="1449+">1449+</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </PopoverContent>
-              </Popover>
-
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 px-3 text-xs font-medium"
-                  >
-                    {quarter || "Q"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-3" align="start">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Select Quarter</label>
-                    <Select value={quarter || "none"} onValueChange={(value) => setQuarter(value === "none" ? "" : value)}>
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Select quarter" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">No Quarter</SelectItem>
-                        <SelectItem value="Q1">Q1</SelectItem>
-                        <SelectItem value="Q2">Q2</SelectItem>
-                        <SelectItem value="Q3">Q3</SelectItem>
-                        <SelectItem value="Q4">Q4</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </PopoverContent>
-              </Popover>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Start date</label>
+                <DatePicker 
+                  date={startDate} 
+                  setDate={setStartDate} 
+                  label="Pick date"
+                  quarter={quarter}
+                  setQuarter={setQuarter}
+                  number={number}
+                  setNumber={setNumber}
+                  showQuarterYear={true}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Due date</label>
+                <DatePicker 
+                  date={dueDate} 
+                  setDate={setDueDate} 
+                  label="Pick date" 
+                />
+              </div>
             </div>
-            
             {movedDate && (
               <div className="space-y-2">
                 <label className="text-sm font-medium">Moved date</label>
