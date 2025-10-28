@@ -367,28 +367,8 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
                 </PopoverTrigger>
                 <PopoverContent className="w-64 p-3" align="start">
                   <div className="space-y-2">
-                    <Select value={number || "none"} onValueChange={(value) => setNumber(value === "none" ? "" : value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select year" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">No Year</SelectItem>
-                        {[...Array(12)].map((_, i) => {
-                          const y = String(1440 + i);
-                          return (
-                            <SelectItem key={y} value={y}>
-                              {y}
-                            </SelectItem>
-                          );
-                        })}
-                      </SelectContent>
-                    </Select>
-                    <div className="text-xs text-muted-foreground">Or type a custom year</div>
-                    <Input
-                      placeholder="e.g., 1447 or 1448+"
-                      value={number || ""}
-                      onChange={(e) => setNumber(e.target.value)}
-                    />
+                    <YearWheel value={number} onValueChange={setNumber} placeholder="Select year" />
+                    <div className="text-xs text-muted-foreground">Options start at 1447</div>
                   </div>
                 </PopoverContent>
               </Popover>
