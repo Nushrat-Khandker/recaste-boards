@@ -90,6 +90,8 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
   const [title, setTitle] = useState(card.title);
   const [description, setDescription] = useState(card.description || '');
   const [projectName, setProjectName] = useState(card.projectName || '');
+  const [quarter, setQuarter] = useState(card.quarter || '');
+  const [number, setNumber] = useState(card.number || '');
   const [tags, setTags] = useState<Tag[]>(Array.isArray(card.tags) ? card.tags : []);
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>(card.priority || 'medium');
   const [newTagText, setNewTagText] = useState('');
@@ -106,6 +108,8 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
     setTitle(card.title);
     setDescription(card.description || '');
     setProjectName(card.projectName || '');
+    setQuarter(card.quarter || '');
+    setNumber(card.number || '');
     setTags(Array.isArray(card.tags) ? card.tags : []);
     setPriority(card.priority || 'medium');
     setSelectedColor(tagColors[0].value);
@@ -193,6 +197,8 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
       title: title.trim(),
       description: description.trim() || undefined,
       projectName: projectName.trim() || undefined,
+      quarter: quarter || undefined,
+      number: number || undefined,
       tags: tags.length > 0 ? tags : undefined,
       priority: priority,
       startDate,
@@ -301,6 +307,48 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
               )}
             </div>
             <p className="text-xs text-muted-foreground">Type to create new or select existing project</p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-2">
+              <label htmlFor="quarter" className="text-sm font-medium">Quarter</label>
+              <Select value={quarter || "none"} onValueChange={(value) => setQuarter(value === "none" ? "" : value)}>
+                <SelectTrigger id="quarter">
+                  <SelectValue placeholder="Select quarter" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  <SelectItem value="Q1">Q1</SelectItem>
+                  <SelectItem value="Q2">Q2</SelectItem>
+                  <SelectItem value="Q3">Q3</SelectItem>
+                  <SelectItem value="Q4">Q4</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-2">
+              <label htmlFor="number" className="text-sm font-medium">Number</label>
+              <Select value={number || "none"} onValueChange={(value) => setNumber(value === "none" ? "" : value)}>
+                <SelectTrigger id="number">
+                  <SelectValue placeholder="Select number" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  <SelectItem value="1">1</SelectItem>
+                  <SelectItem value="2">2</SelectItem>
+                  <SelectItem value="3">3</SelectItem>
+                  <SelectItem value="4">4</SelectItem>
+                  <SelectItem value="5">5</SelectItem>
+                  <SelectItem value="6">6</SelectItem>
+                  <SelectItem value="7">7</SelectItem>
+                  <SelectItem value="8">8</SelectItem>
+                  <SelectItem value="9">9</SelectItem>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="11">11</SelectItem>
+                  <SelectItem value="12">12</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           
           <div className="grid gap-2">
