@@ -8,11 +8,12 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { useKanban } from '../context/KanbanContext';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
 import { YearWheel } from './YearWheel';
 import TagFilter from './TagFilter';
+import { NotificationCenter } from './NotificationCenter';
 
 const Header: React.FC = () => {
   const location = useLocation();
@@ -119,6 +120,9 @@ const Header: React.FC = () => {
                 <SelectItem value="Q4">Q4</SelectItem>
               </SelectContent>
             </Select>
+
+            {/* Notifications */}
+            <NotificationCenter />
 
             {/* More Options Menu */}
             <DropdownMenu>
