@@ -308,48 +308,6 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
             </div>
             <p className="text-xs text-muted-foreground">Type to create new or select existing project</p>
           </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="grid gap-2">
-              <label htmlFor="quarter" className="text-sm font-medium">Quarter</label>
-              <Select value={quarter || "none"} onValueChange={(value) => setQuarter(value === "none" ? "" : value)}>
-                <SelectTrigger id="quarter">
-                  <SelectValue placeholder="Select quarter" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  <SelectItem value="Q1">Q1</SelectItem>
-                  <SelectItem value="Q2">Q2</SelectItem>
-                  <SelectItem value="Q3">Q3</SelectItem>
-                  <SelectItem value="Q4">Q4</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid gap-2">
-              <label htmlFor="number" className="text-sm font-medium">Number</label>
-              <Select value={number || "none"} onValueChange={(value) => setNumber(value === "none" ? "" : value)}>
-                <SelectTrigger id="number">
-                  <SelectValue placeholder="Select number" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  <SelectItem value="1">1</SelectItem>
-                  <SelectItem value="2">2</SelectItem>
-                  <SelectItem value="3">3</SelectItem>
-                  <SelectItem value="4">4</SelectItem>
-                  <SelectItem value="5">5</SelectItem>
-                  <SelectItem value="6">6</SelectItem>
-                  <SelectItem value="7">7</SelectItem>
-                  <SelectItem value="8">8</SelectItem>
-                  <SelectItem value="9">9</SelectItem>
-                  <SelectItem value="10">10</SelectItem>
-                  <SelectItem value="11">11</SelectItem>
-                  <SelectItem value="12">12</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
           
           <div className="grid gap-2">
             <label htmlFor="description" className="text-sm font-medium">Description</label>
@@ -371,7 +329,12 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
                 <DatePicker 
                   date={startDate} 
                   setDate={setStartDate} 
-                  label="Pick date" 
+                  label="Pick date"
+                  quarter={quarter}
+                  setQuarter={setQuarter}
+                  number={number}
+                  setNumber={setNumber}
+                  showQuarterYear={true}
                 />
               </div>
               <div className="space-y-2">

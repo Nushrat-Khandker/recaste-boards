@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
-import { Send, Paperclip, Mic, Video, Square, Plus, Smile, AtSign, Code, Image as ImageIcon } from 'lucide-react';
+import { Send, Paperclip, Mic, Video, Square, Plus, Smile, AtSign, Code, Image as ImageIcon, Trash2, Edit2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface ChatMessage {
@@ -31,8 +31,12 @@ export const ChatView = ({ boardName }: ChatViewProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingType, setRecordingType] = useState<'audio' | 'video' | null>(null);
+  const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [profilesMap, setProfilesMap] = useState<Record<string, string | null>>({});
+  const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState('');
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -232,16 +236,7 @@ export const ChatView = ({ boardName }: ChatViewProps) => {
         });
         
         stream.getTracks().forEach(track => track.stop());
-        
-        const file = new File(
-          [blob],
-          `${type}-${Date.now()}.webm`,
-          { type: blob.type }
-        );
-        
-        const dataTransfer = new DataTransfer();
-        dataTransfer.items.add(file);
-        await handleFileUpload(dataTransfer.files);
+        setRecordedBlob(blob);
       };
 
       mediaRecorder.start();
@@ -266,7 +261,84 @@ export const ChatView = ({ boardName }: ChatViewProps) => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
-      setRecordingType(null);
+    }
+  };
+
+  const sendRecording = async () => {
+    if (!recordedBlob || !recordingType) return;
+
+    const file = new File(
+      [recordedBlob],
+      `${recordingType}-${Date.now()}.webm`,
+      { type: recordedBlob.type }
+    );
+    
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(file);
+    await handleFileUpload(dataTransfer.files);
+    
+    setRecordedBlob(null);
+    setRecordingType(null);
+  };
+
+  const cancelRecording = () => {
+    setRecordedBlob(null);
+    setRecordingType(null);
+  };
+
+  const deleteMessage = async (messageId: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { error } = await (supabase as any)
+      .from('chat_messages')
+      .delete()
+      .eq('id', messageId)
+      .eq('user_id', user.id);
+
+    if (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to delete message',
+        variant: 'destructive',
+      });
+    } else {
+      setMessages(prev => prev.filter(m => m.id !== messageId));
+      toast({
+        title: 'Success',
+        description: 'Message deleted',
+      });
+    }
+  };
+
+  const startEditMessage = (message: ChatMessage) => {
+    setEditingMessageId(message.id);
+    setEditContent(message.content || '');
+  };
+
+  const saveEditMessage = async (messageId: string) => {
+    if (!editContent.trim()) return;
+
+    const { error } = await (supabase as any)
+      .from('chat_messages')
+      .update({ content: editContent })
+      .eq('id', messageId);
+
+    if (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update message',
+        variant: 'destructive',
+      });
+    } else {
+      setMessages(prev => prev.map(m => 
+        m.id === messageId ? { ...m, content: editContent } : m
+      ));
+      setEditingMessageId(null);
+      toast({
+        title: 'Success',
+        description: 'Message updated',
+      });
     }
   };
 
@@ -309,26 +381,77 @@ export const ChatView = ({ boardName }: ChatViewProps) => {
           </div>
         ) : (
           messages.map((message) => (
-            <Card key={message.id} className="p-3">
+            <Card 
+              key={message.id} 
+              className="p-3 group relative"
+              onMouseEnter={() => setHoveredMessageId(message.id)}
+              onMouseLeave={() => setHoveredMessageId(null)}
+            >
               <div className="flex flex-col gap-1">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">
                     {profilesMap[message.user_id] || message.profiles?.full_name || message.user_id.slice(0, 8)}
                   </span>
-                  <span className="text-xs text-muted-foreground">
-                    {format(new Date(message.created_at), 'MMM d, HH:mm')}
-                  </span>
-                </div>
-                {message.message_type === 'text' && message.content && (
-                  <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                )}
-                {message.message_type === 'file' && message.file_url && (
-                  <div className="flex items-center gap-2 text-sm text-primary">
-                    <Paperclip className="h-4 w-4" />
-                    <a href={message.file_url} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                      {message.file_name || 'File attachment'}
-                    </a>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground">
+                      {format(new Date(message.created_at), 'MMM d, HH:mm')}
+                    </span>
+                    {hoveredMessageId === message.id && (
+                      <div className="flex gap-1">
+                        {message.message_type === 'text' && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={() => startEditMessage(message)}
+                          >
+                            <Edit2 className="h-3 w-3" />
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 text-destructive"
+                          onClick={() => deleteMessage(message.id)}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
+                </div>
+                {editingMessageId === message.id ? (
+                  <div className="flex gap-2">
+                    <Input
+                      value={editContent}
+                      onChange={(e) => setEditContent(e.target.value)}
+                      className="flex-1"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          saveEditMessage(message.id);
+                        } else if (e.key === 'Escape') {
+                          setEditingMessageId(null);
+                        }
+                      }}
+                      autoFocus
+                    />
+                    <Button size="sm" onClick={() => saveEditMessage(message.id)}>Save</Button>
+                    <Button size="sm" variant="ghost" onClick={() => setEditingMessageId(null)}>Cancel</Button>
+                  </div>
+                ) : (
+                  <>
+                    {message.message_type === 'text' && message.content && (
+                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                    )}
+                    {message.message_type === 'file' && message.file_url && (
+                      <div className="flex items-center gap-2 text-sm text-primary">
+                        <Paperclip className="h-4 w-4" />
+                        <a href={message.file_url} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                          {message.file_name || 'File attachment'}
+                        </a>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </Card>
@@ -338,6 +461,25 @@ export const ChatView = ({ boardName }: ChatViewProps) => {
       </div>
       
       <div className="border-t bg-background">
+        {recordedBlob && (
+          <div className="px-4 py-3 bg-muted border-b">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-sm">{recordingType === 'video' ? '🎥' : '🎤'} Recording ready</span>
+                {recordingType === 'audio' && (
+                  <audio src={URL.createObjectURL(recordedBlob)} controls className="h-8" />
+                )}
+                {recordingType === 'video' && (
+                  <video src={URL.createObjectURL(recordedBlob)} controls className="h-20" />
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" onClick={sendRecording}>Send</Button>
+                <Button size="sm" variant="ghost" onClick={cancelRecording}>Cancel</Button>
+              </div>
+            </div>
+          </div>
+        )}
         <div className="px-4 py-3">
           <div className="border rounded-lg bg-background">
             <Textarea
