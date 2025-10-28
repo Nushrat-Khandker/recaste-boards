@@ -14,7 +14,8 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
-
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 interface EditCardDialogProps {
   card: KanbanCard;
   columnId: string;
@@ -321,31 +322,100 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
             />
           </div>
           
-          {/* Date picker section */}
+          {/* Date quick actions: 4 small buttons in one line */}
           <div className="grid gap-3">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Start date</label>
-                <DatePicker 
-                  date={startDate} 
-                  setDate={setStartDate} 
-                  label="Pick date"
-                  quarter={quarter}
-                  setQuarter={setQuarter}
-                  number={number}
-                  setNumber={setNumber}
-                  showQuarterYear={true}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Due date</label>
-                <DatePicker 
-                  date={dueDate} 
-                  setDate={setDueDate} 
-                  label="Pick date" 
-                />
-              </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8 px-2">
+                    {startDate ? `Start: ${format(startDate, "MMM d, yy")}` : "Start date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={startDate}
+                    onSelect={setStartDate}
+                    initialFocus
+                    className="p-3 pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8 px-2">
+                    {dueDate ? `Due: ${format(dueDate, "MMM d, yy")}` : "Due date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={dueDate}
+                    onSelect={setDueDate}
+                    initialFocus
+                    className="p-3 pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8 px-2">
+                    {number ? `Year: ${number}` : "Year"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-64 p-3" align="start">
+                  <div className="space-y-2">
+                    <Select value={number || "none"} onValueChange={(value) => setNumber(value === "none" ? "" : value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select year" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">No Year</SelectItem>
+                        {[...Array(12)].map((_, i) => {
+                          const y = String(1440 + i);
+                          return (
+                            <SelectItem key={y} value={y}>
+                              {y}
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                    <div className="text-xs text-muted-foreground">Or type a custom year</div>
+                    <Input
+                      placeholder="e.g., 1447 or 1448+"
+                      value={number || ""}
+                      onChange={(e) => setNumber(e.target.value)}
+                    />
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8 px-2">
+                    {quarter ? `Q: ${quarter}` : "Q"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-40 p-3" align="start">
+                  <Select value={quarter || "none"} onValueChange={(value) => setQuarter(value === "none" ? "" : value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select quarter" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No Quarter</SelectItem>
+                      <SelectItem value="Q1">Q1</SelectItem>
+                      <SelectItem value="Q2">Q2</SelectItem>
+                      <SelectItem value="Q3">Q3</SelectItem>
+                      <SelectItem value="Q4">Q4</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </PopoverContent>
+              </Popover>
             </div>
+
             {movedDate && (
               <div className="space-y-2">
                 <label className="text-sm font-medium">Moved date</label>

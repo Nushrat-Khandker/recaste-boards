@@ -226,8 +226,8 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
   const { user } = useAuth();
   const navigate = useNavigate();
   const [columns, setColumns] = useState<KanbanColumn[]>([]);
-  const [selectedNumber, setSelectedNumber] = useState<string>('');
-  const [selectedQuarter, setSelectedQuarter] = useState<string>('');
+  const [selectedNumber, setSelectedNumber] = useState<string>(() => localStorage.getItem('selectedNumber') || '');
+  const [selectedQuarter, setSelectedQuarter] = useState<string>(() => localStorage.getItem('selectedQuarter') || '');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedProject, setSelectedProject] = useState<string | null>(() => {
     return localStorage.getItem('selectedProject') || null;
