@@ -32,6 +32,7 @@ export const ChatView = ({ boardName }: ChatViewProps) => {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingType, setRecordingType] = useState<'audio' | 'video' | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [profilesMap, setProfilesMap] = useState<Record<string, string | null>>({});
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -57,17 +58,20 @@ export const ChatView = ({ boardName }: ChatViewProps) => {
           filter: `board_name=eq.${boardName}`,
         },
         async (payload) => {
-          // Fetch the message with profile data
-          const { data } = await (supabase as any)
-            .from('chat_messages')
-            .select('*, profiles:user_id(full_name)')
-            .eq('id', payload.new.id)
-            .single();
-          
-          if (data) {
-            setMessages((prev) => [...prev, data]);
-            scrollToBottom();
+          // Append message and fetch profile name if missing
+          setMessages((prev) => [...prev, payload.new as ChatMessage]);
+          const uid = (payload.new as any).user_id as string;
+          if (!(uid in profilesMap)) {
+            const { data: prof } = await (supabase as any)
+              .from('profiles')
+              .select('id, full_name')
+              .eq('id', uid)
+              .single();
+            if (prof) {
+              setProfilesMap((prev) => ({ ...prev, [prof.id]: prof.full_name }));
+            }
           }
+          scrollToBottom();
         }
       )
       .subscribe();
@@ -84,7 +88,7 @@ export const ChatView = ({ boardName }: ChatViewProps) => {
   const loadMessages = async () => {
     const { data, error } = await (supabase as any)
       .from('chat_messages')
-      .select('*, profiles:user_id(full_name)')
+      .select('*')
       .eq('board_name', boardName)
       .order('created_at', { ascending: true });
 
@@ -96,7 +100,18 @@ export const ChatView = ({ boardName }: ChatViewProps) => {
         variant: 'destructive',
       });
     } else {
-      setMessages(data || []);
+      const msgs = (data || []) as ChatMessage[];
+      setMessages(msgs);
+      const uniqueIds = Array.from(new Set(msgs.map(m => m.user_id)));
+      if (uniqueIds.length) {
+        const { data: profs } = await (supabase as any)
+          .from('profiles')
+          .select('id, full_name')
+          .in('id', uniqueIds);
+        const map: Record<string, string | null> = {};
+        (profs || []).forEach((p: any) => { map[p.id] = p.full_name; });
+        setProfilesMap(map);
+      }
     }
   };
 
@@ -116,12 +131,16 @@ export const ChatView = ({ boardName }: ChatViewProps) => {
       return;
     }
 
-    const { error } = await (supabase as any).from('chat_messages').insert({
-      board_name: boardName,
-      user_id: user.id,
-      content: newMessage,
-      message_type: 'text',
-    });
+    const { data: inserted, error } = await (supabase as any)
+      .from('chat_messages')
+      .insert({
+        board_name: boardName,
+        user_id: user.id,
+        content: newMessage,
+        message_type: 'text',
+      })
+      .select('*')
+      .single();
 
     if (error) {
       console.error('Error sending message:', error);
@@ -132,6 +151,20 @@ export const ChatView = ({ boardName }: ChatViewProps) => {
       });
     } else {
       setNewMessage('');
+      if (inserted) {
+        setMessages((prev) => [...prev, inserted as ChatMessage]);
+        const uid = user.id as string;
+        if (!(uid in profilesMap)) {
+          const { data: prof } = await (supabase as any)
+            .from('profiles')
+            .select('id, full_name')
+            .eq('id', uid)
+            .single();
+          if (prof) {
+            setProfilesMap((prev) => ({ ...prev, [prof.id]: prof.full_name }));
+          }
+        }
+      }
     }
     
     setIsLoading(false);
@@ -298,7 +331,7 @@ export const ChatView = ({ boardName }: ChatViewProps) => {
               <div className="flex flex-col gap-1">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">
-                    {message.profiles?.full_name || message.user_id.slice(0, 8)}
+                    {profilesMap[message.user_id] || message.profiles?.full_name || message.user_id.slice(0, 8)}
                   </span>
                   <span className="text-xs text-muted-foreground">
                     {format(new Date(message.created_at), 'MMM d, HH:mm')}
