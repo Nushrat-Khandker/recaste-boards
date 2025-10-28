@@ -145,7 +145,7 @@ const ProjectsContent = () => {
         {/* Board Content */}
         <main className="flex-1 container mx-auto px-4 py-6">
           {boardView === 'tasks' && <KanbanBoard />}
-          {boardView === 'chat' && <ChatView boardName={viewingProject} />}
+          {boardView === 'chat' && <ChatView contextType="board" contextId={viewingProject} />}
           {boardView === 'files' && <FilesView boardName={viewingProject} />}
         </main>
       </div>

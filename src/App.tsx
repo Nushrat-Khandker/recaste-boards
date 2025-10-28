@@ -12,6 +12,7 @@ import SlackIntegrationPage from "./pages/SlackIntegration";
 import Projects from "./pages/Projects";
 import Auth from "./pages/Auth";
 import AdminProtected from "./pages/AdminProtected";
+import Chat from "./pages/Chat";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +26,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/projects" element={<Projects />} />
+            <Route path="/chat" element={<Chat />} />
             <Route path="/tags" element={<Tags />} />
             <Route path="/slack" element={<SlackIntegrationPage />} />
             <Route path="/auth" element={<Auth />} />

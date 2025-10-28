@@ -22,10 +22,16 @@ interface ChatMessage {
 }
 
 interface ChatViewProps {
-  boardName: string;
+  contextType: 'board' | 'project' | 'general';
+  contextId?: string;
+  boardName?: string; // Deprecated, for backward compatibility
 }
 
-export const ChatView = ({ boardName }: ChatViewProps) => {
+export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) => {
+  // Use contextId if provided, otherwise fall back to boardName for backward compatibility
+  const actualContextId = contextId || boardName || null;
+  const actualContextType = contextType;
+
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -37,6 +43,9 @@ export const ChatView = ({ boardName }: ChatViewProps) => {
   const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
+  const [showMentionPicker, setShowMentionPicker] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState('');
+  const [allUsers, setAllUsers] = useState<Array<{ id: string; name: string }>>([]);
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -49,20 +58,26 @@ export const ChatView = ({ boardName }: ChatViewProps) => {
 
   useEffect(() => {
     loadMessages();
+    loadUsers();
     
     // Subscribe to new messages
+    const channelName = actualContextId 
+      ? `chat:${actualContextType}:${actualContextId}` 
+      : `chat:${actualContextType}`;
+    
     const channel = supabase
-      .channel(`chat:${boardName}`)
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
           table: 'chat_messages',
-          filter: `board_name=eq.${boardName}`,
+          filter: actualContextId 
+            ? `context_type=eq.${actualContextType},context_id=eq.${actualContextId}`
+            : `context_type=eq.${actualContextType}`,
         },
         async (payload) => {
-          // Append message and fetch profile name if missing
           setMessages((prev) => [...prev, payload.new as ChatMessage]);
           const uid = (payload.new as any).user_id as string;
           if (!(uid in profilesMap)) {
@@ -83,18 +98,35 @@ export const ChatView = ({ boardName }: ChatViewProps) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [boardName]);
+  }, [actualContextType, actualContextId]);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
+  const loadUsers = async () => {
+    const { data } = await (supabase as any)
+      .from('profiles')
+      .select('id, full_name');
+    
+    if (data) {
+      setAllUsers(data.map((u: any) => ({ id: u.id, name: u.full_name || 'Unknown' })));
+    }
+  };
+
   const loadMessages = async () => {
-    const { data, error } = await (supabase as any)
+    let query = (supabase as any)
       .from('chat_messages')
       .select('*')
-      .eq('board_name', boardName)
-      .order('created_at', { ascending: true });
+      .eq('context_type', actualContextType);
+    
+    if (actualContextId) {
+      query = query.eq('context_id', actualContextId);
+    }
+    
+    query = query.order('created_at', { ascending: true });
+    
+    const { data, error } = await query;
 
     if (error) {
       console.error('Error loading messages:', error);
@@ -119,6 +151,16 @@ export const ChatView = ({ boardName }: ChatViewProps) => {
     }
   };
 
+  const extractMentions = (text: string): string[] => {
+    const mentionRegex = /@\[([^\]]+)\]\(([^)]+)\)/g;
+    const mentions: string[] = [];
+    let match;
+    while ((match = mentionRegex.exec(text)) !== null) {
+      mentions.push(match[2]); // Extract user ID
+    }
+    return mentions;
+  };
+
   const sendMessage = async () => {
     if (!newMessage.trim()) return;
 
@@ -135,11 +177,16 @@ export const ChatView = ({ boardName }: ChatViewProps) => {
       return;
     }
 
+    const mentionedUserIds = extractMentions(newMessage);
+
     const { error } = await (supabase as any).from('chat_messages').insert({
-      board_name: boardName,
+      board_name: actualContextId, // Keep for backward compatibility
+      context_type: actualContextType,
+      context_id: actualContextId,
       user_id: user.id,
       content: newMessage,
       message_type: 'text',
+      mentioned_users: mentionedUserIds,
     });
 
     if (error) {
@@ -174,7 +221,7 @@ export const ChatView = ({ boardName }: ChatViewProps) => {
     for (const file of Array.from(files)) {
       try {
         const fileExt = file.name.split('.').pop();
-        const fileName = `${boardName}/${Date.now()}-${file.name}`;
+        const fileName = `${actualContextType}/${actualContextId || 'general'}/${Date.now()}-${file.name}`;
         
         const { error: uploadError } = await supabase.storage
           .from('board-files')
@@ -187,7 +234,9 @@ export const ChatView = ({ boardName }: ChatViewProps) => {
           .getPublicUrl(fileName);
 
         const { error: dbError } = await (supabase as any).from('chat_messages').insert({
-          board_name: boardName,
+          board_name: actualContextId, // Keep for backward compatibility
+          context_type: actualContextType,
+          context_id: actualContextId,
           user_id: user.id,
           message_type: 'file',
           file_url: publicUrl,
@@ -358,8 +407,44 @@ export const ChatView = ({ boardName }: ChatViewProps) => {
     await handleFileUpload(e.dataTransfer.files);
   };
 
+  const insertMention = (user: { id: string; name: string }) => {
+    const beforeCursor = newMessage.substring(0, newMessage.lastIndexOf('@'));
+    const afterCursor = newMessage.substring(newMessage.length);
+    setNewMessage(`${beforeCursor}@[${user.name}](${user.id}) ${afterCursor}`);
+    setShowMentionPicker(false);
+    setMentionQuery('');
+  };
+
+  const handleMessageChange = (text: string) => {
+    setNewMessage(text);
+    
+    // Check for @ mentions
+    const lastAtIndex = text.lastIndexOf('@');
+    if (lastAtIndex !== -1) {
+      const afterAt = text.substring(lastAtIndex + 1);
+      if (!afterAt.includes(' ') && !afterAt.includes(']')) {
+        setMentionQuery(afterAt);
+        setShowMentionPicker(true);
+      } else {
+        setShowMentionPicker(false);
+      }
+    } else {
+      setShowMentionPicker(false);
+    }
+  };
+
+  const filteredUsers = allUsers.filter(u => 
+    u.name.toLowerCase().includes(mentionQuery.toLowerCase())
+  );
+
+  const getContextLabel = () => {
+    if (actualContextType === 'general') return 'General Chat';
+    if (actualContextType === 'project') return actualContextId || 'Project';
+    return actualContextId || 'Board';
+  };
+
   return (
-    <div 
+    <div
       className="flex flex-col h-[calc(100vh-200px)]"
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
@@ -482,18 +567,33 @@ export const ChatView = ({ boardName }: ChatViewProps) => {
         )}
         <div className="px-4 py-3">
           <div className="border rounded-lg bg-background">
-            <Textarea
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              placeholder={`Message #${boardName}`}
-              className="min-h-[80px] resize-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  sendMessage();
-                }
-              }}
-            />
+            <div className="relative">
+              <Textarea
+                value={newMessage}
+                onChange={(e) => handleMessageChange(e.target.value)}
+                placeholder={`Message ${getContextLabel()}`}
+                className="min-h-[80px] resize-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey && !showMentionPicker) {
+                    e.preventDefault();
+                    sendMessage();
+                  }
+                }}
+              />
+              {showMentionPicker && filteredUsers.length > 0 && (
+                <Card className="absolute bottom-full mb-2 left-0 max-h-48 overflow-y-auto z-50 w-64">
+                  {filteredUsers.map((user) => (
+                    <button
+                      key={user.id}
+                      onClick={() => insertMention(user)}
+                      className="w-full text-left px-3 py-2 hover:bg-muted text-sm"
+                    >
+                      {user.name}
+                    </button>
+                  ))}
+                </Card>
+              )}
+            </div>
             
             <div className="flex items-center justify-between px-2 pb-2 pt-1 border-t">
               <div className="flex items-center gap-1">
@@ -539,6 +639,10 @@ export const ChatView = ({ boardName }: ChatViewProps) => {
                 <Button
                   variant="ghost"
                   size="icon"
+                  onClick={() => {
+                    handleMessageChange(newMessage + '@');
+                    setShowMentionPicker(true);
+                  }}
                   className="h-8 w-8"
                   disabled={isLoading}
                   title="Mention someone"
