@@ -11,7 +11,7 @@ import { useKanban } from '../context/KanbanContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
-import { YearWheel } from './YearWheel';
+import { QuarterSelector } from './QuarterSelector';
 import TagFilter from './TagFilter';
 import { NotificationCenter } from './NotificationCenter';
 
@@ -102,24 +102,12 @@ const Header: React.FC = () => {
           
           {/* Right Side Controls */}
           <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-            <YearWheel 
-              value={selectedNumber} 
-              onValueChange={setSelectedNumber}
-              placeholder="Year"
-              className="w-14 sm:w-20 text-xs sm:text-sm"
+            <QuarterSelector
+              selectedQuarter={selectedQuarter}
+              selectedYear={selectedNumber}
+              onQuarterChange={setSelectedQuarter}
+              onYearChange={setSelectedNumber}
             />
-            
-            <Select value={selectedQuarter} onValueChange={setSelectedQuarter}>
-              <SelectTrigger className="w-12 sm:w-16 text-xs sm:text-sm h-8 sm:h-10">
-                <SelectValue placeholder="Q" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Q1">Q1</SelectItem>
-                <SelectItem value="Q2">Q2</SelectItem>
-                <SelectItem value="Q3">Q3</SelectItem>
-                <SelectItem value="Q4">Q4</SelectItem>
-              </SelectContent>
-            </Select>
 
             {/* Notifications */}
             <NotificationCenter />
