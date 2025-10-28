@@ -144,32 +144,41 @@ export type Database = {
       }
       chat_messages: {
         Row: {
-          board_name: string
+          board_name: string | null
           content: string | null
+          context_id: string | null
+          context_type: string | null
           created_at: string | null
           file_name: string | null
           file_url: string | null
           id: string
+          mentioned_users: string[] | null
           message_type: string
           user_id: string
         }
         Insert: {
-          board_name: string
+          board_name?: string | null
           content?: string | null
+          context_id?: string | null
+          context_type?: string | null
           created_at?: string | null
           file_name?: string | null
           file_url?: string | null
           id?: string
+          mentioned_users?: string[] | null
           message_type?: string
           user_id: string
         }
         Update: {
-          board_name?: string
+          board_name?: string | null
           content?: string | null
+          context_id?: string | null
+          context_type?: string | null
           created_at?: string | null
           file_name?: string | null
           file_url?: string | null
           id?: string
+          mentioned_users?: string[] | null
           message_type?: string
           user_id?: string
         }
