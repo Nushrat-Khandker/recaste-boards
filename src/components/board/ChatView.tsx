@@ -56,9 +56,18 @@ export const ChatView = ({ boardName }: ChatViewProps) => {
           table: 'chat_messages',
           filter: `board_name=eq.${boardName}`,
         },
-        (payload) => {
-          setMessages((prev) => [...prev, payload.new as ChatMessage]);
-          scrollToBottom();
+        async (payload) => {
+          // Fetch the message with profile data
+          const { data } = await (supabase as any)
+            .from('chat_messages')
+            .select('*, profiles:user_id(full_name)')
+            .eq('id', payload.new.id)
+            .single();
+          
+          if (data) {
+            setMessages((prev) => [...prev, data]);
+            scrollToBottom();
+          }
         }
       )
       .subscribe();
