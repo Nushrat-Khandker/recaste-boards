@@ -75,7 +75,7 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
           table: 'chat_messages',
           filter: actualContextId 
             ? `context_type=eq.${actualContextType},context_id=eq.${actualContextId}`
-            : `context_type=eq.${actualContextType}`,
+            : `context_type=eq.${actualContextType},context_id=is.null`,
         },
         async (payload) => {
           setMessages((prev) => [...prev, payload.new as ChatMessage]);
@@ -122,6 +122,8 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
     
     if (actualContextId) {
       query = query.eq('context_id', actualContextId);
+    } else {
+      query = query.is('context_id', null);
     }
     
     query = query.order('created_at', { ascending: true });
