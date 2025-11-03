@@ -381,7 +381,7 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
       const cardData = {
         title: validatedCard.title,
         description: validatedCard.description,
-        project_name: validatedCard.projectName,
+        project_name: validatedCard.projectName || selectedProject || undefined,
         column_id: columnId,
         priority: validatedCard.priority || 'medium',
         number: validatedCard.number || selectedNumber,
