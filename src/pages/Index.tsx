@@ -3,29 +3,20 @@ import KanbanBoard from "@/components/KanbanBoard";
 import Header from "@/components/Header";
 import { HijriCalendar } from "@/components/HijriCalendar";
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const IndexContent = () => {
-  const [viewMode, setViewMode] = useState<'board' | 'calendar'>('board');
+  const [searchParams] = useSearchParams();
+  const viewMode = searchParams.get('view') === 'calendar' ? 'calendar' : 'board';
   const { selectedProject, setSelectedProject } = useKanban();
 
   // Clear any project filter when navigating to main tasks view
   useEffect(() => {
     setSelectedProject(null);
   }, [setSelectedProject]);
-
-  // Check URL hash to determine view
-  useEffect(() => {
-    const handleHashChange = () => {
-      setViewMode(window.location.hash === '#calendar' ? 'calendar' : 'board');
-    };
-    
-    handleHashChange();
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
-  }, []);
 
   return (
     <>

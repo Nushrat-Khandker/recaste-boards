@@ -43,7 +43,7 @@ const Header: React.FC = () => {
   // Determine current view from route
   const currentView = location.pathname === '/projects' ? 'projects' 
                     : location.pathname === '/chat' ? 'chat'
-                    : location.pathname === '/' && location.hash === '#calendar' ? 'calendar'
+                    : location.pathname === '/' && location.search === '?view=calendar' ? 'calendar'
                     : 'tasks';
 
   const handleSendToSlack = async () => {
@@ -159,7 +159,7 @@ const Header: React.FC = () => {
               </Link>
             </TabsTrigger>
             <TabsTrigger value="calendar" asChild className="text-xs sm:text-sm px-2 sm:px-3">
-              <Link to="/#calendar" className="gap-1 sm:gap-2">
+              <Link to="/?view=calendar" className="gap-1 sm:gap-2">
                 <span className="hidden sm:inline">📅</span> Calendar
               </Link>
             </TabsTrigger>
