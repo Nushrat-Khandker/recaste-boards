@@ -5,8 +5,9 @@ import { format } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { useKanban } from '@/context/KanbanContext';
+import { useKanban, KanbanCard as KanbanContextCard } from '@/context/KanbanContext';
 import EditCardDialog from '@/components/EditCardDialog';
+import { Plus } from 'lucide-react';
 interface KanbanCard {
   id: string;
   title: string;
@@ -45,7 +46,7 @@ const SOLAR_EVENT_EMOJIS: Record<string, string> = {
 };
 
 export function HijriCalendar() {
-  const { selectedTags, selectedProject, updateCard, columns } = useKanban();
+  const { selectedTags, selectedProject, updateCard, addCard, columns } = useKanban();
   const [newMoons, setNewMoons] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [monthRange, setMonthRange] = useState<{ start: Date; end: Date } | null>(null);
@@ -55,6 +56,8 @@ export function HijriCalendar() {
   const [solarEvents, setSolarEvents] = useState<Map<string, string>>(new Map());
   const [cards, setCards] = useState<KanbanCard[]>([]);
   const [selectedCard, setSelectedCard] = useState<{ card: KanbanCard; columnId: string } | null>(null);
+  const [newCardDate, setNewCardDate] = useState<Date | null>(null);
+  const [hoveredDate, setHoveredDate] = useState<string | null>(null);
 
   useEffect(() => {
     loadNewMoons();
@@ -313,17 +316,32 @@ export function HijriCalendar() {
           const solarEmoji = solarEvents.get(dateKey);
           const isToday = format(new Date(), 'yyyy-MM-dd') === dateKey;
           const cardsForDate = getCardsForDate(gregorianDate);
+          const isHovered = hoveredDate === dateKey;
 
           return (
             <div
               key={hijriDay}
               className={cn(
-                "aspect-square border border-border/70 sm:border-2 rounded-sm sm:rounded-lg p-0.5 sm:p-2 relative flex flex-col overflow-hidden bg-white dark:bg-slate-800",
+                "aspect-square border border-border/70 sm:border-2 rounded-sm sm:rounded-lg p-0.5 sm:p-2 relative flex flex-col overflow-hidden bg-white dark:bg-slate-800 group",
                 weekday === 5 && "bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700",
                 weekday === 6 && "bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700",
                 isToday && "ring-1 sm:ring-2 ring-primary"
               )}
+              onMouseEnter={() => setHoveredDate(dateKey)}
+              onMouseLeave={() => setHoveredDate(null)}
             >
+              {/* Add card button - shown on hover */}
+              <button
+                onClick={() => setNewCardDate(gregorianDate)}
+                className={cn(
+                  "absolute top-1 right-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-primary/90 hover:bg-primary text-primary-foreground flex items-center justify-center transition-opacity duration-200 z-10",
+                  isHovered ? "opacity-100" : "opacity-0"
+                )}
+                title="Add card"
+              >
+                <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+              </button>
+
               {/* Moon phase and solar events */}
               <div className="flex gap-0.5 sm:gap-1 mb-0.5 sm:mb-1">
                 {moonEmoji && <span className="text-[10px] sm:text-base leading-none">{moonEmoji}</span>}
@@ -378,6 +396,38 @@ export function HijriCalendar() {
             updateCard(columnId, updatedCard);
             setSelectedCard(null);
           }}
+        />
+      )}
+
+      {/* New Card Dialog */}
+      {newCardDate && (
+        <EditCardDialog
+          card={{
+            id: 'new',
+            title: '',
+            description: '',
+            projectName: selectedProject || '',
+            tags: [],
+            priority: 'medium',
+            startDate: newCardDate,
+            dueDate: newCardDate,
+          } as KanbanContextCard}
+          columnId="todo"
+          isOpen={!!newCardDate}
+          onClose={() => setNewCardDate(null)}
+          onSave={(columnId, newCard) => {
+            addCard(columnId, {
+              title: newCard.title,
+              description: newCard.description,
+              projectName: newCard.projectName,
+              tags: newCard.tags,
+              startDate: newCard.startDate,
+              dueDate: newCard.dueDate,
+            });
+            setNewCardDate(null);
+            fetchCards();
+          }}
+          isNew={true}
         />
       )}
     </div>
