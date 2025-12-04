@@ -19,12 +19,15 @@ serve(async (req) => {
     );
 
     const teamMembers = [
-      "Nushrat",
-      "Sabih", 
-      "Naomi",
-      "Musfera",
+      "Farah",
       "Inaya",
-      "Farah"
+      "Mahedi",
+      "Musfera",
+      "Naomi",
+      "Nasir",
+      "Nushrat",
+      "Oishorjo",
+      "Sabih"
     ];
 
     const results = [];
