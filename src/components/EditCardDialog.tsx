@@ -23,6 +23,18 @@ interface Profile {
   full_name: string | null;
   email: string | null;
 }
+
+// Hardcoded team members list
+const TEAM_MEMBERS = [
+  "Farah",
+  "Inaya",
+  "Mahedi",
+  "Naomi",
+  "Nasir",
+  "Nushrat",
+  "Oishorjo",
+  "Sabih"
+];
 interface EditCardDialogProps {
   card: KanbanCard;
   columnId: string;
@@ -111,19 +123,6 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
   const [fileAttachments, setFileAttachments] = useState<Array<{ url: string; type: 'google_doc' | 'txt' | 'html'; name: string }>>(card.fileAttachments || []);
   const [newFileUrl, setNewFileUrl] = useState('');
   const [assignedTo, setAssignedTo] = useState<string | undefined>(card.assignedTo);
-  const [profiles, setProfiles] = useState<Profile[]>([]);
-
-  // Fetch profiles for assignee selection
-  useEffect(() => {
-    const fetchProfiles = async () => {
-      const { data, error } = await supabase.from('profiles').select('id, full_name, email').order('full_name');
-      console.log('Fetched profiles:', data, 'Error:', error);
-      if (data) setProfiles(data);
-    };
-    if (isOpen) {
-      fetchProfiles();
-    }
-  }, [isOpen]);
 
   // Reset form when card changes
   useEffect(() => {
@@ -229,7 +228,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
       movedDate: card.movedDate,
       fileAttachments: fileAttachments.length > 0 ? fileAttachments : undefined,
       assignedTo: assignedTo || undefined,
-      assignedToName: profiles.find(p => p.id === assignedTo)?.full_name || undefined,
+      assignedToName: assignedTo || undefined,
     };
     
     onSave(columnId, updatedCard);
@@ -342,7 +341,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
                   {assignedTo ? (
                     <div className="flex items-center gap-2">
                       <User className="h-4 w-4" />
-                      {profiles.find(p => p.id === assignedTo)?.full_name || 'Unknown'}
+                      {assignedTo}
                     </div>
                   ) : (
                     <span className="text-muted-foreground">Unassigned</span>
@@ -351,11 +350,11 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="unassigned">Unassigned</SelectItem>
-                {profiles.map((profile) => (
-                  <SelectItem key={profile.id} value={profile.id}>
+                {TEAM_MEMBERS.map((name) => (
+                  <SelectItem key={name} value={name}>
                     <div className="flex items-center gap-2">
                       <User className="h-4 w-4" />
-                      {profile.full_name || profile.email || 'Unknown'}
+                      {name}
                     </div>
                   </SelectItem>
                 ))}
