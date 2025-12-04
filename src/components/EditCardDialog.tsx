@@ -116,11 +116,14 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
   // Fetch profiles for assignee selection
   useEffect(() => {
     const fetchProfiles = async () => {
-      const { data } = await supabase.from('profiles').select('id, full_name, email');
+      const { data, error } = await supabase.from('profiles').select('id, full_name, email').order('full_name');
+      console.log('Fetched profiles:', data, 'Error:', error);
       if (data) setProfiles(data);
     };
-    fetchProfiles();
-  }, []);
+    if (isOpen) {
+      fetchProfiles();
+    }
+  }, [isOpen]);
 
   // Reset form when card changes
   useEffect(() => {
