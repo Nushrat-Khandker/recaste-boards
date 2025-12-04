@@ -22,7 +22,6 @@ serve(async (req) => {
       "Farah",
       "Inaya",
       "Mahedi",
-      "Musfera",
       "Naomi",
       "Nasir",
       "Nushrat",
