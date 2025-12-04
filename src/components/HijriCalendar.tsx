@@ -423,6 +423,7 @@ export function HijriCalendar() {
               tags: newCard.tags,
               startDate: newCard.startDate,
               dueDate: newCard.dueDate,
+              assignedTo: newCard.assignedTo,
             });
             setNewCardDate(null);
             fetchCards();

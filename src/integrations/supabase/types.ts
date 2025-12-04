@@ -380,6 +380,7 @@ export type Database = {
       }
       kanban_cards: {
         Row: {
+          assigned_to: string | null
           column_id: string
           created_at: string
           description: string | null
@@ -398,6 +399,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          assigned_to?: string | null
           column_id: string
           created_at?: string
           description?: string | null
@@ -416,6 +418,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          assigned_to?: string | null
           column_id?: string
           created_at?: string
           description?: string | null
@@ -433,7 +436,15 @@ export type Database = {
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "kanban_cards_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       kanban_columns: {
         Row: {

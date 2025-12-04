@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
-import { X, Move, Pencil, CalendarClock, Link as LinkIcon } from 'lucide-react';
+import { X, Move, Pencil, CalendarClock, Link as LinkIcon, User } from 'lucide-react';
 import EditCardDialog from './EditCardDialog';
 import { useKanban, Tag } from '../context/KanbanContext';
 import { Badge } from '@/components/ui/badge';
@@ -20,6 +20,8 @@ interface KanbanCardProps {
   dueDate?: Date;
   movedDate?: Date;
   fileAttachments?: Array<{ url: string; type: 'google_doc' | 'txt' | 'html'; name: string }>;
+  assignedTo?: string;
+  assignedToName?: string;
   onDelete: () => void;
   onDragStart: (e: React.DragEvent, cardId: string, columnId: string) => void;
   columnId: string;
@@ -67,6 +69,8 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
   dueDate,
   movedDate,
   fileAttachments = [],
+  assignedTo,
+  assignedToName,
   onDelete,
   onDragStart,
   columnId
@@ -163,6 +167,14 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
             </Badge>
           </div>
         )}
+
+        {/* Display assigned user if it exists */}
+        {assignedToName && (
+          <div className="flex items-center gap-1 mb-2 text-xs text-muted-foreground">
+            <User size={12} />
+            <span>{assignedToName}</span>
+          </div>
+        )}
         
         {/* Display tags and priority */}
         {(tags.length > 0 || priority) && (
@@ -200,7 +212,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
       </Card>
 
       <EditCardDialog
-        card={{ id, title, description, projectName, tags, priority, number, quarter, startDate, dueDate, movedDate, fileAttachments }}
+        card={{ id, title, description, projectName, tags, priority, number, quarter, startDate, dueDate, movedDate, fileAttachments, assignedTo, assignedToName }}
         columnId={columnId}
         isOpen={isEditDialogOpen}
         onClose={() => setIsEditDialogOpen(false)}

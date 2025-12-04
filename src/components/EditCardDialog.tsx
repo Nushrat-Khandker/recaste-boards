@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { X, CalendarClock, Plus, Check, Link as LinkIcon, ExternalLink, FileText } from "lucide-react"; 
+import { X, CalendarClock, Plus, Check, Link as LinkIcon, ExternalLink, FileText, User } from "lucide-react"; 
 import { KanbanCard, Tag, useKanban } from '../context/KanbanContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
@@ -16,6 +16,13 @@ import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { supabase } from "@/integrations/supabase/client";
+
+interface Profile {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+}
 interface EditCardDialogProps {
   card: KanbanCard;
   columnId: string;
@@ -103,6 +110,17 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
   const [isTagDropdownOpen, setIsTagDropdownOpen] = useState(false);
   const [fileAttachments, setFileAttachments] = useState<Array<{ url: string; type: 'google_doc' | 'txt' | 'html'; name: string }>>(card.fileAttachments || []);
   const [newFileUrl, setNewFileUrl] = useState('');
+  const [assignedTo, setAssignedTo] = useState<string | undefined>(card.assignedTo);
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+
+  // Fetch profiles for assignee selection
+  useEffect(() => {
+    const fetchProfiles = async () => {
+      const { data } = await supabase.from('profiles').select('id, full_name, email');
+      if (data) setProfiles(data);
+    };
+    fetchProfiles();
+  }, []);
 
   // Reset form when card changes
   useEffect(() => {
@@ -118,6 +136,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
     setStartDate(card.startDate ? new Date(card.startDate) : undefined);
     setDueDate(card.dueDate ? new Date(card.dueDate) : undefined);
     setFileAttachments(card.fileAttachments || []);
+    setAssignedTo(card.assignedTo);
   }, [card, isOpen]);
 
   const handleAddTag = () => {
@@ -206,6 +225,8 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
       dueDate,
       movedDate: card.movedDate,
       fileAttachments: fileAttachments.length > 0 ? fileAttachments : undefined,
+      assignedTo: assignedTo || undefined,
+      assignedToName: profiles.find(p => p.id === assignedTo)?.full_name || undefined,
     };
     
     onSave(columnId, updatedCard);
@@ -308,6 +329,35 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
               )}
             </div>
             <p className="text-xs text-muted-foreground">Type to create new or select existing project</p>
+          </div>
+          
+          <div className="grid gap-2">
+            <label htmlFor="assignedTo" className="text-sm font-medium">Assigned To</label>
+            <Select value={assignedTo || "unassigned"} onValueChange={(value) => setAssignedTo(value === "unassigned" ? undefined : value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select assignee">
+                  {assignedTo ? (
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      {profiles.find(p => p.id === assignedTo)?.full_name || 'Unknown'}
+                    </div>
+                  ) : (
+                    <span className="text-muted-foreground">Unassigned</span>
+                  )}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="unassigned">Unassigned</SelectItem>
+                {profiles.map((profile) => (
+                  <SelectItem key={profile.id} value={profile.id}>
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      {profile.full_name || profile.email || 'Unknown'}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           
           <div className="grid gap-2">

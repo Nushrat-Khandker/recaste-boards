@@ -34,6 +34,8 @@ export interface KanbanCard {
   dueDate?: Date;   // New field for due date
   movedDate?: Date; // Automatically set when card is moved between columns
   fileAttachments?: Array<{ url: string; type: 'google_doc' | 'txt' | 'html'; name: string }>; // File attachments
+  assignedTo?: string; // User ID of assigned person
+  assignedToName?: string; // Display name of assigned person
 }
 
 export interface KanbanColumn {
@@ -217,6 +219,8 @@ const convertSupabaseDataToColumns = (cards: any[], columns: any[]): KanbanColum
         dueDate: card.due_date ? new Date(card.due_date) : undefined,
         movedDate: card.moved_date ? new Date(card.moved_date) : undefined,
         fileAttachments: card.file_attachments ? (typeof card.file_attachments === 'string' ? JSON.parse(card.file_attachments) : card.file_attachments) : undefined,
+        assignedTo: card.assigned_to,
+        assignedToName: card.profiles?.full_name,
       }))
   }));
 };
@@ -239,10 +243,10 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
     try {
       setLoading(true);
       
-      // Fetch columns and cards from database
+      // Fetch columns and cards from database with profile join for assignee
       const [columnsResult, cardsResult] = await Promise.all([
         supabase.from('kanban_columns').select('*').order('position'),
-        supabase.from('kanban_cards').select('*').order('created_at', { ascending: false })
+        supabase.from('kanban_cards').select('*, profiles:assigned_to(full_name)').order('created_at', { ascending: false })
       ]);
 
       if (columnsResult.error) throw columnsResult.error;
@@ -391,6 +395,7 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
         due_date: card.dueDate?.toISOString(),
         file_attachments: card.fileAttachments ? JSON.stringify(card.fileAttachments) : null,
         owner_id: user.id,
+        assigned_to: card.assignedTo || null,
       };
 
       const { data, error } = await supabase
@@ -531,6 +536,7 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
         start_date: updatedCard.startDate?.toISOString(),
         due_date: updatedCard.dueDate?.toISOString(),
         file_attachments: updatedCard.fileAttachments ? JSON.stringify(updatedCard.fileAttachments) : null,
+        assigned_to: updatedCard.assignedTo || null,
       };
 
       const { error } = await supabase
