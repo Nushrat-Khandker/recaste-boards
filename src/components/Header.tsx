@@ -30,6 +30,7 @@ const Header: React.FC = () => {
   const [showSlackInput, setShowSlackInput] = useState(false);
   const [slackChannel, setSlackChannel] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [searchExpanded, setSearchExpanded] = useState(false);
 
   const headerRef = useRef<HTMLElement | null>(null);
   useEffect(() => {
@@ -104,36 +105,75 @@ const Header: React.FC = () => {
           
           {/* Right Side Controls */}
           <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-            {/* Search Input */}
-            <div className="relative">
-              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
-              <Input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search cards..."
-                className="h-8 sm:h-10 w-28 sm:w-40 pl-7 pr-7 text-xs sm:text-sm"
-              />
-              {searchQuery && (
+            {/* Search - Icon only on mobile, expands on tap */}
+            {searchExpanded ? (
+              <div className="relative">
+                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search..."
+                  className="h-8 sm:h-10 w-28 sm:w-40 pl-7 pr-7 text-xs sm:text-sm"
+                  autoFocus
+                  onBlur={() => {
+                    if (!searchQuery) setSearchExpanded(false);
+                  }}
+                />
                 <Button
                   variant="ghost"
                   size="sm"
                   className="absolute right-0 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
-                  onClick={() => setSearchQuery('')}
+                  onClick={() => {
+                    setSearchQuery('');
+                    setSearchExpanded(false);
+                  }}
                 >
                   <X className="h-3 w-3" />
                 </Button>
-              )}
-            </div>
+              </div>
+            ) : (
+              <>
+                {/* Mobile: Icon button */}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8 sm:hidden"
+                  onClick={() => setSearchExpanded(true)}
+                >
+                  <Search className="h-3 w-3" />
+                </Button>
+                {/* Desktop: Full search input */}
+                <div className="relative hidden sm:block">
+                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                  <Input
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search cards..."
+                    className="h-10 w-40 pl-7 pr-7 text-sm"
+                  />
+                  {searchQuery && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+                      onClick={() => setSearchQuery('')}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  )}
+                </div>
+              </>
+            )}
             
             <YearWheel 
               value={selectedNumber} 
               onValueChange={setSelectedNumber}
               placeholder="Year"
-              className="w-14 sm:w-20 text-xs sm:text-sm"
+              className="w-[52px] sm:w-20 text-xs sm:text-sm"
             />
             
             <Select value={selectedQuarter} onValueChange={setSelectedQuarter}>
-              <SelectTrigger className="w-12 sm:w-16 text-xs sm:text-sm h-8 sm:h-10">
+              <SelectTrigger className="w-[42px] sm:w-16 text-xs sm:text-sm h-8 sm:h-10">
                 <SelectValue placeholder="Q" />
               </SelectTrigger>
               <SelectContent>
