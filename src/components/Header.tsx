@@ -146,11 +146,11 @@ const Header: React.FC = () => {
               value={selectedNumber} 
               onValueChange={setSelectedNumber}
               placeholder="Year"
-              className="w-[52px] sm:w-20 text-xs sm:text-sm"
+              className="w-[46px] sm:w-16 text-[10px] sm:text-xs h-7 sm:h-8"
             />
             
             <Select value={selectedQuarter} onValueChange={setSelectedQuarter}>
-              <SelectTrigger className="w-[42px] sm:w-16 text-xs sm:text-sm h-8 sm:h-10">
+              <SelectTrigger className="w-[36px] sm:w-14 text-[10px] sm:text-xs h-7 sm:h-8">
                 <SelectValue placeholder="Q" />
               </SelectTrigger>
               <SelectContent>
