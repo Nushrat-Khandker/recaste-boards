@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FolderKanban, X, Plus, Pencil, Check, Archive, ArchiveRestore } from 'lucide-react';
+import { FolderKanban, X, Plus, Pencil, Check, Archive, ArchiveRestore, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -29,6 +29,11 @@ const ProjectFilter: React.FC = () => {
   const [newProjectName, setNewProjectName] = useState('');
   const [editingProject, setEditingProject] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredProjects = allProjects.filter(project =>
+    project.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleAddProject = () => {
     if (newProjectName.trim()) {
@@ -65,6 +70,20 @@ const ProjectFilter: React.FC = () => {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-64">
+            <div className="p-2">
+              <div className="relative">
+                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search projects..."
+                  className="h-8 pl-7 text-sm"
+                />
+              </div>
+            </div>
+            
+            <DropdownMenuSeparator />
+            
             <div className="flex items-center justify-between px-2 py-1.5">
               <Label htmlFor="show-archived" className="text-xs text-muted-foreground">
                 {showArchived ? 'Archived Projects' : 'Active Projects'}
@@ -91,7 +110,7 @@ const ProjectFilter: React.FC = () => {
               </DropdownMenuCheckboxItem>
             )}
             
-            {allProjects.map((project) => (
+            {filteredProjects.map((project) => (
               <div key={project} className="flex items-center gap-1 px-2 py-1.5 hover:bg-accent group/item">
                 {editingProject === project ? (
                   <>
@@ -185,9 +204,9 @@ const ProjectFilter: React.FC = () => {
               </div>
             ))}
             
-            {allProjects.length === 0 && (
+            {filteredProjects.length === 0 && (
               <div className="px-2 py-3 text-center text-sm text-muted-foreground">
-                {showArchived ? 'No archived projects' : 'No active projects'}
+                {searchQuery ? 'No matching projects' : showArchived ? 'No archived projects' : 'No active projects'}
               </div>
             )}
             
