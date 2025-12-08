@@ -4,18 +4,20 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import Header from "@/components/Header";
 import KanbanBoard from "@/components/KanbanBoard";
 import { ChatView } from "@/components/board/ChatView";
 import { FilesView } from "@/components/board/FilesView";
-import { Hash, MessageSquare, Folder, Pencil, Check, XCircle, ArrowLeft } from "lucide-react";
+import { Hash, MessageSquare, Folder, Pencil, Check, XCircle, ArrowLeft, Archive, ArchiveRestore } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 
 type BoardView = 'tasks' | 'chat' | 'files';
 
 const ProjectsContent = () => {
-  const { columns, allProjects, setSelectedProject, selectedProject, renameProject } = useKanban();
+  const { columns, allProjects, setSelectedProject, selectedProject, renameProject, archiveProject, unarchiveProject, showArchived, setShowArchived } = useKanban();
   const [viewingProject, setViewingProject] = useState<string | null>(null);
   const [boardView, setBoardView] = useState<BoardView>('tasks');
   const [editingProject, setEditingProject] = useState<string | null>(null);
@@ -157,9 +159,21 @@ const ProjectsContent = () => {
       <Header />
       
       <div className="container mx-auto px-4 py-8">
+        {/* Archive Toggle */}
+        <div className="flex items-center justify-end gap-2 mb-6">
+          <Switch
+            id="show-archived"
+            checked={showArchived}
+            onCheckedChange={setShowArchived}
+          />
+          <Label htmlFor="show-archived" className="text-sm text-muted-foreground cursor-pointer">
+            Show Archived
+          </Label>
+        </div>
+
       {projectData.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
-          <p>No boards yet. Create a card with a project name to get started!</p>
+          <p>{showArchived ? "No archived boards." : "No boards yet. Create a card with a project name to get started!"}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -200,17 +214,47 @@ const ProjectsContent = () => {
                 ) : (
                   <div className="flex items-center justify-between">
                     <CardTitle>{project.name}</CardTitle>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleStartEdit(project.name);
-                      }}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <Pencil className="h-3 w-3" />
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleStartEdit(project.name);
+                        }}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity"
+                        title="Rename"
+                      >
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                      {showArchived ? (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            unarchiveProject(project.name);
+                          }}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity text-green-600 hover:text-green-700"
+                          title="Unarchive"
+                        >
+                          <ArchiveRestore className="h-3 w-3" />
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            archiveProject(project.name);
+                          }}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                          title="Archive"
+                        >
+                          <Archive className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 )}
                 <CardDescription>{project.totalCards} total tasks • Click to view</CardDescription>
