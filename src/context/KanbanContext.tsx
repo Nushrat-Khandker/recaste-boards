@@ -73,6 +73,8 @@ interface KanbanContextType {
   unarchiveProject: (projectName: string) => Promise<void>;
   showArchived: boolean;
   setShowArchived: (show: boolean) => void;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
 }
 
 const tagColors: Record<string, string> = {
@@ -193,6 +195,8 @@ export const KanbanContext = createContext<KanbanContextType>({
   unarchiveProject: async () => {},
   showArchived: false,
   setShowArchived: () => {},
+  searchQuery: '',
+  setSearchQuery: () => {},
 });
 
 export const useKanban = () => useContext(KanbanContext);
@@ -249,6 +253,7 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
   const [loading, setLoading] = useState<boolean>(true);
   const [archivedProjects, setArchivedProjects] = useState<string[]>([]);
   const [showArchived, setShowArchived] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   // Load archived projects
   const loadArchivedProjects = async () => {
@@ -335,8 +340,9 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
     };
   }, []);
 
-  // Filter columns based on tags, project, year, and quarter
+  // Filter columns based on tags, project, year, quarter, and search query
   const filteredColumns = React.useMemo(() => {
+    const query = searchQuery.toLowerCase().trim();
     return columns.map(column => ({
       ...column,
       cards: column.cards.filter(card => {
@@ -353,10 +359,17 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
         // Filter by selected quarter
         const matchesQuarter = !selectedQuarter || card.quarter === selectedQuarter;
         
-        return matchesTags && matchesProject && matchesYear && matchesQuarter;
+        // Filter by search query - matches title, description, project name, or file attachment names
+        const matchesSearch = !query || 
+          card.title.toLowerCase().includes(query) ||
+          (card.description && card.description.toLowerCase().includes(query)) ||
+          (card.projectName && card.projectName.toLowerCase().includes(query)) ||
+          (card.fileAttachments && card.fileAttachments.some(f => f.name.toLowerCase().includes(query)));
+        
+        return matchesTags && matchesProject && matchesYear && matchesQuarter && matchesSearch;
       })
     }));
-  }, [columns, selectedTags, selectedProject, selectedNumber, selectedQuarter]);
+  }, [columns, selectedTags, selectedProject, selectedNumber, selectedQuarter, searchQuery]);
 
   // Get all unique projects from cards (only named projects), filtered by archive status
   const allProjects = React.useMemo(() => {
@@ -849,6 +862,8 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
       unarchiveProject,
       showArchived,
       setShowArchived,
+      searchQuery,
+      setSearchQuery,
     }}>
       {children}
     </KanbanContext.Provider>

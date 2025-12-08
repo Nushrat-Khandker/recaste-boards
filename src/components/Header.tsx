@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { MessageSquare, MoreVertical } from 'lucide-react';
+import { MessageSquare, MoreVertical, Search, X } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -22,7 +22,9 @@ const Header: React.FC = () => {
     selectedNumber, 
     setSelectedNumber, 
     selectedQuarter, 
-    setSelectedQuarter
+    setSelectedQuarter,
+    searchQuery,
+    setSearchQuery
   } = useKanban();
   
   const [showSlackInput, setShowSlackInput] = useState(false);
@@ -102,6 +104,27 @@ const Header: React.FC = () => {
           
           {/* Right Side Controls */}
           <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+            {/* Search Input */}
+            <div className="relative">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search cards..."
+                className="h-8 sm:h-10 w-28 sm:w-40 pl-7 pr-7 text-xs sm:text-sm"
+              />
+              {searchQuery && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+                  onClick={() => setSearchQuery('')}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
+            
             <YearWheel 
               value={selectedNumber} 
               onValueChange={setSelectedNumber}
