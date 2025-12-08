@@ -6,6 +6,16 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import Header from "@/components/Header";
 import KanbanBoard from "@/components/KanbanBoard";
 import { ChatView } from "@/components/board/ChatView";
@@ -22,6 +32,14 @@ const ProjectsContent = () => {
   const [boardView, setBoardView] = useState<BoardView>('tasks');
   const [editingProject, setEditingProject] = useState<string | null>(null);
   const [newProjectName, setNewProjectName] = useState("");
+  const [projectToArchive, setProjectToArchive] = useState<string | null>(null);
+
+  const handleConfirmArchive = () => {
+    if (projectToArchive) {
+      archiveProject(projectToArchive);
+      setProjectToArchive(null);
+    }
+  };
 
   // Get cards grouped by project (only named projects)
   const projectData = allProjects.map(projectName => {
@@ -246,7 +264,7 @@ const ProjectsContent = () => {
                           variant="ghost"
                           onClick={(e) => {
                             e.stopPropagation();
-                            archiveProject(project.name);
+                            setProjectToArchive(project.name);
                           }}
                           className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
                           title="Archive"
@@ -280,6 +298,22 @@ const ProjectsContent = () => {
         </div>
       )}
       </div>
+
+      {/* Archive Confirmation Dialog */}
+      <AlertDialog open={!!projectToArchive} onOpenChange={(open) => !open && setProjectToArchive(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Archive "{projectToArchive}"?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will hide the project from your board list. You can restore it anytime by toggling "Show Archived".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmArchive}>Archive</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
