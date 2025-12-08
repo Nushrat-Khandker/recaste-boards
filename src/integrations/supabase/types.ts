@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      archived_projects: {
+        Row: {
+          archived_at: string
+          archived_by: string | null
+          id: string
+          project_name: string
+        }
+        Insert: {
+          archived_at?: string
+          archived_by?: string | null
+          id?: string
+          project_name: string
+        }
+        Update: {
+          archived_at?: string
+          archived_by?: string | null
+          id?: string
+          project_name?: string
+        }
+        Relationships: []
+      }
       board_files: {
         Row: {
           board_name: string

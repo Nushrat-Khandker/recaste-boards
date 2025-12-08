@@ -68,6 +68,11 @@ interface KanbanContextType {
   filteredColumns: KanbanColumn[];
   loading: boolean;
   renameProject: (oldName: string, newName: string) => Promise<void>;
+  archivedProjects: string[];
+  archiveProject: (projectName: string) => Promise<void>;
+  unarchiveProject: (projectName: string) => Promise<void>;
+  showArchived: boolean;
+  setShowArchived: (show: boolean) => void;
 }
 
 const tagColors: Record<string, string> = {
@@ -182,7 +187,12 @@ export const KanbanContext = createContext<KanbanContextType>({
   clearAllFilters: () => {},
   filteredColumns: [],
   loading: false,
-  renameProject: async () => {}
+  renameProject: async () => {},
+  archivedProjects: [],
+  archiveProject: async () => {},
+  unarchiveProject: async () => {},
+  showArchived: false,
+  setShowArchived: () => {},
 });
 
 export const useKanban = () => useContext(KanbanContext);
@@ -237,6 +247,22 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
     return localStorage.getItem('selectedProject') || null;
   });
   const [loading, setLoading] = useState<boolean>(true);
+  const [archivedProjects, setArchivedProjects] = useState<string[]>([]);
+  const [showArchived, setShowArchived] = useState<boolean>(false);
+
+  // Load archived projects
+  const loadArchivedProjects = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('archived_projects')
+        .select('project_name');
+      
+      if (error) throw error;
+      setArchivedProjects(data?.map(p => p.project_name) || []);
+    } catch (error) {
+      console.error('Error loading archived projects:', error);
+    }
+  };
 
   // Load data from Supabase database
   const loadData = async () => {
@@ -285,6 +311,7 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
   // Load data on mount
   useEffect(() => {
     loadData();
+    loadArchivedProjects();
   }, []);
 
   // Realtime updates for kanban tables
@@ -331,18 +358,21 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
     }));
   }, [columns, selectedTags, selectedProject, selectedNumber, selectedQuarter]);
 
-  // Get all unique projects from cards (only named projects)
+  // Get all unique projects from cards (only named projects), filtered by archive status
   const allProjects = React.useMemo(() => {
     const projects = new Set<string>();
     columns.forEach(column => {
       column.cards.forEach(card => {
         if (card.projectName && card.projectName.trim().length > 0) {
-          projects.add(card.projectName);
+          const isArchived = archivedProjects.includes(card.projectName);
+          if (showArchived ? isArchived : !isArchived) {
+            projects.add(card.projectName);
+          }
         }
       });
     });
     return Array.from(projects).sort();
-  }, [columns]);
+  }, [columns, archivedProjects, showArchived]);
 
   // Auto-clear filters if they hide all cards but data exists
   useEffect(() => {
@@ -733,6 +763,62 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
     }
   };
 
+  const archiveProject = async (projectName: string): Promise<void> => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      const { error } = await supabase
+        .from('archived_projects')
+        .insert({ project_name: projectName, archived_by: user?.id });
+
+      if (error) throw error;
+
+      setArchivedProjects(prev => [...prev, projectName]);
+      
+      // Clear selection if archived project was selected
+      if (selectedProject === projectName) {
+        setSelectedProject(null);
+      }
+
+      toast({
+        title: "Success",
+        description: "Project archived successfully",
+      });
+    } catch (error) {
+      console.error('Error archiving project:', error);
+      toast({
+        title: "Error",
+        description: "Failed to archive project. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const unarchiveProject = async (projectName: string): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('archived_projects')
+        .delete()
+        .eq('project_name', projectName);
+
+      if (error) throw error;
+
+      setArchivedProjects(prev => prev.filter(p => p !== projectName));
+
+      toast({
+        title: "Success",
+        description: "Project unarchived successfully",
+      });
+    } catch (error) {
+      console.error('Error unarchiving project:', error);
+      toast({
+        title: "Error",
+        description: "Failed to unarchive project. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
     return (
     <KanbanContext.Provider value={{ 
       columns, 
@@ -757,7 +843,12 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
       clearAllFilters,
       filteredColumns,
       loading,
-      renameProject
+      renameProject,
+      archivedProjects,
+      archiveProject,
+      unarchiveProject,
+      showArchived,
+      setShowArchived,
     }}>
       {children}
     </KanbanContext.Provider>

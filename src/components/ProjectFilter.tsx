@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FolderKanban, X, Plus, Pencil, Check } from 'lucide-react';
+import { FolderKanban, X, Plus, Pencil, Check, Archive, ArchiveRestore } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -11,9 +11,21 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useKanban } from '../context/KanbanContext';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 const ProjectFilter: React.FC = () => {
-  const { allProjects, selectedProject, setSelectedProject, renameProject } = useKanban();
+  const { 
+    allProjects, 
+    selectedProject, 
+    setSelectedProject, 
+    renameProject,
+    archiveProject,
+    unarchiveProject,
+    showArchived,
+    setShowArchived,
+    archivedProjects
+  } = useKanban();
   const [newProjectName, setNewProjectName] = useState('');
   const [editingProject, setEditingProject] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
@@ -26,7 +38,7 @@ const ProjectFilter: React.FC = () => {
     }
   };
 
-  if (allProjects.length === 0 && !selectedProject) {
+  if (allProjects.length === 0 && !selectedProject && archivedProjects.length === 0) {
     return null;
   }
 
@@ -53,12 +65,31 @@ const ProjectFilter: React.FC = () => {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-64">
-            <DropdownMenuCheckboxItem
-              checked={selectedProject === null}
-              onCheckedChange={() => setSelectedProject(null)}
-            >
-              All Projects
-            </DropdownMenuCheckboxItem>
+            <div className="flex items-center justify-between px-2 py-1.5">
+              <Label htmlFor="show-archived" className="text-xs text-muted-foreground">
+                {showArchived ? 'Archived Projects' : 'Active Projects'}
+              </Label>
+              <div className="flex items-center gap-2">
+                <Archive className="h-3 w-3 text-muted-foreground" />
+                <Switch
+                  id="show-archived"
+                  checked={showArchived}
+                  onCheckedChange={setShowArchived}
+                  className="scale-75"
+                />
+              </div>
+            </div>
+            
+            <DropdownMenuSeparator />
+            
+            {!showArchived && (
+              <DropdownMenuCheckboxItem
+                checked={selectedProject === null}
+                onCheckedChange={() => setSelectedProject(null)}
+              >
+                All Projects
+              </DropdownMenuCheckboxItem>
+            )}
             
             {allProjects.map((project) => (
               <div key={project} className="flex items-center gap-1 px-2 py-1.5 hover:bg-accent group/item">
@@ -107,49 +138,89 @@ const ProjectFilter: React.FC = () => {
                     >
                       {project}
                     </DropdownMenuCheckboxItem>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-6 w-6 p-0 opacity-0 group-hover/item:opacity-100"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setEditingProject(project);
-                        setEditValue(project);
-                      }}
-                    >
-                      <Pencil className="h-3 w-3" />
-                    </Button>
+                    {!showArchived && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 w-6 p-0 opacity-0 group-hover/item:opacity-100"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingProject(project);
+                          setEditValue(project);
+                        }}
+                        title="Rename project"
+                      >
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                    )}
+                    {showArchived ? (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 w-6 p-0 opacity-0 group-hover/item:opacity-100"
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          await unarchiveProject(project);
+                        }}
+                        title="Unarchive project"
+                      >
+                        <ArchiveRestore className="h-3 w-3" />
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 w-6 p-0 opacity-0 group-hover/item:opacity-100"
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          await archiveProject(project);
+                        }}
+                        title="Archive project"
+                      >
+                        <Archive className="h-3 w-3" />
+                      </Button>
+                    )}
                   </>
                 )}
               </div>
             ))}
             
-            <DropdownMenuSeparator />
+            {allProjects.length === 0 && (
+              <div className="px-2 py-3 text-center text-sm text-muted-foreground">
+                {showArchived ? 'No archived projects' : 'No active projects'}
+              </div>
+            )}
             
-            <div className="p-2 space-y-2">
-              <p className="text-xs font-medium text-muted-foreground">Create new project</p>
-              <Input
-                value={newProjectName}
-                onChange={(e) => setNewProjectName(e.target.value)}
-                placeholder="Project name"
-                className="h-8"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && newProjectName.trim()) {
-                    handleAddProject();
-                  }
-                }}
-              />
-              <Button
-                onClick={handleAddProject}
-                disabled={!newProjectName.trim()}
-                size="sm"
-                className="w-full h-8"
-              >
-                <Plus className="mr-1 h-3 w-3" />
-                Add Project
-              </Button>
-              <p className="text-xs text-muted-foreground">Projects are created when you add cards with a project name</p>
-            </div>
+            {!showArchived && (
+              <>
+                <DropdownMenuSeparator />
+                
+                <div className="p-2 space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground">Create new project</p>
+                  <Input
+                    value={newProjectName}
+                    onChange={(e) => setNewProjectName(e.target.value)}
+                    placeholder="Project name"
+                    className="h-8"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && newProjectName.trim()) {
+                        handleAddProject();
+                      }
+                    }}
+                  />
+                  <Button
+                    onClick={handleAddProject}
+                    disabled={!newProjectName.trim()}
+                    size="sm"
+                    className="w-full h-8"
+                  >
+                    <Plus className="mr-1 h-3 w-3" />
+                    Add Project
+                  </Button>
+                  <p className="text-xs text-muted-foreground">Projects are created when you add cards with a project name</p>
+                </div>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       )}
