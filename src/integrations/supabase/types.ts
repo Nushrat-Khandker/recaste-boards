@@ -767,7 +767,6 @@ export type Database = {
         Returns: boolean
       }
       has_role:
-        | { Args: { role_name: string; user_id: string }; Returns: boolean }
         | {
             Args: {
               _role: Database["public"]["Enums"]["app_role"]
@@ -775,6 +774,7 @@ export type Database = {
             }
             Returns: boolean
           }
+        | { Args: { role_name: string; user_id: string }; Returns: boolean }
       is_board_member: {
         Args: { _board_name: string; _user_id: string }
         Returns: boolean
