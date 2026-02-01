@@ -1,4 +1,4 @@
-import { ChatView } from "@/components/board/ChatView";
+import { ChatView } from "@/components/chat";
 import Header from "@/components/Header";
 import { KanbanProvider } from "@/context/KanbanContext";
 
