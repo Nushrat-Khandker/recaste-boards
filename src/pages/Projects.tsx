@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import Header from "@/components/Header";
 import KanbanBoard from "@/components/KanbanBoard";
-import { ChatView } from "@/components/board/ChatView";
+import { ChatView } from "@/components/chat";
 import { FilesView } from "@/components/board/FilesView";
 import { Hash, MessageSquare, Folder, Pencil, Check, XCircle, ArrowLeft, Archive, ArchiveRestore } from "lucide-react";
 import { useState } from "react";
