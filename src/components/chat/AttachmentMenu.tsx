@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Popover,
@@ -49,6 +49,8 @@ const ATTACHMENT_OPTIONS = [
 
 export const AttachmentMenu = ({ onFileUpload, disabled }: AttachmentMenuProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [open, setOpen] = useState(false);
+  const [pendingAccept, setPendingAccept] = useState<string>('*/*');
   const { toast } = useToast();
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -72,11 +74,16 @@ export const AttachmentMenu = ({ onFileUpload, disabled }: AttachmentMenuProps) 
     }
   };
 
-  const triggerFileInput = (accept: string) => {
-    if (fileInputRef.current) {
-      fileInputRef.current.accept = accept;
-      fileInputRef.current.click();
-    }
+  const handleOptionClick = (accept: string) => {
+    setPendingAccept(accept);
+    setOpen(false);
+    // Use setTimeout to let the popover close first, then trigger file input
+    setTimeout(() => {
+      if (fileInputRef.current) {
+        fileInputRef.current.accept = accept;
+        fileInputRef.current.click();
+      }
+    }, 100);
   };
 
   return (
@@ -85,10 +92,11 @@ export const AttachmentMenu = ({ onFileUpload, disabled }: AttachmentMenuProps) 
         ref={fileInputRef}
         type="file"
         multiple
+        accept={pendingAccept}
         className="hidden"
         onChange={handleFileSelect}
       />
-      <Popover>
+      <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
             variant="ghost"
@@ -104,7 +112,7 @@ export const AttachmentMenu = ({ onFileUpload, disabled }: AttachmentMenuProps) 
           {ATTACHMENT_OPTIONS.map((option) => (
             <button
               key={option.label}
-              onClick={() => triggerFileInput(option.accept)}
+              onClick={() => handleOptionClick(option.accept)}
               className="flex items-center gap-3 w-full px-3 py-2.5 text-sm rounded-md hover:bg-muted transition-colors"
             >
               <option.icon className="h-4 w-4 text-muted-foreground" />
