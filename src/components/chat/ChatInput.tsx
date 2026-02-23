@@ -1,13 +1,13 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { 
-  Send, Paperclip, Mic, Video, Square, Plus, Smile, AtSign, Code 
+  Send, Mic, Video, Square, Smile, AtSign, Code 
 } from 'lucide-react';
-import { ChatUser, MAX_FILE_SIZE } from './types';
-import { useToast } from '@/components/ui/use-toast';
+import { ChatUser } from './types';
+import { AttachmentMenu } from './AttachmentMenu';
 
 interface ChatInputProps {
   onSendMessage: (content: string, mentionedUserIds: string[]) => void;
@@ -38,8 +38,7 @@ export const ChatInput = ({
   const [showMentionPicker, setShowMentionPicker] = useState(false);
   const [mentionQuery, setMentionQuery] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const { toast } = useToast();
+  
 
   const commonEmojis = ['😀', '😂', '❤️', '👍', '🎉', '🔥', '✅', '👀', '🙌', '💯', '🚀', '💪'];
 
@@ -93,27 +92,7 @@ export const ChatInput = ({
     setNewMessage(prev => prev + '\n```\n\n```');
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
-
-    // Check file sizes
-    for (const file of Array.from(files)) {
-      if (file.size > MAX_FILE_SIZE) {
-        toast({
-          title: 'File too large',
-          description: `${file.name} exceeds the 10MB limit`,
-          variant: 'destructive',
-        });
-        return;
-      }
-    }
-    
-    onFileUpload(files);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
+  
 
   const filteredUsers = allUsers.filter(u => 
     u.name.toLowerCase().includes(mentionQuery.toLowerCase())
@@ -180,24 +159,7 @@ export const ChatInput = ({
           
           <div className="flex items-center justify-between px-2 pb-2 pt-1 border-t">
             <div className="flex items-center gap-1">
-              <input
-                ref={fileInputRef}
-                type="file"
-                multiple
-                className="hidden"
-                onChange={handleFileSelect}
-              />
-              
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isLoading}
-                title="Attach files (max 10MB)"
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
+              <AttachmentMenu onFileUpload={onFileUpload} disabled={isLoading} />
 
               <Button
                 variant="ghost"

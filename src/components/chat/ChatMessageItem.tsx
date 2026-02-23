@@ -3,8 +3,9 @@ import { format } from 'date-fns';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Paperclip, Trash2, Edit2, RefreshCw, Loader2 } from 'lucide-react';
+import { Paperclip, Trash2, Edit2, RefreshCw, Loader2, Download } from 'lucide-react';
 import { ChatMessage } from './types';
+import { isImageFile, isVideoFile, isAudioFile, isPdfFile, getFileTypeInfo, getFileExtension } from './fileUtils';
 
 interface ChatMessageItemProps {
   message: ChatMessage;
@@ -20,22 +21,28 @@ interface ChatMessageItemProps {
   onCancelEdit: () => void;
 }
 
-const isImageFile = (fileName: string | null, fileUrl: string | null): boolean => {
-  if (!fileName && !fileUrl) return false;
-  const name = (fileName || fileUrl || '').toLowerCase();
-  return /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(name);
-};
+const FileAttachmentCard = ({ fileName, fileUrl }: { fileName: string | null; fileUrl: string }) => {
+  const info = getFileTypeInfo(fileName, fileUrl);
+  const ext = getFileExtension(fileName);
+  const IconComponent = info.icon;
 
-const isVideoFile = (fileName: string | null, fileUrl: string | null): boolean => {
-  if (!fileName && !fileUrl) return false;
-  const name = (fileName || fileUrl || '').toLowerCase();
-  return /\.(mp4|webm|mov|avi|mkv)$/i.test(name);
-};
-
-const isAudioFile = (fileName: string | null, fileUrl: string | null): boolean => {
-  if (!fileName && !fileUrl) return false;
-  const name = (fileName || fileUrl || '').toLowerCase();
-  return /\.(mp3|wav|ogg|m4a|webm)$/i.test(name);
+  return (
+    <a
+      href={fileUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-center gap-3 p-3 rounded-lg border bg-muted/50 hover:bg-muted transition-colors max-w-xs"
+    >
+      <div className={`p-2 rounded-md bg-background ${info.color}`}>
+        <IconComponent className="h-5 w-5" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium truncate">{fileName || 'File attachment'}</p>
+        <p className="text-xs text-muted-foreground">{ext || info.label}</p>
+      </div>
+      <Download className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+    </a>
+  );
 };
 
 export const ChatMessageItem = ({
@@ -140,7 +147,7 @@ export const ChatMessageItem = ({
             {message.message_type === 'file' && message.file_url && (
               <div className="mt-1">
                 {isImageFile(message.file_name, message.file_url) ? (
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     <img 
                       src={message.file_url} 
                       alt={message.file_name || 'Image'} 
@@ -153,7 +160,7 @@ export const ChatMessageItem = ({
                     </div>
                   </div>
                 ) : isVideoFile(message.file_name, message.file_url) ? (
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     <video 
                       src={message.file_url} 
                       controls 
@@ -165,7 +172,7 @@ export const ChatMessageItem = ({
                     </div>
                   </div>
                 ) : isAudioFile(message.file_name, message.file_url) ? (
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     <audio 
                       src={message.file_url} 
                       controls 
@@ -176,18 +183,17 @@ export const ChatMessageItem = ({
                       <span>{message.file_name}</span>
                     </div>
                   </div>
-                ) : (
-                  <div className="flex items-center gap-2 text-sm text-primary">
-                    <Paperclip className="h-4 w-4" />
-                    <a 
-                      href={message.file_url} 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      className="hover:underline"
-                    >
-                      {message.file_name || 'File attachment'}
-                    </a>
+                ) : isPdfFile(message.file_name, message.file_url) ? (
+                  <div className="space-y-1">
+                    <iframe
+                      src={message.file_url}
+                      className="w-full max-w-md h-64 rounded-lg border"
+                      title={message.file_name || 'PDF'}
+                    />
+                    <FileAttachmentCard fileName={message.file_name} fileUrl={message.file_url} />
                   </div>
+                ) : (
+                  <FileAttachmentCard fileName={message.file_name} fileUrl={message.file_url} />
                 )}
               </div>
             )}
