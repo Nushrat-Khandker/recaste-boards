@@ -129,9 +129,10 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
         description: 'Failed to send message. Click retry to try again.',
         variant: 'destructive',
       });
-    } else {
-      // Replace temp message with real one
-      removeMessage(tempId);
+    } else if (data) {
+      // Step 3: Replace temp message with real server response immediately
+      // This prevents duplicates when Realtime INSERT also arrives
+      updateMessage(tempId, { ...data, pending: false, failed: false });
     }
     
     setIsSending(false);
