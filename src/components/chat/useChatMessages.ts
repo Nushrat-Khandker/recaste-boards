@@ -12,9 +12,11 @@ export const useChatMessages = (config: ChatContextConfig) => {
   const [loadingMore, setLoadingMore] = useState(false);
   const { toast } = useToast();
 
-  // Use ref for profilesMap to avoid stale closures (Step 4)
+  // Refs to avoid stale closures
   const profilesMapRef = useRef(profilesMap);
   profilesMapRef.current = profilesMap;
+  const messagesRef = useRef(messages);
+  messagesRef.current = messages;
 
   const loadProfilesForMessages = useCallback(async (msgs: ChatMessage[]) => {
     const uniqueIds = Array.from(new Set(msgs.map(m => m.user_id)));
@@ -32,7 +34,7 @@ export const useChatMessages = (config: ChatContextConfig) => {
         setProfilesMap(prev => ({ ...prev, ...newMap }));
       }
     }
-  }, []); // No profilesMap dependency - uses ref instead
+  }, []);
 
   const loadMessages = useCallback(async (offset = 0, append = false) => {
     if (offset === 0) {
@@ -80,7 +82,7 @@ export const useChatMessages = (config: ChatContextConfig) => {
 
     setIsLoading(false);
     setLoadingMore(false);
-  }, [contextType, contextId, toast, loadProfilesForMessages]); // No profilesMap dependency (Step 4)
+  }, [contextType, contextId, toast, loadProfilesForMessages]);
 
   const loadMore = useCallback(() => {
     if (!loadingMore && hasMore) {
@@ -88,37 +90,45 @@ export const useChatMessages = (config: ChatContextConfig) => {
     }
   }, [loadMessages, messages.length, loadingMore, hasMore]);
 
-  // Realtime subscription + fallback polling (Steps 1, 2, 5)
+  // Realtime + polling
   useEffect(() => {
     loadMessages();
 
-    const channelName = contextId
-      ? `chat:${contextType}:${contextId}`
-      : `chat:${contextType}`;
-
-    // Build filter - Step 5: avoid unreliable is.null filter
-    const filter = contextId
-      ? `context_type=eq.${contextType},context_id=eq.${contextId}`
-      : `context_type=eq.${contextType}`;
-
-    let pollInterval = 5000;
+    let pollInterval = 3000; // Start at 3s for snappy feel
     let pollTimeoutId: ReturnType<typeof setTimeout>;
     let isActive = true;
+    let realtimeWorking = false;
 
-    // Step 2: Listen for ALL events (INSERT, UPDATE, DELETE)
+    const channelName = contextId
+      ? `chat:${contextType}:${contextId}`
+      : `chat:${contextType}:general`;
+
+    // Only use filter when contextId exists — avoids CHANNEL_ERROR with null filters
+    const subscriptionConfig: any = {
+      event: '*',
+      schema: 'public',
+      table: 'chat_messages',
+    };
+    if (contextId) {
+      subscriptionConfig.filter = `context_id=eq.${contextId}`;
+    }
+
     const channel = supabase
       .channel(channelName)
       .on(
         'postgres_changes',
-        {
-          event: '*', // All events instead of just INSERT
-          schema: 'public',
-          table: 'chat_messages',
-          filter,
-        },
+        subscriptionConfig,
         async (payload) => {
-          // Reset poll interval when realtime works (Step 1)
-          pollInterval = 5000;
+          realtimeWorking = true;
+          pollInterval = 5000; // Relax polling when realtime works
+
+          const newMsg = payload.new as ChatMessage;
+
+          // For general chat without filter, manually check context_type
+          if (!contextId && payload.eventType !== 'DELETE') {
+            const msgContextType = (newMsg as any)?.context_type;
+            if (msgContextType && msgContextType !== contextType) return;
+          }
 
           if (payload.eventType === 'DELETE') {
             const oldMsg = payload.old as { id: string };
@@ -134,38 +144,42 @@ export const useChatMessages = (config: ChatContextConfig) => {
             return;
           }
 
-          // INSERT - Step 3: dedup check
-          const newMessage = payload.new as ChatMessage;
+          // INSERT with dedup
           setMessages(prev => {
-            // Check if already exists (dedup)
-            if (prev.some(m => m.id === newMessage.id)) {
+            if (prev.some(m => m.id === newMsg.id)) {
               return prev.map(m =>
-                m.id === newMessage.id
-                  ? { ...newMessage, pending: false, failed: false }
+                m.id === newMsg.id
+                  ? { ...newMsg, pending: false, failed: false }
                   : m
               );
             }
-            return [...prev, newMessage];
+            return [...prev, newMsg];
           });
 
-          // Load profile if needed
-          await loadProfilesForMessages([newMessage]);
+          await loadProfilesForMessages([newMsg]);
         }
       )
-      .subscribe();
+      .subscribe((status: string) => {
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          console.warn('Realtime channel issue, relying on polling fallback');
+          realtimeWorking = false;
+          pollInterval = 3000; // Poll faster when realtime is down
+        }
+        if (status === 'SUBSCRIBED') {
+          realtimeWorking = true;
+        }
+      });
 
-    // Step 1: Fallback polling with exponential backoff
+    // Polling fallback
     const poll = async () => {
       if (!isActive) return;
 
-      // Get the latest message timestamp from current state
       const currentMessages = messagesRef.current;
       const lastTimestamp = currentMessages.length > 0
         ? currentMessages[currentMessages.length - 1].created_at
         : null;
 
       if (!lastTimestamp) {
-        // No messages yet, skip polling (initial load handles this)
         if (isActive) pollTimeoutId = setTimeout(poll, pollInterval);
         return;
       }
@@ -187,23 +201,20 @@ export const useChatMessages = (config: ChatContextConfig) => {
       const { data } = await query;
 
       if (data && data.length > 0) {
-        // Merge new messages, deduplicating
         setMessages(prev => {
           const existingIds = new Set(prev.map(m => m.id));
           const newMsgs = (data as ChatMessage[]).filter(m => !existingIds.has(m.id));
           return newMsgs.length > 0 ? [...prev, ...newMsgs] : prev;
         });
         await loadProfilesForMessages(data as ChatMessage[]);
-        pollInterval = 5000; // Reset on new data
+        pollInterval = realtimeWorking ? 5000 : 3000;
       } else {
-        // Backoff when no changes
-        pollInterval = Math.min(pollInterval * 1.5, 30000);
+        pollInterval = Math.min(pollInterval * 1.5, realtimeWorking ? 30000 : 10000);
       }
 
       if (isActive) pollTimeoutId = setTimeout(poll, pollInterval);
     };
 
-    // Start polling after a delay to let realtime connect first
     pollTimeoutId = setTimeout(poll, pollInterval);
 
     return () => {
@@ -211,11 +222,7 @@ export const useChatMessages = (config: ChatContextConfig) => {
       clearTimeout(pollTimeoutId);
       supabase.removeChannel(channel);
     };
-  }, [contextType, contextId]); // Minimal dependencies
-
-  // Ref to access current messages inside polling without stale closure
-  const messagesRef = useRef(messages);
-  messagesRef.current = messages;
+  }, [contextType, contextId]);
 
   const addOptimisticMessage = useCallback((message: ChatMessage) => {
     setMessages(prev => [...prev, message]);
