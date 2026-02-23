@@ -207,12 +207,15 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
           title: 'Success',
           description: `${file.name} uploaded successfully`,
         });
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error uploading file:', error);
         setUploadProgress(null);
+        const errorMsg = error?.message || error?.error || `Failed to upload ${file.name}`;
         toast({
-          title: 'Error',
-          description: `Failed to upload ${file.name}`,
+          title: 'Upload Failed',
+          description: errorMsg.includes('Payload too large') 
+            ? `${file.name} is too large for the server. Max allowed: 200MB.`
+            : `Failed to upload ${file.name}: ${errorMsg}`,
           variant: 'destructive',
         });
       }
