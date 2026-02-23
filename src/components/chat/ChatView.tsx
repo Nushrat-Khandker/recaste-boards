@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
@@ -144,6 +144,51 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
     await sendMessage(message.content, []);
   };
 
+  const uploadFileWithProgress = useCallback((
+    bucket: string,
+    path: string,
+    file: File,
+    onProgress: (percent: number) => void,
+  ): Promise<void> => {
+    return new Promise(async (resolve, reject) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return reject(new Error('Not authenticated'));
+
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const url = `${supabaseUrl}/storage/v1/object/${bucket}/${path}`;
+
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', url, true);
+      xhr.setRequestHeader('Authorization', `Bearer ${session.access_token}`);
+      xhr.setRequestHeader('x-upsert', 'false');
+
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          onProgress(Math.round((e.loaded / e.total) * 95)); // 0-95% for upload
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve();
+        } else {
+          try {
+            const resp = JSON.parse(xhr.responseText);
+            reject(new Error(resp.message || resp.error || `Upload failed (${xhr.status})`));
+          } catch {
+            reject(new Error(`Upload failed with status ${xhr.status}`));
+          }
+        }
+      };
+
+      xhr.onerror = () => reject(new Error('Network error during upload'));
+      xhr.ontimeout = () => reject(new Error('Upload timed out'));
+      xhr.timeout = 600000; // 10 min timeout for large files
+
+      xhr.send(file);
+    });
+  }, []);
+
   const handleFileUpload = async (files: FileList) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -168,21 +213,12 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
       try {
         setUploadProgress(0);
         const fileName = `${actualContextType}/${actualContextId || 'general'}/${Date.now()}-${file.name}`;
-        
-        // Simulate progress (Supabase doesn't provide upload progress)
-        const progressInterval = setInterval(() => {
-          setUploadProgress(prev => Math.min((prev || 0) + 10, 90));
-        }, 100);
 
-        const { error: uploadError } = await supabase.storage
-          .from('board-files')
-          .upload(fileName, file);
+        await uploadFileWithProgress('board-files', fileName, file, (percent) => {
+          setUploadProgress(percent);
+        });
 
-        clearInterval(progressInterval);
-
-        if (uploadError) throw uploadError;
-
-        setUploadProgress(95);
+        setUploadProgress(97);
 
         const { data: { publicUrl } } = supabase.storage
           .from('board-files')
@@ -210,12 +246,10 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
       } catch (error: any) {
         console.error('Error uploading file:', error);
         setUploadProgress(null);
-        const errorMsg = error?.message || error?.error || `Failed to upload ${file.name}`;
+        const errorMsg = error?.message || `Failed to upload ${file.name}`;
         toast({
           title: 'Upload Failed',
-          description: errorMsg.includes('Payload too large') 
-            ? `${file.name} is too large for the server. Max allowed: 200MB.`
-            : `Failed to upload ${file.name}: ${errorMsg}`,
+          description: errorMsg,
           variant: 'destructive',
         });
       }
