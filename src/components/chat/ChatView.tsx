@@ -9,6 +9,7 @@ import { ChatMessageItem } from './ChatMessageItem';
 import { ChatInput } from './ChatInput';
 import { RecordingPreview } from './RecordingPreview';
 import { ChatMessage, ChatUser, MAX_FILE_SIZE } from './types';
+import * as tus from 'tus-js-client';
 
 interface ChatViewProps {
   contextType: 'board' | 'project' | 'general';
@@ -144,7 +145,7 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
     await sendMessage(message.content, []);
   };
 
-  const uploadFileWithProgress = useCallback((
+  const uploadFileWithTus = useCallback((
     bucket: string,
     path: string,
     file: File,
@@ -155,37 +156,44 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
       if (!session) return reject(new Error('Not authenticated'));
 
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const url = `${supabaseUrl}/storage/v1/object/${bucket}/${path}`;
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || supabaseUrl.match(/https:\/\/([^.]+)/)?.[1];
 
-      const xhr = new XMLHttpRequest();
-      xhr.open('POST', url, true);
-      xhr.setRequestHeader('Authorization', `Bearer ${session.access_token}`);
-      xhr.setRequestHeader('x-upsert', 'false');
-
-      xhr.upload.onprogress = (e) => {
-        if (e.lengthComputable) {
-          onProgress(Math.round((e.loaded / e.total) * 95)); // 0-95% for upload
-        }
-      };
-
-      xhr.onload = () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
+      const upload = new tus.Upload(file, {
+        endpoint: `${supabaseUrl}/storage/v1/upload/resumable`,
+        retryDelays: [0, 1000, 3000, 5000],
+        chunkSize: 6 * 1024 * 1024, // 6MB chunks
+        headers: {
+          authorization: `Bearer ${session.access_token}`,
+          'x-upsert': 'false',
+        },
+        uploadDataDuringCreation: true,
+        removeFingerprintOnSuccess: true,
+        metadata: {
+          bucketName: bucket,
+          objectName: path,
+          contentType: file.type || 'application/octet-stream',
+          cacheControl: '3600',
+        },
+        onError: (error) => {
+          console.error('TUS upload error:', error);
+          reject(new Error(error.message || 'Upload failed'));
+        },
+        onProgress: (bytesUploaded, bytesTotal) => {
+          const percent = Math.round((bytesUploaded / bytesTotal) * 95);
+          onProgress(percent);
+        },
+        onSuccess: () => {
           resolve();
-        } else {
-          try {
-            const resp = JSON.parse(xhr.responseText);
-            reject(new Error(resp.message || resp.error || `Upload failed (${xhr.status})`));
-          } catch {
-            reject(new Error(`Upload failed with status ${xhr.status}`));
-          }
-        }
-      };
+        },
+      });
 
-      xhr.onerror = () => reject(new Error('Network error during upload'));
-      xhr.ontimeout = () => reject(new Error('Upload timed out'));
-      xhr.timeout = 600000; // 10 min timeout for large files
+      // Check for previous uploads to resume
+      const previousUploads = await upload.findPreviousUploads();
+      if (previousUploads.length > 0) {
+        upload.resumeFromPreviousUpload(previousUploads[0]);
+      }
 
-      xhr.send(file);
+      upload.start();
     });
   }, []);
 
@@ -214,7 +222,7 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
         setUploadProgress(0);
         const fileName = `${actualContextType}/${actualContextId || 'general'}/${Date.now()}-${file.name}`;
 
-        await uploadFileWithProgress('board-files', fileName, file, (percent) => {
+        await uploadFileWithTus('board-files', fileName, file, (percent) => {
           setUploadProgress(percent);
         });
 
