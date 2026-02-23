@@ -1,92 +1,63 @@
 
 
-## Chat System Robustness Improvements
+## Fix Chat System Reliability
 
-I've analyzed the chat system and identified several issues that need to be fixed. Here's what I found and how I'll fix each one:
+The chat system has several issues causing it to be unreliable. Here's a breakdown and the fix:
 
-### Critical Issues
+### Problems Identified
 
-#### 1. File Upload Storage Policy (BROKEN)
-The storage RLS policy for `board-files` has a bug that prevents ALL file uploads:
-- Current policy: `auth.uid() = owner` 
-- Problem: The `owner` column is NULL during INSERT operations
-- Result: Every file upload fails
+1. **No fallback when Realtime drops** -- The chat relies 100% on Supabase Realtime for live updates. If the connection drops silently (common with network changes, device sleep, etc.), messages stop appearing until page refresh.
 
-**Fix**: Update the storage policy to allow authenticated users to upload without checking owner:
-```sql
-DROP POLICY IF EXISTS "Users can upload files" ON storage.objects;
+2. **Only listens for INSERT events** -- The Realtime subscription only handles `INSERT`. If someone edits or deletes a message, other users won't see the change until they refresh.
 
-CREATE POLICY "Authenticated users can upload to board-files"
-ON storage.objects FOR INSERT
-WITH CHECK (
-  bucket_id = 'board-files' 
-  AND auth.role() = 'authenticated'
-);
-```
+3. **Optimistic message dedup is fragile** -- When a message is sent, a temp ID like `temp-123` is created. The Realtime INSERT comes back with the real UUID. The code tries to match by ID, but since temp IDs never match real IDs, duplicates can appear (the temp message stays AND the real one gets added).
 
----
+4. **`loadMessages` has stale closure over `profilesMap`** -- The `useCallback` for `loadMessages` depends on `profilesMap`, which changes frequently, causing unnecessary re-renders and potential stale data.
 
-### Backend Storage Requirements
+5. **General chat uses `context_id = null`** -- For general chat, `contextId` is `null`, so the Realtime filter uses `context_id=is.null`. This filter syntax can be unreliable with Supabase Realtime.
 
-Your current setup is **adequate** - no additional backend storage is needed:
-- `board-files` bucket exists and is public (good for sharing files)
-- `chat_messages` table has proper schema with context support
-- Realtime is enabled for chat_messages (live updates work)
+### Solution
 
----
+**Step 1: Add fallback polling to `useChatMessages.ts`**
 
-### Frontend Improvements
+Add a lightweight polling mechanism that kicks in as a safety net alongside Realtime:
+- Poll every 5 seconds initially
+- Back off to 30 seconds when no new messages detected
+- Reset to 5 seconds when Realtime delivers a message (proving it's working)
+- Only fetch messages newer than the last known `created_at` timestamp
 
-#### 2. Add Loading States
-Show a spinner while messages are loading initially, instead of jumping straight to "No messages yet"
+**Step 2: Listen for ALL Realtime events (INSERT, UPDATE, DELETE)**
 
-#### 3. Add Optimistic Updates
-When sending a message, show it immediately in the UI before the server confirms (with a subtle "sending" indicator)
+Expand the subscription from just `INSERT` to `*` (all events):
+- `INSERT`: Add new message (with dedup)
+- `UPDATE`: Update existing message content in place
+- `DELETE`: Remove the deleted message from state
 
-#### 4. Add Error Retry
-If a message fails to send, show a retry button instead of just a toast notification
+**Step 3: Fix optimistic message deduplication**
 
-#### 5. Add File Size Limits
-Prevent uploads larger than 10MB with a helpful error message
+When a message is sent successfully:
+- Remove the temp message immediately after the insert returns data
+- Replace it with the real message from the server response
+- The Realtime INSERT handler should check for duplicates by ID before adding
 
-#### 6. Add Upload Progress Indicator
-Show a progress bar when uploading files so users know it's working
+**Step 4: Fix stale closure in `loadMessages`**
 
-#### 7. Add Image/Video Previews
-Display images and videos inline in the chat instead of just file links
+Remove `profilesMap` from the `useCallback` dependency array and use a ref instead to avoid unnecessary re-creations of the function.
 
-#### 8. Add Message Pagination
-Load messages in batches (e.g., 50 at a time) with "Load more" for older messages to prevent performance issues
+**Step 5: Improve general chat Realtime filter**
 
-#### 9. Wire Up Placeholder Buttons
-- Emoji picker button currently does nothing - add emoji picker
-- Code snippet button does nothing - add code formatting
-
----
-
-### Implementation Order
-
-1. **Fix storage RLS policy** (SQL migration) - unblocks file uploads
-2. **Add loading state** for message fetch
-3. **Add optimistic updates** for sending messages
-4. **Add error retry UI** for failed messages
-5. **Add file size validation** (10MB limit)
-6. **Add upload progress** indicator
-7. **Add inline image/video previews**
-8. **Add message pagination** (50 messages at a time)
-9. **Add emoji picker** (using a lightweight library)
-
----
+For general/project contexts where `contextId` is null, use a simpler filter that only filters by `context_type` to avoid the unreliable `is.null` filter syntax.
 
 ### Technical Details
 
 **Files to modify:**
-- `src/components/board/ChatView.tsx` - Main chat component updates
-- SQL migration for storage policy fix
+- `src/components/chat/useChatMessages.ts` -- Add polling fallback, fix Realtime subscription, fix dedup logic, fix stale closures
+- `src/components/chat/ChatView.tsx` -- Fix optimistic update flow so temp messages are properly replaced with server response
 
-**New dependencies needed:**
-- Consider adding `emoji-mart` or similar for emoji picker
+**No new dependencies or database changes needed.**
 
-**Database changes:**
-- Storage policy update only (no new tables needed)
-
+### What This Fixes
+- Messages will always appear even if Realtime drops silently
+- Edits and deletes by other users will be reflected in real-time
+- No more duplicate messages appearing after sending
+- Better performance from fewer unnecessary re-renders
