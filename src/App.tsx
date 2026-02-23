@@ -12,6 +12,7 @@ import SlackIntegrationPage from "./pages/SlackIntegration";
 import Projects from "./pages/Projects";
 import Auth from "./pages/Auth";
 import AdminProtected from "./pages/AdminProtected";
+import ResetPassword from "./pages/ResetPassword";
 import Chat from "./pages/Chat";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/tags" element={<Tags />} />
             <Route path="/slack" element={<SlackIntegrationPage />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/admin" element={<AdminProtected />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
