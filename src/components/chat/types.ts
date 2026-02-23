@@ -24,5 +24,5 @@ export interface ChatUser {
   name: string;
 }
 
-export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+export const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200MB
 export const MESSAGES_PER_PAGE = 50;

@@ -159,7 +159,7 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
       if (file.size > MAX_FILE_SIZE) {
         toast({
           title: 'File too large',
-          description: `${file.name} exceeds the 10MB limit`,
+          description: `${file.name} exceeds the 200MB limit`,
           variant: 'destructive',
         });
         continue;
@@ -326,7 +326,7 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
         <div className="absolute inset-0 bg-primary/10 border-2 border-dashed border-primary z-50 flex items-center justify-center">
           <div className="text-center">
             <Paperclip className="h-12 w-12 mx-auto mb-2 text-primary" />
-            <p className="text-lg font-medium">Drop files to upload (max 10MB)</p>
+            <p className="text-lg font-medium">Drop files to upload (max 200MB)</p>
           </div>
         </div>
       )}
