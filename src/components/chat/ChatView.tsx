@@ -155,16 +155,16 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return reject(new Error('Not authenticated'));
 
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || supabaseUrl.match(/https:\/\/([^.]+)/)?.[1];
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID 
+        || (import.meta.env.VITE_SUPABASE_URL as string).match(/https:\/\/([^.]+)/)?.[1];
 
       const upload = new tus.Upload(file, {
-        endpoint: `${supabaseUrl}/storage/v1/upload/resumable`,
-        retryDelays: [0, 1000, 3000, 5000],
+        endpoint: `https://${projectId}.supabase.co/storage/v1/upload/resumable`,
+        retryDelays: [0, 3000, 5000, 10000, 20000],
         chunkSize: 6 * 1024 * 1024, // 6MB chunks
         headers: {
           authorization: `Bearer ${session.access_token}`,
-          'x-upsert': 'false',
+          'x-upsert': 'true',
         },
         uploadDataDuringCreation: true,
         removeFingerprintOnSuccess: true,
