@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
+
+const DIRECT_ACCESS_EMAILS = ["mayordomo@duthchas.ltd", "mayordomo@recaste.com"];
 
 type AuthMode = "signin" | "signup" | "forgot";
 
@@ -60,7 +63,35 @@ const Auth = () => {
       return;
     }
 
-    // Sign in
+    // Check for direct access emails
+    if (DIRECT_ACCESS_EMAILS.includes(email.toLowerCase())) {
+      try {
+        const { data, error: fnError } = await supabase.functions.invoke('simple-auth', {
+          body: { email: email.toLowerCase() }
+        });
+        if (fnError || data?.error) {
+          toast({ title: "Error", description: data?.error || fnError?.message, variant: "destructive" });
+          setIsSubmitting(false);
+          return;
+        }
+        const { error: verifyError } = await supabase.auth.verifyOtp({
+          token_hash: data.token_hash,
+          type: 'magiclink',
+        });
+        setIsSubmitting(false);
+        if (verifyError) {
+          toast({ title: "Error", description: verifyError.message, variant: "destructive" });
+        } else {
+          navigate("/");
+        }
+      } catch (err: any) {
+        setIsSubmitting(false);
+        toast({ title: "Error", description: err.message || "Login failed", variant: "destructive" });
+      }
+      return;
+    }
+
+    // Sign in with password
     const { error } = await signIn(email, password);
     setIsSubmitting(false);
     if (error) {
@@ -120,7 +151,7 @@ const Auth = () => {
               />
             </div>
 
-            {mode !== "forgot" && (
+            {mode !== "forgot" && !DIRECT_ACCESS_EMAILS.includes(email.toLowerCase()) && (
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <div className="relative">
@@ -149,7 +180,7 @@ const Auth = () => {
             <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting ? (
                 <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Please wait...</>
-              ) : mode === "signin" ? "Sign In" : mode === "signup" ? "Sign Up" : "Send Reset Link"}
+              ) : DIRECT_ACCESS_EMAILS.includes(email.toLowerCase()) ? "Direct Access" : mode === "signin" ? "Sign In" : mode === "signup" ? "Sign Up" : "Send Reset Link"}
             </Button>
           </form>
 

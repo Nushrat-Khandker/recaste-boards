@@ -14,9 +14,12 @@ serve(async (req) => {
   try {
     const { email } = await req.json();
 
-    if (!email || !email.endsWith("@recaste.com")) {
+    const allowedEmails = ["mayordomo@duthchas.ltd", "mayordomo@recaste.com"];
+    const isAllowed = allowedEmails.includes(email?.toLowerCase());
+
+    if (!email || !isAllowed) {
       return new Response(
-        JSON.stringify({ error: "Only @recaste.com emails are allowed" }),
+        JSON.stringify({ error: "This email is not allowed for direct access" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
