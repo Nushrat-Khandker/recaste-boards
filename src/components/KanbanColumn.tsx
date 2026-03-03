@@ -1,8 +1,20 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import KanbanCard from './KanbanCard';
 import AddCard from './AddCard';
 import { useKanban, KanbanCard as KanbanCardType, Tag } from '../context/KanbanContext';
+import { Button } from '@/components/ui/button';
+import { Archive } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface KanbanColumnProps {
   id: string;
@@ -22,6 +34,14 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
   onDragStart
 }) => {
   const { addCard, deleteCard } = useKanban();
+  const [showArchiveAll, setShowArchiveAll] = useState(false);
+
+  const handleArchiveAll = async () => {
+    for (const card of cards) {
+      await deleteCard(id, card.id);
+    }
+    setShowArchiveAll(false);
+  };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -91,6 +111,17 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
             <span className="bg-muted text-muted-foreground text-xs px-2 py-1 rounded-full min-w-[20px] text-center">
               {cards.length}
             </span>
+            {cards.length > 0 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                onClick={() => setShowArchiveAll(true)}
+                title="Archive all cards"
+              >
+                <Archive className="h-3.5 w-3.5" />
+              </Button>
+            )}
             <AddCard 
               columnId={id} 
               onAddCard={handleAddCard}
@@ -133,6 +164,24 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
           onAddCard={handleAddCard} 
         />
       </div>
+
+      {/* Archive All Confirmation Dialog */}
+      <AlertDialog open={showArchiveAll} onOpenChange={setShowArchiveAll}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Archive all cards in "{title}"?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete all {cards.length} card{cards.length !== 1 ? 's' : ''} in this column. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleArchiveAll} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Archive All
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
