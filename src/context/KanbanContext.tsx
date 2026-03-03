@@ -453,8 +453,8 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
         number: validatedCard.number || selectedNumber || null,
         quarter: validatedCard.quarter || selectedQuarter || null,
         tags: (card.tags && card.tags.length > 0 ? card.tags : null) as any,
-        start_date: card.startDate ? card.startDate.toISOString() : null,
-        due_date: card.dueDate ? card.dueDate.toISOString() : null,
+        start_date: (() => { try { return card.startDate ? (card.startDate instanceof Date ? card.startDate : new Date(card.startDate)).toISOString() : null; } catch { return null; } })(),
+        due_date: (() => { try { return card.dueDate ? (card.dueDate instanceof Date ? card.dueDate : new Date(card.dueDate)).toISOString() : null; } catch { return null; } })(),
         file_attachments: (card.fileAttachments && card.fileAttachments.length > 0 ? card.fileAttachments : null) as any,
         checklist: (card.checklist && card.checklist.length > 0 ? card.checklist : []) as any,
         owner_id: user.id,
@@ -598,6 +598,18 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
         quarter: updatedCard.quarter,
       });
 
+      // Safely convert dates
+      const toISOOrNull = (d: any): string | null => {
+        if (!d) return null;
+        try {
+          const date = d instanceof Date ? d : new Date(d);
+          if (isNaN(date.getTime())) return null;
+          return date.toISOString();
+        } catch {
+          return null;
+        }
+      };
+
       const cardData = {
         title: validatedCard.title,
         description: validatedCard.description || null,
@@ -606,8 +618,8 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
         number: validatedCard.number || null,
         quarter: validatedCard.quarter || null,
         tags: (updatedCard.tags && updatedCard.tags.length > 0 ? updatedCard.tags : null) as any,
-        start_date: updatedCard.startDate ? updatedCard.startDate.toISOString() : null,
-        due_date: updatedCard.dueDate ? updatedCard.dueDate.toISOString() : null,
+        start_date: toISOOrNull(updatedCard.startDate),
+        due_date: toISOOrNull(updatedCard.dueDate),
         file_attachments: (updatedCard.fileAttachments && updatedCard.fileAttachments.length > 0 ? updatedCard.fileAttachments : null) as any,
         checklist: (updatedCard.checklist && updatedCard.checklist.length > 0 ? updatedCard.checklist : []) as any,
       };

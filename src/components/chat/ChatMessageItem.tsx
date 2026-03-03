@@ -55,16 +55,21 @@ const FileAttachmentCard = ({ fileName, fileUrl }: { fileName: string | null; fi
   );
 };
 
+// URL regex for detecting links in text
+const URL_REGEX = /(https?:\/\/[^\s<>\"')\]]+)/gi;
+
 const renderMessageContent = (content: string) => {
-  const parts = content.split(/(@\[([^\]]+)\]\([^)]+\))/g);
+  // First split by mentions
+  const mentionParts = content.split(/(@\[([^\]]+)\]\([^)]+\))/g);
   const elements: React.ReactNode[] = [];
   let i = 0;
-  while (i < parts.length) {
-    const mentionMatch = parts[i].match(/^@\[([^\]]+)\]\(([^)]+)\)$/);
+  let keyIdx = 0;
+  while (i < mentionParts.length) {
+    const mentionMatch = mentionParts[i].match(/^@\[([^\]]+)\]\(([^)]+)\)$/);
     if (mentionMatch) {
       elements.push(
         <span 
-          key={i} 
+          key={`mention-${keyIdx++}`} 
           className="inline-flex items-center bg-primary/20 text-primary font-semibold rounded-full px-2 py-0.5 text-[13px] mx-0.5 cursor-default"
         >
           @{mentionMatch[1]}
@@ -72,11 +77,61 @@ const renderMessageContent = (content: string) => {
       );
       i += 3;
     } else {
-      if (parts[i]) elements.push(parts[i]);
+      // For non-mention text, detect and render URLs as clickable links
+      if (mentionParts[i]) {
+        const textWithLinks = renderTextWithLinks(mentionParts[i], keyIdx);
+        elements.push(...textWithLinks.elements);
+        keyIdx = textWithLinks.nextKey;
+      }
       i++;
     }
   }
   return elements;
+};
+
+const renderTextWithLinks = (text: string, startKey: number) => {
+  const elements: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let keyIdx = startKey;
+  let match: RegExpExecArray | null;
+  
+  // Reset regex state
+  URL_REGEX.lastIndex = 0;
+  
+  while ((match = URL_REGEX.exec(text)) !== null) {
+    // Add text before the URL
+    if (match.index > lastIndex) {
+      elements.push(text.slice(lastIndex, match.index));
+    }
+    
+    const url = match[1];
+    // Clean trailing punctuation that's likely not part of the URL
+    const cleanUrl = url.replace(/[.,;:!?]+$/, '');
+    const trailing = url.slice(cleanUrl.length);
+    
+    elements.push(
+      <a
+        key={`link-${keyIdx++}`}
+        href={cleanUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="underline underline-offset-2 break-all hover:opacity-80 transition-opacity"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {cleanUrl}
+      </a>
+    );
+    
+    if (trailing) elements.push(trailing);
+    lastIndex = match.index + url.length;
+  }
+  
+  // Add remaining text
+  if (lastIndex < text.length) {
+    elements.push(text.slice(lastIndex));
+  }
+  
+  return { elements, nextKey: keyIdx };
 };
 
 export const ChatMessageItem = ({
