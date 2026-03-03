@@ -148,6 +148,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
             dueDate={card.dueDate}
             movedDate={card.movedDate}
             fileAttachments={card.fileAttachments}
+            checklist={card.checklist}
             assignedTo={card.assignedTo}
             assignedToName={card.assignedToName}
             ownerId={card.ownerId}
