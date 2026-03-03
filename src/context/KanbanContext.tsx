@@ -25,17 +25,19 @@ export interface KanbanCard {
   id: string;
   title: string;
   description?: string;
-  projectName?: string; // Added project name field
+  projectName?: string;
   tags?: Tag[];
   priority?: 'low' | 'medium' | 'high';
-  number?: string; // Added number field
-  quarter?: string; // Added quarter field
-  startDate?: Date; // New field for start date
-  dueDate?: Date;   // New field for due date
-  movedDate?: Date; // Automatically set when card is moved between columns
-  fileAttachments?: Array<{ url: string; type: 'google_doc' | 'txt' | 'html'; name: string }>; // File attachments
-  assignedTo?: string; // User ID of assigned person
-  assignedToName?: string; // Display name of assigned person
+  number?: string;
+  quarter?: string;
+  startDate?: Date;
+  dueDate?: Date;
+  movedDate?: Date;
+  fileAttachments?: Array<{ url: string; type: 'google_doc' | 'txt' | 'html'; name: string }>;
+  assignedTo?: string;
+  assignedToName?: string;
+  ownerId?: string;
+  ownerName?: string;
 }
 
 export interface KanbanColumn {
@@ -214,7 +216,7 @@ const toTags = (raw: any) => {
 };
 
 // Convert Supabase data to KanbanColumn format
-const convertSupabaseDataToColumns = (cards: any[], columns: any[]): KanbanColumn[] => {
+const convertSupabaseDataToColumns = (cards: any[], columns: any[], profilesMap: Map<string, string>): KanbanColumn[] => {
   return columns.map(column => ({
     id: column.id,
     title: column.title,
@@ -235,6 +237,8 @@ const convertSupabaseDataToColumns = (cards: any[], columns: any[]): KanbanColum
         fileAttachments: card.file_attachments ? (typeof card.file_attachments === 'string' ? JSON.parse(card.file_attachments) : card.file_attachments) : undefined,
         assignedTo: card.assigned_to,
         assignedToName: card.profiles?.full_name,
+        ownerId: card.owner_id,
+        ownerName: card.owner_id ? profilesMap.get(card.owner_id) : undefined,
       }))
   }));
 };
@@ -274,16 +278,23 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
     try {
       setLoading(true);
       
-      // Fetch columns and cards from database with profile join for assignee
-      const [columnsResult, cardsResult] = await Promise.all([
+      // Fetch columns, cards, and profiles from database
+      const [columnsResult, cardsResult, profilesResult] = await Promise.all([
         supabase.from('kanban_columns').select('*').order('position'),
-        supabase.from('kanban_cards').select('*, profiles:assigned_to(full_name)').order('created_at', { ascending: false })
+        supabase.from('kanban_cards').select('*, profiles:assigned_to(full_name)').order('created_at', { ascending: false }),
+        supabase.from('profiles').select('id, full_name')
       ]);
 
       if (columnsResult.error) throw columnsResult.error;
       if (cardsResult.error) throw cardsResult.error;
 
-      const columns = convertSupabaseDataToColumns(cardsResult.data || [], columnsResult.data || []);
+      // Build a map of user_id -> full_name for owner lookup
+      const profilesMap = new Map<string, string>();
+      (profilesResult.data || []).forEach((p: any) => {
+        if (p.full_name) profilesMap.set(p.id, p.full_name);
+      });
+
+      const columns = convertSupabaseDataToColumns(cardsResult.data || [], columnsResult.data || [], profilesMap);
       setColumns(columns);
     } catch (error) {
       console.error('Error loading data:', error);

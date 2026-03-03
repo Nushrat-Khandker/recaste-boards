@@ -150,6 +150,8 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
             fileAttachments={card.fileAttachments}
             assignedTo={card.assignedTo}
             assignedToName={card.assignedToName}
+            ownerId={card.ownerId}
+            ownerName={card.ownerName}
             onDelete={() => deleteCard(id, card.id)}
             onDragStart={onDragStart}
             columnId={id}

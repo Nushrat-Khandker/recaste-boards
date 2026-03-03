@@ -24,10 +24,8 @@ interface Profile {
   email: string | null;
 }
 
-// Hardcoded team members list
+// Hardcoded team members list (assignable members, excludes admin)
 const TEAM_MEMBERS = [
-  "Farah",
-  "Inaya",
   "Mahedi",
   "Naomi",
   "Nasir",
