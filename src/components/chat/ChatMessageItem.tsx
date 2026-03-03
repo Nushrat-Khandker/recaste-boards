@@ -199,13 +199,13 @@ export const ChatMessageItem = ({
   return (
     <div 
       className={`flex items-start gap-1 ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
     >
       {/* For own messages: toolbar on the left */}
       {isOwnMessage && actionButtons}
 
       <div 
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
         className={`relative max-w-[75%] min-w-[140px] rounded-2xl px-3.5 py-2 shadow-sm transition-all
           ${isOwnMessage 
             ? 'bg-primary text-primary-foreground rounded-br-md' 
