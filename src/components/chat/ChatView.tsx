@@ -54,8 +54,9 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const isInitialLoadRef = useRef(true);
+  const hasScrolledInitialRef = useRef(false);
 
-  const scrollToBottom = (instant = false) => {
+  const scrollToBottom = useCallback((instant = false) => {
     const container = scrollContainerRef.current;
     if (!container) return;
     if (instant) {
@@ -63,24 +64,31 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
     } else {
       container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
     }
-  };
+  }, []);
 
-  // Scroll to bottom on new messages; use instant scroll on initial load
+  // On initial load, aggressively scroll to bottom with multiple attempts
   useEffect(() => {
-    if (messages.length > 0) {
-      if (isInitialLoadRef.current) {
-        // Double rAF ensures layout is fully computed before scrolling
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            scrollToBottom(true);
-            isInitialLoadRef.current = false;
-          });
-        });
-      } else {
-        scrollToBottom();
-      }
+    if (messages.length > 0 && isInitialLoadRef.current) {
+      isInitialLoadRef.current = false;
+      hasScrolledInitialRef.current = false;
+      
+      const doScroll = () => {
+        scrollToBottom(true);
+        hasScrolledInitialRef.current = true;
+      };
+
+      // Attempt multiple times to handle layout shifts from images/media
+      doScroll();
+      requestAnimationFrame(doScroll);
+      requestAnimationFrame(() => requestAnimationFrame(doScroll));
+      setTimeout(doScroll, 100);
+      setTimeout(doScroll, 300);
+      setTimeout(doScroll, 600);
+    } else if (messages.length > 0 && hasScrolledInitialRef.current) {
+      // For subsequent messages, smooth scroll
+      scrollToBottom();
     }
-  }, [messages]);
+  }, [messages, scrollToBottom]);
   useEffect(() => { loadUsers(); getCurrentUser(); }, []);
   useEffect(() => { isInitialLoadRef.current = true; }, [actualContextType, actualContextId]);
 
