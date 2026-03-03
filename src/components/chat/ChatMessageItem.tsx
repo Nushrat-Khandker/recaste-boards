@@ -166,12 +166,45 @@ export const ChatMessageItem = ({
     hoverTimeoutRef.current = setTimeout(() => setIsHovered(false), 150);
   }, []);
 
-  return (
+  const actionButtons = isHovered && !message.pending && (
     <div 
-      className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} relative`}
+      className="flex items-center gap-0.5 bg-popover border border-border rounded-full shadow-md px-1 py-0.5 shrink-0 self-center"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
+      <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full" onClick={() => onReply(message)} title="Reply">
+        <Reply className="h-3 w-3" />
+      </Button>
+      {onToggleReaction && (
+        <EmojiPickerButton onSelect={(emoji) => onToggleReaction(message.id, emoji)} />
+      )}
+      {message.failed && (
+        <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full" onClick={() => onRetry(message)} title="Retry">
+          <RefreshCw className="h-3 w-3" />
+        </Button>
+      )}
+      {isOwnMessage && message.message_type === 'text' && !message.failed && (
+        <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full" onClick={() => onEdit(message)} title="Edit">
+          <Edit2 className="h-3 w-3" />
+        </Button>
+      )}
+      {isOwnMessage && (
+        <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full text-destructive hover:text-destructive" onClick={() => onDelete(message.id)} title="Delete">
+          <Trash2 className="h-3 w-3" />
+        </Button>
+      )}
+    </div>
+  );
+
+  return (
+    <div 
+      className={`flex items-start gap-1 ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      {/* For own messages: toolbar on the left */}
+      {isOwnMessage && actionButtons}
+
       <div 
         className={`relative max-w-[75%] min-w-[140px] rounded-2xl px-3.5 py-2 shadow-sm transition-all
           ${isOwnMessage 
@@ -182,7 +215,6 @@ export const ChatMessageItem = ({
           ${message.failed ? 'ring-2 ring-destructive' : ''}
         `}
       >
-        {/* Reply preview */}
         {replyToMessage && (
           <div 
             className={`mb-1.5 px-2.5 py-1.5 rounded-lg border-l-3 text-xs
@@ -204,12 +236,10 @@ export const ChatMessageItem = ({
           </div>
         )}
 
-        {/* Sender name (for others' messages) */}
         {!isOwnMessage && (
           <p className="text-xs font-semibold text-primary mb-0.5">{userName}</p>
         )}
 
-        {/* Message content */}
         {isEditing ? (
           <div className="flex gap-2">
             <Input
@@ -236,40 +266,22 @@ export const ChatMessageItem = ({
               <div className="mt-0.5">
                 {isImageFile(message.file_name, message.file_url) ? (
                   <div className="space-y-1">
-                    <img 
-                      src={message.file_url} 
-                      alt={message.file_name || 'Image'} 
-                      className="max-w-full max-h-64 rounded-lg object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                      onClick={() => window.open(message.file_url!, '_blank')}
-                    />
-                    <div className="flex items-center gap-1.5 text-xs opacity-70">
-                      <Paperclip className="h-3 w-3" />
-                      <span className="truncate">{message.file_name}</span>
-                    </div>
+                    <img src={message.file_url} alt={message.file_name || 'Image'} className="max-w-full max-h-64 rounded-lg object-cover cursor-pointer hover:opacity-90 transition-opacity" onClick={() => window.open(message.file_url!, '_blank')} />
+                    <div className="flex items-center gap-1.5 text-xs opacity-70"><Paperclip className="h-3 w-3" /><span className="truncate">{message.file_name}</span></div>
                   </div>
                 ) : isVideoFile(message.file_name, message.file_url) ? (
                   <div className="space-y-1">
                     <video src={message.file_url} controls className="max-w-full max-h-64 rounded-lg" />
-                    <div className="flex items-center gap-1.5 text-xs opacity-70">
-                      <Paperclip className="h-3 w-3" />
-                      <span className="truncate">{message.file_name}</span>
-                    </div>
+                    <div className="flex items-center gap-1.5 text-xs opacity-70"><Paperclip className="h-3 w-3" /><span className="truncate">{message.file_name}</span></div>
                   </div>
                 ) : isAudioFile(message.file_name, message.file_url) ? (
                   <div className="space-y-1">
                     <audio src={message.file_url} controls className="max-w-full" />
-                    <div className="flex items-center gap-1.5 text-xs opacity-70">
-                      <Paperclip className="h-3 w-3" />
-                      <span className="truncate">{message.file_name}</span>
-                    </div>
+                    <div className="flex items-center gap-1.5 text-xs opacity-70"><Paperclip className="h-3 w-3" /><span className="truncate">{message.file_name}</span></div>
                   </div>
                 ) : isPdfFile(message.file_name, message.file_url) ? (
                   <div className="space-y-1">
-                    <iframe
-                      src={message.file_url}
-                      className="w-full max-w-md h-48 rounded-lg border"
-                      title={message.file_name || 'PDF'}
-                    />
+                    <iframe src={message.file_url} className="w-full max-w-md h-48 rounded-lg border" title={message.file_name || 'PDF'} />
                     <FileAttachmentCard fileName={message.file_name} fileUrl={message.file_url} />
                   </div>
                 ) : (
@@ -280,7 +292,6 @@ export const ChatMessageItem = ({
           </>
         )}
 
-        {/* Timestamp + status row */}
         <div className={`flex items-center gap-1 mt-0.5 ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
           <span className={`text-[10px] ${isOwnMessage ? 'text-primary-foreground/60' : 'text-muted-foreground'}`}>
             {format(new Date(message.created_at), 'HH:mm')}
@@ -296,7 +307,6 @@ export const ChatMessageItem = ({
           )}
         </div>
 
-        {/* Emoji reactions */}
         <EmojiReactions
           reactions={reactions}
           currentUserId={currentUserId}
@@ -304,63 +314,10 @@ export const ChatMessageItem = ({
           profilesMap={profilesMap}
           isOwnMessage={isOwnMessage}
         />
-
-        {/* Action buttons on hover */}
-        {isHovered && !message.pending && (
-          <div 
-            className={`absolute -top-3 ${isOwnMessage ? 'right-1' : 'left-1'} 
-              flex items-center gap-0.5 bg-popover border border-border rounded-full shadow-md px-1 py-0.5 z-10`}
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
-          >
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 rounded-full"
-              onClick={() => onReply(message)}
-              title="Reply"
-            >
-              <Reply className="h-3 w-3" />
-            </Button>
-            {onToggleReaction && (
-              <EmojiPickerButton onSelect={(emoji) => onToggleReaction(message.id, emoji)} />
-            )}
-            {message.failed && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 rounded-full"
-                onClick={() => onRetry(message)}
-                title="Retry"
-              >
-                <RefreshCw className="h-3 w-3" />
-              </Button>
-            )}
-            {isOwnMessage && message.message_type === 'text' && !message.failed && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 rounded-full"
-                onClick={() => onEdit(message)}
-                title="Edit"
-              >
-                <Edit2 className="h-3 w-3" />
-              </Button>
-            )}
-            {isOwnMessage && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 rounded-full text-destructive hover:text-destructive"
-                onClick={() => onDelete(message.id)}
-                title="Delete"
-              >
-                <Trash2 className="h-3 w-3" />
-              </Button>
-            )}
-          </div>
-        )}
       </div>
+
+      {/* For others' messages: toolbar on the right */}
+      {!isOwnMessage && actionButtons}
     </div>
   );
 };
