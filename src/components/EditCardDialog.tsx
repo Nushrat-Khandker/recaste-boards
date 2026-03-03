@@ -15,6 +15,12 @@ import { useToast } from "@/components/ui/use-toast";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
+import { supabase } from '@/integrations/supabase/client';
+
+interface TeamMember {
+  id: string;
+  full_name: string;
+}
 
 interface EditCardDialogProps {
   card: KanbanCard;
@@ -25,7 +31,7 @@ interface EditCardDialogProps {
   isNew?: boolean;
 }
 
-const TEAM_MEMBERS = ["Mahedi", "Naomi", "Nasir", "Nushrat", "Oishorjo", "Sabih"];
+// Team members loaded dynamically from profiles
 
 const tagColors = [
   { label: 'Red', value: '#ef4444' },
@@ -69,6 +75,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
 }) => {
   const { getAllTags, allProjects } = useKanban();
   const { toast } = useToast();
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [title, setTitle] = useState(card.title);
   const [description, setDescription] = useState(card.description || '');
   const [projectName, setProjectName] = useState(card.projectName || '');
@@ -87,6 +94,17 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
   const [assignedTo, setAssignedTo] = useState<string | undefined>(card.assignedTo);
   const [checklist, setChecklist] = useState<ChecklistItem[]>(card.checklist || []);
   const [newChecklistItem, setNewChecklistItem] = useState('');
+
+  // Load team members from profiles
+  useEffect(() => {
+    const loadTeamMembers = async () => {
+      const { data } = await supabase.from('profiles').select('id, full_name');
+      if (data) {
+        setTeamMembers(data.filter(p => p.full_name).map(p => ({ id: p.id, full_name: p.full_name! })));
+      }
+    };
+    loadTeamMembers();
+  }, []);
 
   useEffect(() => {
     setTitle(card.title);
@@ -260,13 +278,13 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
               <Select value={assignedTo || "unassigned"} onValueChange={(value) => setAssignedTo(value === "unassigned" ? undefined : value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select assignee">
-                    {assignedTo ? <div className="flex items-center gap-2"><User className="h-4 w-4" />{assignedTo}</div> : <span className="text-muted-foreground">Unassigned</span>}
+                    {assignedTo ? <div className="flex items-center gap-2"><User className="h-4 w-4" />{teamMembers.find(m => m.id === assignedTo)?.full_name || assignedTo}</div> : <span className="text-muted-foreground">Unassigned</span>}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="unassigned">Unassigned</SelectItem>
-                  {TEAM_MEMBERS.map((name) => (
-                    <SelectItem key={name} value={name}><div className="flex items-center gap-2"><User className="h-4 w-4" />{name}</div></SelectItem>
+                  {teamMembers.map((member) => (
+                    <SelectItem key={member.id} value={member.id}><div className="flex items-center gap-2"><User className="h-4 w-4" />{member.full_name}</div></SelectItem>
                   ))}
                 </SelectContent>
               </Select>

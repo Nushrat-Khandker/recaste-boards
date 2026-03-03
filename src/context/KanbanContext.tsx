@@ -452,11 +452,11 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
         priority: validatedCard.priority || 'medium',
         number: validatedCard.number || selectedNumber,
         quarter: validatedCard.quarter || selectedQuarter,
-        tags: card.tags ? JSON.stringify(card.tags) : null,
+        tags: (card.tags && card.tags.length > 0 ? card.tags : null) as any,
         start_date: card.startDate?.toISOString(),
         due_date: card.dueDate?.toISOString(),
-        file_attachments: card.fileAttachments ? JSON.stringify(card.fileAttachments) : null,
-        checklist: card.checklist ? JSON.stringify(card.checklist) : '[]',
+        file_attachments: (card.fileAttachments && card.fileAttachments.length > 0 ? card.fileAttachments : null) as any,
+        checklist: (card.checklist && card.checklist.length > 0 ? card.checklist : []) as any,
         owner_id: user.id,
       };
 
@@ -600,11 +600,11 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
         priority: validatedCard.priority,
         number: validatedCard.number,
         quarter: validatedCard.quarter,
-        tags: updatedCard.tags ? JSON.stringify(updatedCard.tags) : null,
+        tags: (updatedCard.tags && updatedCard.tags.length > 0 ? updatedCard.tags : null) as any,
         start_date: updatedCard.startDate?.toISOString(),
         due_date: updatedCard.dueDate?.toISOString(),
-        file_attachments: updatedCard.fileAttachments ? JSON.stringify(updatedCard.fileAttachments) : null,
-        checklist: updatedCard.checklist ? JSON.stringify(updatedCard.checklist) : '[]',
+        file_attachments: (updatedCard.fileAttachments && updatedCard.fileAttachments.length > 0 ? updatedCard.fileAttachments : null) as any,
+        checklist: (updatedCard.checklist && updatedCard.checklist.length > 0 ? updatedCard.checklist : []) as any,
       };
 
       // Only include assigned_to if it looks like a UUID (not a name string)
