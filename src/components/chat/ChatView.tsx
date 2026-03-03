@@ -66,9 +66,11 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
     }
   }, []);
 
-  // On initial load, aggressively scroll to bottom with multiple attempts
+  // On initial load, scroll to bottom after messages are rendered (isLoading must be false)
   useEffect(() => {
-    if (messages.length > 0 && isInitialLoadRef.current) {
+    if (isLoading || messages.length === 0) return;
+
+    if (isInitialLoadRef.current) {
       isInitialLoadRef.current = false;
       hasScrolledInitialRef.current = false;
       
@@ -77,18 +79,17 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
         hasScrolledInitialRef.current = true;
       };
 
-      // Attempt multiple times to handle layout shifts from images/media
+      // Multiple attempts to handle layout shifts from images/media
       doScroll();
       requestAnimationFrame(doScroll);
       requestAnimationFrame(() => requestAnimationFrame(doScroll));
       setTimeout(doScroll, 100);
       setTimeout(doScroll, 300);
       setTimeout(doScroll, 600);
-    } else if (messages.length > 0 && hasScrolledInitialRef.current) {
-      // For subsequent messages, smooth scroll
+    } else if (hasScrolledInitialRef.current) {
       scrollToBottom();
     }
-  }, [messages, scrollToBottom]);
+  }, [messages, isLoading, scrollToBottom]);
   useEffect(() => { loadUsers(); getCurrentUser(); }, []);
   useEffect(() => { isInitialLoadRef.current = true; }, [actualContextType, actualContextId]);
 
