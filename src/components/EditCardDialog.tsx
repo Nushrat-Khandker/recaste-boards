@@ -186,6 +186,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
       return;
     }
     
+    const selectedMember = teamMembers.find(m => m.id === assignedTo);
     const updatedCard: KanbanCard = {
       ...card,
       title: title.trim(),
@@ -195,13 +196,13 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
       number: number || undefined,
       tags: tags.length > 0 ? tags : undefined,
       priority,
-      startDate,
-      dueDate,
+      startDate: startDate || undefined,
+      dueDate: dueDate || undefined,
       movedDate: card.movedDate,
       fileAttachments: fileAttachments.length > 0 ? fileAttachments : undefined,
       checklist: checklist.length > 0 ? checklist : undefined,
       assignedTo: assignedTo || undefined,
-      assignedToName: assignedTo || undefined,
+      assignedToName: selectedMember?.full_name || undefined,
     };
     
     onSave(columnId, updatedCard);
