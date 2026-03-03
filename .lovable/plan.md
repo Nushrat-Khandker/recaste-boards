@@ -1,46 +1,43 @@
 
 
-## Fix: Add Authentication Guard to Chat Page
+## Current State: Where Notifications Come From
 
-### Problem
-The `/chat` page has no authentication check. When you visit it without being logged in:
-- The chat UI shows up but you can't send messages (errors occur because there's no user)
-- There's no login prompt or redirect to the sign-in page
+Right now, there is **only one trigger** generating notifications:
 
-### Solution
-Add an auth guard to the Chat page that:
-1. Shows a loading spinner while checking auth status
-2. If not logged in, redirects to `/auth` automatically
-3. If logged in, shows the chat as normal
+- **`on_chat_message_mention`** -- fires on `INSERT` into `chat_messages`, calls `create_mention_notifications()`. It only creates a notification when `mentioned_users` array is non-empty.
 
-### Changes
+That's it. No other events (replies, card assignments, card updates, new chat messages) generate notifications. The `NotificationCenter` UI and real-time subscription work fine -- they just have nothing to show beyond mentions.
 
-**File: `src/pages/Chat.tsx`**
-- Import `useAuth` from `AuthContext`
-- Import `Navigate` from `react-router-dom`
-- Add auth check: if `loading`, show spinner; if no `user`, redirect to `/auth`
-- If authenticated, render the chat normally
+---
 
-This is a small, focused change -- just wrapping the existing chat content with an auth check. No database changes needed.
+## Plan: Add Notification Triggers
 
-### Technical Details
+### 1. Reply Notification Trigger (Database)
 
-```text
-Chat page load flow (after fix):
+Create a new trigger function `create_reply_notifications` on `chat_messages` INSERT:
+- When `reply_to` is not null, look up the original message's `user_id`
+- If the replier is not the same person, insert a notification for the original author
+- Title: "{sender_name} replied to your message"
+- Link: `/chat` (or board-specific link based on context_type/context_id)
 
-  Visit /chat
-      |
-  Check auth state
-      |
-  +---+---+
-  |       |
-Loading  Done
-  |       |
-Spinner  +---+---+
-         |       |
-      No user   User exists
-         |       |
-  Redirect    Show chat
-  to /auth
-```
+### 2. Card Assignment Notification Trigger (Database)
+
+Create a new trigger function `create_assignment_notifications` on `kanban_cards` INSERT and UPDATE:
+- On INSERT: if `assigned_to` is set and differs from `owner_id`, notify the assignee
+- On UPDATE: if `assigned_to` changed (old != new), notify the new assignee
+- Title: "{assigner} assigned you a task: {card_title}"
+- Link: `/?card={card_id}` or similar
+
+### 3. Migration SQL
+
+Single migration with both trigger functions and their triggers attached to the respective tables.
+
+### 4. No Frontend Changes Needed
+
+The existing `NotificationCenter` component already:
+- Subscribes to real-time `INSERT` on `notifications` table
+- Displays title, message, link, and timestamps
+- Handles read/unread state
+
+The new triggers will automatically populate the same `notifications` table, and the UI will pick them up in real-time.
 
