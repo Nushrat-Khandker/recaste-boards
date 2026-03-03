@@ -486,7 +486,12 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
         startDate: data.start_date ? new Date(data.start_date) : undefined,
         dueDate: data.due_date ? new Date(data.due_date) : undefined,
         movedDate: data.moved_date ? new Date(data.moved_date) : undefined,
-        fileAttachments: data.file_attachments ? (typeof data.file_attachments === 'string' ? JSON.parse(data.file_attachments) : data.file_attachments) : undefined,
+        fileAttachments: data.file_attachments ? (typeof data.file_attachments === 'string' ? JSON.parse(data.file_attachments) : data.file_attachments) as any : undefined,
+        checklist: data.checklist ? (typeof data.checklist === 'string' ? JSON.parse(data.checklist) : data.checklist) as any : [],
+        assignedTo: data.assigned_to || undefined,
+        assignedToName: card.assignedToName,
+        ownerId: data.owner_id,
+        ownerName: card.ownerName,
       };
 
       setColumns(prevColumns => 
@@ -615,12 +620,44 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
         (cardData as any).assigned_to = null;
       }
 
-      const { error } = await supabase
+      console.log('Updating card with data:', JSON.stringify(cardData, null, 2));
+      console.log('Card ID:', updatedCard.id);
+
+      const { data: updatedData, error } = await supabase
         .from('kanban_cards')
         .update(cardData)
-        .eq('id', updatedCard.id);
+        .eq('id', updatedCard.id)
+        .select()
+        .single();
 
       if (error) throw error;
+      
+      if (!updatedData) {
+        throw new Error('Card update returned no data - update may have been blocked by permissions');
+      }
+
+      console.log('Card updated successfully, file_attachments saved:', updatedData.file_attachments);
+
+      // Build the confirmed card from DB response + local display data
+      const confirmedCard: KanbanCard = {
+        id: updatedData.id,
+        title: updatedData.title,
+        description: updatedData.description || undefined,
+        projectName: updatedData.project_name || undefined,
+        tags: toTags(updatedData.tags),
+        priority: updatedData.priority as 'low' | 'medium' | 'high',
+        number: updatedData.number || undefined,
+        quarter: updatedData.quarter || undefined,
+        startDate: updatedData.start_date ? new Date(updatedData.start_date) : undefined,
+        dueDate: updatedData.due_date ? new Date(updatedData.due_date) : undefined,
+        movedDate: updatedData.moved_date ? new Date(updatedData.moved_date) : undefined,
+        fileAttachments: updatedData.file_attachments ? (typeof updatedData.file_attachments === 'string' ? JSON.parse(updatedData.file_attachments) : updatedData.file_attachments) as any : undefined,
+        checklist: updatedData.checklist ? (typeof updatedData.checklist === 'string' ? JSON.parse(updatedData.checklist) : updatedData.checklist) as any : [],
+        assignedTo: updatedData.assigned_to || undefined,
+        assignedToName: updatedCard.assignedToName,
+        ownerId: updatedData.owner_id || undefined,
+        ownerName: updatedCard.ownerName,
+      };
 
       setColumns(prevColumns => 
         prevColumns.map(column => 
@@ -628,10 +665,7 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
             ? { 
                 ...column, 
                 cards: column.cards.map(card => 
-                  card.id === updatedCard.id ? {
-                    ...updatedCard,
-                    projectName: updatedCard.projectName // Ensure projectName is preserved
-                  } : card
+                  card.id === updatedCard.id ? confirmedCard : card
                 ) 
               }
             : column
