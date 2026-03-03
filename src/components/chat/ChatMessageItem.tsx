@@ -156,7 +156,7 @@ export const ChatMessageItem = ({
 
   return (
     <div 
-      className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} group relative`}
+      className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} group relative pt-4`}
     >
       <div 
         className={`relative max-w-[75%] min-w-[140px] rounded-2xl px-3.5 py-2 shadow-sm transition-all
