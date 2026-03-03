@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -153,14 +152,11 @@ export const ChatMessageItem = ({
   reactions = [],
   onToggleReaction,
 }: ChatMessageItemProps) => {
-  const [isHovered, setIsHovered] = useState(false);
   const isOwnMessage = message.user_id === currentUserId;
 
   return (
     <div 
-      className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} group`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} group relative`}
     >
       <div 
         className={`relative max-w-[75%] min-w-[140px] rounded-2xl px-3.5 py-2 shadow-sm transition-all
@@ -296,10 +292,11 @@ export const ChatMessageItem = ({
         />
 
         {/* Action buttons on hover */}
-        {isHovered && !message.pending && (
+        {!message.pending && (
           <div 
             className={`absolute -top-3 ${isOwnMessage ? 'left-0 -translate-x-1/2' : 'right-0 translate-x-1/2'} 
-              flex items-center gap-0.5 bg-popover border border-border rounded-full shadow-md px-1 py-0.5 z-10`}
+              flex items-center gap-0.5 bg-popover border border-border rounded-full shadow-md px-1 py-0.5 z-10
+              opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none group-hover:pointer-events-auto`}
           >
             <Button
               variant="ghost"
