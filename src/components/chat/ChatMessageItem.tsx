@@ -45,6 +45,27 @@ const FileAttachmentCard = ({ fileName, fileUrl }: { fileName: string | null; fi
   );
 };
 
+const renderMessageContent = (content: string) => {
+  const parts = content.split(/(@\[([^\]]+)\]\([^)]+\))/g);
+  const elements: React.ReactNode[] = [];
+  let i = 0;
+  while (i < parts.length) {
+    const mentionMatch = parts[i].match(/^@\[([^\]]+)\]\(([^)]+)\)$/);
+    if (mentionMatch) {
+      elements.push(
+        <span key={i} className="bg-primary/15 text-primary font-medium rounded px-1">
+          @{mentionMatch[1]}
+        </span>
+      );
+      i += 3; // skip the capture groups
+    } else {
+      if (parts[i]) elements.push(parts[i]);
+      i++;
+    }
+  }
+  return elements;
+};
+
 export const ChatMessageItem = ({
   message,
   userName,
@@ -142,7 +163,7 @@ export const ChatMessageItem = ({
         ) : (
           <>
             {message.message_type === 'text' && message.content && (
-              <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+              <p className="text-sm whitespace-pre-wrap">{renderMessageContent(message.content)}</p>
             )}
             {message.message_type === 'file' && message.file_url && (
               <div className="mt-1">
