@@ -174,13 +174,6 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
           </div>
         )}
 
-        {/* Display owner */}
-        {ownerName && (
-          <div className="flex items-center gap-1 mb-2 text-xs text-muted-foreground">
-            <span className="font-medium">Owner:</span>
-            <span>{ownerName}</span>
-          </div>
-        )}
 
         {/* Display assigned user if it exists */}
         {assignedToName && (
