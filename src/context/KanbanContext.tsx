@@ -458,8 +458,13 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
         file_attachments: card.fileAttachments ? JSON.stringify(card.fileAttachments) : null,
         checklist: card.checklist ? JSON.stringify(card.checklist) : '[]',
         owner_id: user.id,
-        assigned_to: card.assignedTo || null,
       };
+
+      // Only include assigned_to if it looks like a UUID
+      const isUUID = (val: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+      if (card.assignedTo && isUUID(card.assignedTo)) {
+        (cardData as any).assigned_to = card.assignedTo;
+      }
 
       const { data, error } = await supabase
         .from('kanban_cards')
@@ -600,8 +605,15 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
         due_date: updatedCard.dueDate?.toISOString(),
         file_attachments: updatedCard.fileAttachments ? JSON.stringify(updatedCard.fileAttachments) : null,
         checklist: updatedCard.checklist ? JSON.stringify(updatedCard.checklist) : '[]',
-        assigned_to: updatedCard.assignedTo || null,
       };
+
+      // Only include assigned_to if it looks like a UUID (not a name string)
+      const isUUID = (val: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+      if (updatedCard.assignedTo && isUUID(updatedCard.assignedTo)) {
+        (cardData as any).assigned_to = updatedCard.assignedTo;
+      } else {
+        (cardData as any).assigned_to = null;
+      }
 
       const { error } = await supabase
         .from('kanban_cards')
