@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { MessageSquare, MoreVertical, Search, X } from 'lucide-react';
+import { MessageSquare, MoreVertical, Search, X, LogOut } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { useKanban } from '../context/KanbanContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
 
 import { YearWheel } from './YearWheel';
 import TagFilter from './TagFilter';
@@ -18,6 +19,7 @@ import { NotificationCenter } from './NotificationCenter';
 const Header: React.FC = () => {
   const location = useLocation();
   const { toast } = useToast();
+  const { signOut } = useAuth();
   const { 
     selectedNumber, 
     setSelectedNumber, 
@@ -179,6 +181,11 @@ const Header: React.FC = () => {
                 <DropdownMenuItem onClick={() => setShowSlackInput(!showSlackInput)}>
                   <MessageSquare className="mr-2 h-4 w-4" />
                   Send to Slack
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={signOut} className="text-destructive focus:text-destructive">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sign Out
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
