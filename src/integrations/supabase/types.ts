@@ -175,6 +175,7 @@ export type Database = {
           id: string
           mentioned_users: string[] | null
           message_type: string
+          reply_to: string | null
           user_id: string
         }
         Insert: {
@@ -188,6 +189,7 @@ export type Database = {
           id?: string
           mentioned_users?: string[] | null
           message_type?: string
+          reply_to?: string | null
           user_id: string
         }
         Update: {
@@ -201,9 +203,18 @@ export type Database = {
           id?: string
           mentioned_users?: string[] | null
           message_type?: string
+          reply_to?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_reply_to_fkey"
+            columns: ["reply_to"]
+            isOneToOne: false
+            referencedRelation: "chat_messages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       content_items: {
         Row: {
