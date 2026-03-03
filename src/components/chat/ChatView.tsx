@@ -10,36 +10,34 @@ import { ChatInput } from './ChatInput';
 import { RecordingPreview } from './RecordingPreview';
 import { ChatMessage, ChatUser, MAX_FILE_SIZE } from './types';
 import * as tus from 'tus-js-client';
+import { format, isToday, isYesterday } from 'date-fns';
 
 interface ChatViewProps {
   contextType: 'board' | 'project' | 'general';
   contextId?: string;
-  boardName?: string; // Deprecated, for backward compatibility
+  boardName?: string;
 }
+
+// Group messages by date
+const getDateLabel = (dateStr: string) => {
+  const d = new Date(dateStr);
+  if (isToday(d)) return 'Today';
+  if (isYesterday(d)) return 'Yesterday';
+  return format(d, 'MMMM d, yyyy');
+};
 
 export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) => {
   const actualContextId = contextId || boardName || null;
   const actualContextType = contextType;
 
   const {
-    messages,
-    profilesMap,
-    isLoading,
-    hasMore,
-    loadingMore,
-    loadMore,
-    addOptimisticMessage,
-    updateMessage,
-    removeMessage,
+    messages, profilesMap, isLoading, hasMore, loadingMore,
+    loadMore, addOptimisticMessage, updateMessage, removeMessage,
   } = useChatMessages({ contextType: actualContextType, contextId: actualContextId });
 
   const {
-    isRecording,
-    recordingType,
-    recordedBlob,
-    startRecording,
-    stopRecording,
-    clearRecording,
+    isRecording, recordingType, recordedBlob,
+    startRecording, stopRecording, clearRecording,
   } = useMediaRecording();
 
   const [isDragging, setIsDragging] = useState(false);
@@ -49,6 +47,7 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
   
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -57,14 +56,8 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  useEffect(() => {
-    loadUsers();
-    getCurrentUser();
-  }, []);
+  useEffect(() => { scrollToBottom(); }, [messages]);
+  useEffect(() => { loadUsers(); getCurrentUser(); }, []);
 
   const getCurrentUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -72,287 +65,127 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
   };
 
   const loadUsers = async () => {
-    const { data } = await (supabase as any)
-      .from('profiles')
-      .select('id, full_name');
-    
+    const { data } = await (supabase as any).from('profiles').select('id, full_name');
     if (data) {
       setAllUsers(data.map((u: any) => ({ id: u.id, name: u.full_name || 'Unknown' })));
     }
   };
 
-  const sendMessage = async (content: string, mentionedUserIds: string[]) => {
+  const sendMessage = async (content: string, mentionedUserIds: string[], replyToId?: string) => {
     if (!content.trim()) return;
-
     const { data: { user } } = await supabase.auth.getUser();
-    
     if (!user) {
-      toast({
-        title: 'Error',
-        description: 'You must be logged in to send messages',
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: 'You must be logged in to send messages', variant: 'destructive' });
       return;
     }
 
     setIsSending(true);
-
-    // Create optimistic message
     const tempId = `temp-${Date.now()}`;
     const optimisticMessage: ChatMessage = {
-      id: tempId,
-      content,
-      message_type: 'text',
-      file_url: null,
-      file_name: null,
-      created_at: new Date().toISOString(),
-      user_id: user.id,
-      pending: true,
+      id: tempId, content, message_type: 'text', file_url: null, file_name: null,
+      created_at: new Date().toISOString(), user_id: user.id, reply_to: replyToId || null, pending: true,
     };
-
     addOptimisticMessage(optimisticMessage);
+    setReplyingTo(null);
 
     const { data, error } = await (supabase as any).from('chat_messages').insert({
-      board_name: actualContextId,
-      context_type: actualContextType,
-      context_id: actualContextId,
-      user_id: user.id,
-      content,
-      message_type: 'text',
-      mentioned_users: mentionedUserIds,
+      board_name: actualContextId, context_type: actualContextType, context_id: actualContextId,
+      user_id: user.id, content, message_type: 'text', mentioned_users: mentionedUserIds,
+      reply_to: replyToId || null,
     }).select().single();
 
     if (error) {
-      console.error('Error sending message:', error);
       updateMessage(tempId, { failed: true, pending: false });
-      toast({
-        title: 'Error',
-        description: 'Failed to send message. Click retry to try again.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: 'Failed to send message.', variant: 'destructive' });
     } else if (data) {
-      // Step 3: Replace temp message with real server response immediately
-      // This prevents duplicates when Realtime INSERT also arrives
       updateMessage(tempId, { ...data, pending: false, failed: false });
     }
-    
     setIsSending(false);
   };
 
   const retryMessage = async (message: ChatMessage) => {
     if (!message.content) return;
     removeMessage(message.id);
-    await sendMessage(message.content, []);
+    await sendMessage(message.content, [], message.reply_to || undefined);
   };
 
   const uploadFileWithTus = useCallback((
-    bucket: string,
-    path: string,
-    file: File,
-    onProgress: (percent: number) => void,
+    bucket: string, path: string, file: File, onProgress: (percent: number) => void,
   ): Promise<void> => {
     return new Promise(async (resolve, reject) => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return reject(new Error('Not authenticated'));
-
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID 
         || (import.meta.env.VITE_SUPABASE_URL as string).match(/https:\/\/([^.]+)/)?.[1];
-
       const upload = new tus.Upload(file, {
         endpoint: `https://${projectId}.supabase.co/storage/v1/upload/resumable`,
         retryDelays: [0, 3000, 5000, 10000, 20000],
-        chunkSize: 6 * 1024 * 1024, // 6MB chunks
-        headers: {
-          authorization: `Bearer ${session.access_token}`,
-          'x-upsert': 'true',
-        },
-        uploadDataDuringCreation: true,
-        removeFingerprintOnSuccess: true,
-        metadata: {
-          bucketName: bucket,
-          objectName: path,
-          contentType: file.type || 'application/octet-stream',
-          cacheControl: '3600',
-        },
-        onError: (error) => {
-          console.error('TUS upload error:', error);
-          reject(new Error(error.message || 'Upload failed'));
-        },
-        onProgress: (bytesUploaded, bytesTotal) => {
-          const percent = Math.round((bytesUploaded / bytesTotal) * 95);
-          onProgress(percent);
-        },
-        onSuccess: () => {
-          resolve();
-        },
+        chunkSize: 6 * 1024 * 1024,
+        headers: { authorization: `Bearer ${session.access_token}`, 'x-upsert': 'true' },
+        uploadDataDuringCreation: true, removeFingerprintOnSuccess: true,
+        metadata: { bucketName: bucket, objectName: path, contentType: file.type || 'application/octet-stream', cacheControl: '3600' },
+        onError: (error) => reject(new Error(error.message || 'Upload failed')),
+        onProgress: (bytesUploaded, bytesTotal) => onProgress(Math.round((bytesUploaded / bytesTotal) * 95)),
+        onSuccess: () => resolve(),
       });
-
-      // Check for previous uploads to resume
       const previousUploads = await upload.findPreviousUploads();
-      if (previousUploads.length > 0) {
-        upload.resumeFromPreviousUpload(previousUploads[0]);
-      }
-
+      if (previousUploads.length > 0) upload.resumeFromPreviousUpload(previousUploads[0]);
       upload.start();
     });
   }, []);
 
   const handleFileUpload = async (files: FileList) => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      toast({
-        title: 'Error',
-        description: 'You must be logged in to upload files',
-        variant: 'destructive',
-      });
-      return;
-    }
-
+    if (!user) { toast({ title: 'Error', description: 'You must be logged in', variant: 'destructive' }); return; }
     for (const file of Array.from(files)) {
-      if (file.size > MAX_FILE_SIZE) {
-        toast({
-          title: 'File too large',
-          description: `${file.name} exceeds the 200MB limit`,
-          variant: 'destructive',
-        });
-        continue;
-      }
-
+      if (file.size > MAX_FILE_SIZE) { toast({ title: 'File too large', description: `${file.name} exceeds 200MB`, variant: 'destructive' }); continue; }
       try {
         setUploadProgress(0);
         const fileName = `${actualContextType}/${actualContextId || 'general'}/${Date.now()}-${file.name}`;
-
-        await uploadFileWithTus('board-files', fileName, file, (percent) => {
-          setUploadProgress(percent);
-        });
-
+        await uploadFileWithTus('board-files', fileName, file, (p) => setUploadProgress(p));
         setUploadProgress(97);
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('board-files')
-          .getPublicUrl(fileName);
-
+        const { data: { publicUrl } } = supabase.storage.from('board-files').getPublicUrl(fileName);
         const { error: dbError } = await (supabase as any).from('chat_messages').insert({
-          board_name: actualContextId,
-          context_type: actualContextType,
-          context_id: actualContextId,
-          user_id: user.id,
-          message_type: 'file',
-          file_url: publicUrl,
-          file_name: file.name,
+          board_name: actualContextId, context_type: actualContextType, context_id: actualContextId,
+          user_id: user.id, message_type: 'file', file_url: publicUrl, file_name: file.name,
         });
-
         if (dbError) throw dbError;
-
         setUploadProgress(100);
         setTimeout(() => setUploadProgress(null), 500);
-
-        toast({
-          title: 'Success',
-          description: `${file.name} uploaded successfully`,
-        });
+        toast({ title: 'Success', description: `${file.name} uploaded` });
       } catch (error: any) {
-        console.error('Error uploading file:', error);
         setUploadProgress(null);
-        const errorMsg = error?.message || `Failed to upload ${file.name}`;
-        toast({
-          title: 'Upload Failed',
-          description: errorMsg,
-          variant: 'destructive',
-        });
+        toast({ title: 'Upload Failed', description: error?.message || `Failed to upload ${file.name}`, variant: 'destructive' });
       }
     }
   };
 
   const sendRecording = async () => {
     if (!recordedBlob || !recordingType) return;
-
-    const file = new File(
-      [recordedBlob],
-      `${recordingType}-${Date.now()}.webm`,
-      { type: recordedBlob.type }
-    );
-    
-    const dataTransfer = new DataTransfer();
-    dataTransfer.items.add(file);
-    await handleFileUpload(dataTransfer.files);
-    
+    const file = new File([recordedBlob], `${recordingType}-${Date.now()}.webm`, { type: recordedBlob.type });
+    const dt = new DataTransfer(); dt.items.add(file);
+    await handleFileUpload(dt.files);
     clearRecording();
   };
 
   const deleteMessage = async (messageId: string) => {
-    // Handle optimistic/failed messages
     const message = messages.find(m => m.id === messageId);
-    if (message?.pending || message?.failed) {
-      removeMessage(messageId);
-      return;
-    }
-
-    const { error } = await (supabase as any)
-      .from('chat_messages')
-      .delete()
-      .eq('id', messageId)
-      .eq('user_id', currentUserId);
-
-    if (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to delete message',
-        variant: 'destructive',
-      });
-    } else {
-      removeMessage(messageId);
-      toast({
-        title: 'Success',
-        description: 'Message deleted',
-      });
-    }
+    if (message?.pending || message?.failed) { removeMessage(messageId); return; }
+    const { error } = await (supabase as any).from('chat_messages').delete().eq('id', messageId).eq('user_id', currentUserId);
+    if (error) { toast({ title: 'Error', description: 'Failed to delete message', variant: 'destructive' }); }
+    else { removeMessage(messageId); }
   };
 
-  const startEditMessage = (message: ChatMessage) => {
-    setEditingMessageId(message.id);
-    setEditContent(message.content || '');
-  };
+  const startEditMessage = (message: ChatMessage) => { setEditingMessageId(message.id); setEditContent(message.content || ''); };
 
   const saveEditMessage = async (messageId: string, content: string) => {
     if (!content.trim()) return;
-
-    const { error } = await (supabase as any)
-      .from('chat_messages')
-      .update({ content })
-      .eq('id', messageId);
-
-    if (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to update message',
-        variant: 'destructive',
-      });
-    } else {
-      updateMessage(messageId, { content });
-      setEditingMessageId(null);
-      toast({
-        title: 'Success',
-        description: 'Message updated',
-      });
-    }
+    const { error } = await (supabase as any).from('chat_messages').update({ content }).eq('id', messageId);
+    if (error) { toast({ title: 'Error', description: 'Failed to update message', variant: 'destructive' }); }
+    else { updateMessage(messageId, { content }); setEditingMessageId(null); }
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-  };
-
-  const handleDrop = async (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    await handleFileUpload(e.dataTransfer.files);
-  };
+  const handleReply = (message: ChatMessage) => { setReplyingTo(message); };
 
   const getContextLabel = () => {
     if (actualContextType === 'general') return 'General Chat';
@@ -360,15 +193,35 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
     return actualContextId || 'Board';
   };
 
+  const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); setIsDragging(true); };
+  const handleDragLeave = (e: React.DragEvent) => { e.preventDefault(); setIsDragging(false); };
+  const handleDrop = async (e: React.DragEvent) => { e.preventDefault(); setIsDragging(false); await handleFileUpload(e.dataTransfer.files); };
+
+  // Build a map of message id -> message for reply lookups
+  const messagesById = new Map(messages.map(m => [m.id, m]));
+
+  // Group messages by date
+  const groupedMessages: { label: string; msgs: ChatMessage[] }[] = [];
+  let lastLabel = '';
+  for (const msg of messages) {
+    const label = getDateLabel(msg.created_at);
+    if (label !== lastLabel) {
+      groupedMessages.push({ label, msgs: [msg] });
+      lastLabel = label;
+    } else {
+      groupedMessages[groupedMessages.length - 1].msgs.push(msg);
+    }
+  }
+
   return (
     <div
-      className="flex flex-col h-[calc(100vh-200px)]"
+      className="flex flex-col h-[calc(100vh-200px)] bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9InAiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMSIgZmlsbD0icmdiYSgwLDAsMCwwLjAzKSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3QgZmlsbD0idXJsKCNwKSIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIvPjwvc3ZnPg==')] rounded-xl overflow-hidden border"
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
       {isDragging && (
-        <div className="absolute inset-0 bg-primary/10 border-2 border-dashed border-primary z-50 flex items-center justify-center">
+        <div className="absolute inset-0 bg-primary/10 border-2 border-dashed border-primary z-50 flex items-center justify-center rounded-xl">
           <div className="text-center">
             <Paperclip className="h-12 w-12 mx-auto mb-2 text-primary" />
             <p className="text-lg font-medium">Drop files to upload (max 200MB)</p>
@@ -376,23 +229,11 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-1">
         {hasMore && !isLoading && (
-          <div className="text-center">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={loadMore}
-              disabled={loadingMore}
-            >
-              {loadingMore ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Loading...
-                </>
-              ) : (
-                'Load older messages'
-              )}
+          <div className="text-center py-2">
+            <Button variant="ghost" size="sm" onClick={loadMore} disabled={loadingMore} className="rounded-full text-xs">
+              {loadingMore ? <><Loader2 className="h-3 w-3 mr-1 animate-spin" />Loading...</> : 'Load older messages'}
             </Button>
           </div>
         )}
@@ -403,36 +244,51 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
           </div>
         ) : messages.length === 0 ? (
           <div className="text-center text-muted-foreground py-12">
-            No messages yet. Start a conversation!
+            <p className="text-lg mb-1">💬</p>
+            <p>No messages yet. Start a conversation!</p>
           </div>
         ) : (
-          messages.map((message) => (
-            <ChatMessageItem
-              key={message.id}
-              message={message}
-              userName={profilesMap[message.user_id] || message.profiles?.full_name || message.user_id.slice(0, 8)}
-              currentUserId={currentUserId}
-              onEdit={startEditMessage}
-              onDelete={deleteMessage}
-              onRetry={retryMessage}
-              onSaveEdit={saveEditMessage}
-              isEditing={editingMessageId === message.id}
-              editContent={editContent}
-              setEditContent={setEditContent}
-              onCancelEdit={() => setEditingMessageId(null)}
-            />
+          groupedMessages.map((group) => (
+            <div key={group.label}>
+              <div className="flex justify-center my-3">
+                <span className="text-[11px] bg-muted/80 text-muted-foreground px-3 py-1 rounded-full font-medium shadow-sm">
+                  {group.label}
+                </span>
+              </div>
+              <div className="space-y-1.5">
+                {group.msgs.map((message) => {
+                  const replyMsg = message.reply_to ? messagesById.get(message.reply_to) || null : null;
+                  const replyUserName = replyMsg ? (profilesMap[replyMsg.user_id] || 'Unknown') : undefined;
+                  return (
+                    <ChatMessageItem
+                      key={message.id}
+                      message={message}
+                      userName={profilesMap[message.user_id] || message.profiles?.full_name || message.user_id.slice(0, 8)}
+                      currentUserId={currentUserId}
+                      onEdit={startEditMessage}
+                      onDelete={deleteMessage}
+                      onRetry={retryMessage}
+                      onSaveEdit={saveEditMessage}
+                      onReply={handleReply}
+                      isEditing={editingMessageId === message.id}
+                      editContent={editContent}
+                      setEditContent={setEditContent}
+                      onCancelEdit={() => setEditingMessageId(null)}
+                      replyToMessage={replyMsg}
+                      replyToUserName={replyUserName}
+                      profilesMap={profilesMap}
+                    />
+                  );
+                })}
+              </div>
+            </div>
           ))
         )}
         <div ref={messagesEndRef} />
       </div>
       
       {recordedBlob && recordingType && (
-        <RecordingPreview
-          recordedBlob={recordedBlob}
-          recordingType={recordingType}
-          onSend={sendRecording}
-          onCancel={clearRecording}
-        />
+        <RecordingPreview recordedBlob={recordedBlob} recordingType={recordingType} onSend={sendRecording} onCancel={clearRecording} />
       )}
 
       <ChatInput
@@ -446,6 +302,9 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
         uploadProgress={uploadProgress}
         allUsers={allUsers}
         contextLabel={getContextLabel()}
+        replyingTo={replyingTo}
+        replyingToUserName={replyingTo ? (profilesMap[replyingTo.user_id] || 'Unknown') : null}
+        onCancelReply={() => setReplyingTo(null)}
       />
     </div>
   );

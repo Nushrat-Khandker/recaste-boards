@@ -6,6 +6,7 @@ export interface ChatMessage {
   file_name: string | null;
   created_at: string;
   user_id: string;
+  reply_to: string | null;
   profiles?: {
     full_name: string | null;
   };
