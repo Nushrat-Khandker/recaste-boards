@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Paperclip, Loader2 } from 'lucide-react';
 import { useChatMessages } from './useChatMessages';
 import { useMediaRecording } from './useMediaRecording';
+import { useReactions } from './useReactions';
 import { ChatMessageItem } from './ChatMessageItem';
 import { ChatInput } from './ChatInput';
 import { RecordingPreview } from './RecordingPreview';
@@ -199,6 +200,8 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
 
   // Build a map of message id -> message for reply lookups
   const messagesById = new Map(messages.map(m => [m.id, m]));
+  const messageIds = messages.filter(m => !m.pending && !m.failed).map(m => m.id);
+  const { reactionsMap, toggleReaction } = useReactions(messageIds);
 
   // Group messages by date
   const groupedMessages: { label: string; msgs: ChatMessage[] }[] = [];
@@ -277,6 +280,8 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
                       replyToMessage={replyMsg}
                       replyToUserName={replyUserName}
                       profilesMap={profilesMap}
+                      reactions={reactionsMap[message.id] || []}
+                      onToggleReaction={toggleReaction}
                     />
                   );
                 })}
