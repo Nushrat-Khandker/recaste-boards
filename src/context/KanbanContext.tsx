@@ -21,6 +21,12 @@ export interface Tag {
   customColor?: string;  // Added this property for custom RGB colors
 }
 
+export interface ChecklistItem {
+  id: string;
+  text: string;
+  completed: boolean;
+}
+
 export interface KanbanCard {
   id: string;
   title: string;
@@ -34,6 +40,7 @@ export interface KanbanCard {
   dueDate?: Date;
   movedDate?: Date;
   fileAttachments?: Array<{ url: string; type: 'google_doc' | 'txt' | 'html'; name: string }>;
+  checklist?: ChecklistItem[];
   assignedTo?: string;
   assignedToName?: string;
   ownerId?: string;
@@ -239,6 +246,7 @@ const convertSupabaseDataToColumns = (cards: any[], columns: any[], profilesMap:
         assignedToName: card.profiles?.full_name,
         ownerId: card.owner_id,
         ownerName: card.owner_id ? profilesMap.get(card.owner_id) : undefined,
+        checklist: card.checklist ? (typeof card.checklist === 'string' ? JSON.parse(card.checklist) : card.checklist) : [],
       }))
   }));
 };
@@ -448,6 +456,7 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
         start_date: card.startDate?.toISOString(),
         due_date: card.dueDate?.toISOString(),
         file_attachments: card.fileAttachments ? JSON.stringify(card.fileAttachments) : null,
+        checklist: card.checklist ? JSON.stringify(card.checklist) : '[]',
         owner_id: user.id,
         assigned_to: card.assignedTo || null,
       };
@@ -590,6 +599,7 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
         start_date: updatedCard.startDate?.toISOString(),
         due_date: updatedCard.dueDate?.toISOString(),
         file_attachments: updatedCard.fileAttachments ? JSON.stringify(updatedCard.fileAttachments) : null,
+        checklist: updatedCard.checklist ? JSON.stringify(updatedCard.checklist) : '[]',
         assigned_to: updatedCard.assignedTo || null,
       };
 

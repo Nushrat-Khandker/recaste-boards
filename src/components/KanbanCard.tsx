@@ -1,9 +1,9 @@
 
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
-import { X, Move, Pencil, CalendarClock, Link as LinkIcon, User } from 'lucide-react';
+import { X, Move, Pencil, CalendarClock, Link as LinkIcon, User, CheckSquare } from 'lucide-react';
 import EditCardDialog from './EditCardDialog';
-import { useKanban, Tag } from '../context/KanbanContext';
+import { useKanban, Tag, ChecklistItem } from '../context/KanbanContext';
 import { Badge } from '@/components/ui/badge';
 import { formatDate, formatDateRange } from '../lib/utils';
 
@@ -20,6 +20,7 @@ interface KanbanCardProps {
   dueDate?: Date;
   movedDate?: Date;
   fileAttachments?: Array<{ url: string; type: 'google_doc' | 'txt' | 'html'; name: string }>;
+  checklist?: ChecklistItem[];
   assignedTo?: string;
   assignedToName?: string;
   ownerId?: string;
@@ -71,6 +72,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
   dueDate,
   movedDate,
   fileAttachments = [],
+  checklist = [],
   assignedTo,
   assignedToName,
   ownerId,
@@ -203,6 +205,20 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
           </div>
         )}
 
+        {/* Display checklist progress */}
+        {checklist.length > 0 && (
+          <div className="flex items-center gap-1.5 mt-2 text-xs text-muted-foreground">
+            <CheckSquare size={12} />
+            <span>{checklist.filter(i => i.completed).length}/{checklist.length}</span>
+            <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-primary rounded-full transition-all" 
+                style={{ width: `${(checklist.filter(i => i.completed).length / checklist.length) * 100}%` }}
+              />
+            </div>
+          </div>
+        )}
+
         {/* Display file attachments */}
         {fileAttachments.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-2">
@@ -224,7 +240,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
       </Card>
 
       <EditCardDialog
-        card={{ id, title, description, projectName, tags, priority, number, quarter, startDate, dueDate, movedDate, fileAttachments, assignedTo, assignedToName, ownerId, ownerName }}
+        card={{ id, title, description, projectName, tags, priority, number, quarter, startDate, dueDate, movedDate, fileAttachments, checklist, assignedTo, assignedToName, ownerId, ownerName }}
         columnId={columnId}
         isOpen={isEditDialogOpen}
         onClose={() => setIsEditDialogOpen(false)}
