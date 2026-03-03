@@ -22,6 +22,8 @@ interface KanbanCardProps {
   fileAttachments?: Array<{ url: string; type: 'google_doc' | 'txt' | 'html'; name: string }>;
   assignedTo?: string;
   assignedToName?: string;
+  ownerId?: string;
+  ownerName?: string;
   onDelete: () => void;
   onDragStart: (e: React.DragEvent, cardId: string, columnId: string) => void;
   columnId: string;
@@ -71,6 +73,8 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
   fileAttachments = [],
   assignedTo,
   assignedToName,
+  ownerId,
+  ownerName,
   onDelete,
   onDragStart,
   columnId
@@ -168,6 +172,14 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
           </div>
         )}
 
+        {/* Display owner */}
+        {ownerName && (
+          <div className="flex items-center gap-1 mb-2 text-xs text-muted-foreground">
+            <span className="font-medium">Owner:</span>
+            <span>{ownerName}</span>
+          </div>
+        )}
+
         {/* Display assigned user if it exists */}
         {assignedToName && (
           <div className="flex items-center gap-1 mb-2 text-xs text-muted-foreground">
@@ -212,7 +224,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
       </Card>
 
       <EditCardDialog
-        card={{ id, title, description, projectName, tags, priority, number, quarter, startDate, dueDate, movedDate, fileAttachments, assignedTo, assignedToName }}
+        card={{ id, title, description, projectName, tags, priority, number, quarter, startDate, dueDate, movedDate, fileAttachments, assignedTo, assignedToName, ownerId, ownerName }}
         columnId={columnId}
         isOpen={isEditDialogOpen}
         onClose={() => setIsEditDialogOpen(false)}

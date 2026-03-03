@@ -19,8 +19,6 @@ serve(async (req) => {
     );
 
     const teamMembers = [
-      "Farah",
-      "Inaya",
       "Mahedi",
       "Naomi",
       "Nasir",
