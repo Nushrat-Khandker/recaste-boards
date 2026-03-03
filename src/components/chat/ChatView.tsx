@@ -52,20 +52,29 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
   
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const isInitialLoadRef = useRef(true);
 
   const scrollToBottom = (instant = false) => {
-    messagesEndRef.current?.scrollIntoView({ behavior: instant ? 'instant' : 'smooth' });
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    if (instant) {
+      container.scrollTop = container.scrollHeight;
+    } else {
+      container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+    }
   };
 
   // Scroll to bottom on new messages; use instant scroll on initial load
   useEffect(() => {
     if (messages.length > 0) {
       if (isInitialLoadRef.current) {
-        // Use requestAnimationFrame to ensure DOM is painted before scrolling
+        // Double rAF ensures layout is fully computed before scrolling
         requestAnimationFrame(() => {
-          scrollToBottom(true);
-          isInitialLoadRef.current = false;
+          requestAnimationFrame(() => {
+            scrollToBottom(true);
+            isInitialLoadRef.current = false;
+          });
         });
       } else {
         scrollToBottom();
@@ -247,7 +256,7 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-1">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-1">
         {hasMore && !isLoading && (
           <div className="text-center py-2">
             <Button variant="ghost" size="sm" onClick={loadMore} disabled={loadingMore} className="rounded-full text-xs">
