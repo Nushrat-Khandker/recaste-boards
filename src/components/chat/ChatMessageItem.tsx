@@ -8,6 +8,8 @@ import {
 } from 'lucide-react';
 import { ChatMessage } from './types';
 import { isImageFile, isVideoFile, isAudioFile, isPdfFile, getFileTypeInfo, getFileExtension } from './fileUtils';
+import { EmojiReactions, EmojiPickerButton } from './EmojiReactions';
+import { Reaction } from './useReactions';
 
 interface ChatMessageItemProps {
   message: ChatMessage;
@@ -25,6 +27,8 @@ interface ChatMessageItemProps {
   replyToMessage?: ChatMessage | null;
   replyToUserName?: string;
   profilesMap: Record<string, string | null>;
+  reactions?: Reaction[];
+  onToggleReaction?: (messageId: string, emoji: string) => void;
 }
 
 const FileAttachmentCard = ({ fileName, fileUrl }: { fileName: string | null; fileUrl: string }) => {
@@ -91,6 +95,8 @@ export const ChatMessageItem = ({
   replyToMessage,
   replyToUserName,
   profilesMap,
+  reactions = [],
+  onToggleReaction,
 }: ChatMessageItemProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const isOwnMessage = message.user_id === currentUserId;
@@ -225,6 +231,15 @@ export const ChatMessageItem = ({
           )}
         </div>
 
+        {/* Emoji reactions */}
+        <EmojiReactions
+          reactions={reactions}
+          currentUserId={currentUserId}
+          onToggle={(emoji) => onToggleReaction?.(message.id, emoji)}
+          profilesMap={profilesMap}
+          isOwnMessage={isOwnMessage}
+        />
+
         {/* Action buttons on hover */}
         {isHovered && !message.pending && (
           <div 
@@ -240,6 +255,9 @@ export const ChatMessageItem = ({
             >
               <Reply className="h-3 w-3" />
             </Button>
+            {onToggleReaction && (
+              <EmojiPickerButton onSelect={(emoji) => onToggleReaction(message.id, emoji)} />
+            )}
             {message.failed && (
               <Button
                 variant="ghost"
