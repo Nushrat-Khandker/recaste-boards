@@ -52,13 +52,28 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
   
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const isInitialLoadRef = useRef(true);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const scrollToBottom = (instant = false) => {
+    messagesEndRef.current?.scrollIntoView({ behavior: instant ? 'instant' : 'smooth' });
   };
 
-  useEffect(() => { scrollToBottom(); }, [messages]);
+  // Scroll to bottom on new messages; use instant scroll on initial load
+  useEffect(() => {
+    if (messages.length > 0) {
+      if (isInitialLoadRef.current) {
+        // Use requestAnimationFrame to ensure DOM is painted before scrolling
+        requestAnimationFrame(() => {
+          scrollToBottom(true);
+          isInitialLoadRef.current = false;
+        });
+      } else {
+        scrollToBottom();
+      }
+    }
+  }, [messages]);
   useEffect(() => { loadUsers(); getCurrentUser(); }, []);
+  useEffect(() => { isInitialLoadRef.current = true; }, [actualContextType, actualContextId]);
 
   const getCurrentUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
