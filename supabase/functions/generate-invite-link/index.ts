@@ -29,10 +29,10 @@ serve(async (req) => {
       );
     }
 
-    // Validate @recaste.com email
-    if (!email || !email.endsWith("@recaste.com")) {
+    // Basic email format validation
+    if (!email.includes("@")) {
       return new Response(
-        JSON.stringify({ error: "Only @recaste.com emails are allowed" }),
+        JSON.stringify({ error: "Invalid email format" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
