@@ -16,10 +16,10 @@ const InviteUser = () => {
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email.endsWith("@recaste.com")) {
+    if (!email || !email.includes("@")) {
       toast({
         title: "Invalid email",
-        description: "Only @recaste.com emails can be invited",
+        description: "Please enter a valid email address",
         variant: "destructive",
       });
       return;
@@ -72,7 +72,7 @@ const InviteUser = () => {
       <CardHeader>
         <CardTitle>Invite Team Member</CardTitle>
         <CardDescription>
-          Send an invite link to a @recaste.com email address
+          Generate an invite link for any email address
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -80,7 +80,7 @@ const InviteUser = () => {
           <form onSubmit={handleInvite} className="flex gap-2">
             <Input
               type="email"
-              placeholder="name@recaste.com"
+              placeholder="name@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
