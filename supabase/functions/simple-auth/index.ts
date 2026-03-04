@@ -12,14 +12,11 @@ serve(async (req) => {
   }
 
   try {
-    const { email } = await req.json();
+    const { email, full_name } = await req.json();
 
-    const allowedDomains = ["@recaste.com", "@duthchas.ltd"];
-    const isAllowed = email && allowedDomains.some((domain: string) => email.toLowerCase().endsWith(domain));
-
-    if (!email || !isAllowed) {
+    if (!email || !email.includes("@")) {
       return new Response(
-        JSON.stringify({ error: "This email domain is not allowed for direct access" }),
+        JSON.stringify({ error: "Please enter a valid email address" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -30,19 +27,16 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    // Extract first name from email (e.g., nushrat@recaste.com -> Nushrat)
-    const firstName = email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1);
+    // Derive a display name: use provided name, or capitalize email prefix
+    const displayName = full_name?.trim() || email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1);
 
-    // Create or update user with confirmed email
-    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.createUser({
-      email: email,
+    // Create user with confirmed email (or ignore if exists)
+    const { error: userError } = await supabaseAdmin.auth.admin.createUser({
+      email: email.toLowerCase(),
       email_confirm: true,
-      user_metadata: {
-        full_name: firstName
-      }
+      user_metadata: { full_name: displayName },
     });
 
-    // Ignore "user already exists" error - just continue to generate magic link
     if (userError && userError.code !== 'email_exists') {
       console.error("User creation error:", userError);
       return new Response(
@@ -51,10 +45,21 @@ serve(async (req) => {
       );
     }
 
-    // Generate OTP token hash for session
+    // If user already exists, update their name if a new one was provided
+    if (userError?.code === 'email_exists' && full_name?.trim()) {
+      const { data: listData } = await supabaseAdmin.auth.admin.listUsers();
+      const existingUser = listData?.users?.find(u => u.email === email.toLowerCase());
+      if (existingUser) {
+        await supabaseAdmin.auth.admin.updateUser(existingUser.id, {
+          user_metadata: { full_name: displayName },
+        });
+      }
+    }
+
+    // Generate magic link token for instant sign-in
     const { data, error } = await supabaseAdmin.auth.admin.generateLink({
       type: 'magiclink',
-      email: email
+      email: email.toLowerCase(),
     });
 
     if (error) {
@@ -65,7 +70,6 @@ serve(async (req) => {
       );
     }
 
-    // Return token hash for client to verify via verifyOtp
     return new Response(
       JSON.stringify({ 
         token_hash: data.properties.hashed_token,
