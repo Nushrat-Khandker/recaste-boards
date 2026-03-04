@@ -332,11 +332,11 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
     }
   }, [selectedProject]);
 
-  // Load data on mount
+  // Load data on mount and when user changes (login/logout)
   useEffect(() => {
     loadData();
     loadArchivedProjects();
-  }, []);
+  }, [user]);
 
   // Realtime updates for kanban tables
   useEffect(() => {
@@ -357,7 +357,7 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [user]);
 
   // Filter columns based on tags, project, year, quarter, and search query
   const filteredColumns = React.useMemo(() => {
