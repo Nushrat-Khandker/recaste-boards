@@ -9,7 +9,10 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 
-const DIRECT_ACCESS_EMAILS = ["mayordomo@duthchas.ltd", "mayordomo@recaste.com"];
+const DIRECT_ACCESS_DOMAINS = ["@recaste.com", "@duthchas.ltd"];
+
+const isDirectAccessEmail = (email: string) =>
+  DIRECT_ACCESS_DOMAINS.some(domain => email.toLowerCase().endsWith(domain));
 
 type AuthMode = "signin" | "signup" | "forgot";
 
@@ -64,7 +67,7 @@ const Auth = () => {
     }
 
     // Check for direct access emails
-    if (DIRECT_ACCESS_EMAILS.includes(email.toLowerCase())) {
+    if (isDirectAccessEmail(email)) {
       try {
         const { data, error: fnError } = await supabase.functions.invoke('simple-auth', {
           body: { email: email.toLowerCase() }
@@ -151,7 +154,7 @@ const Auth = () => {
               />
             </div>
 
-            {mode !== "forgot" && !DIRECT_ACCESS_EMAILS.includes(email.toLowerCase()) && (
+            {mode !== "forgot" && !isDirectAccessEmail(email) && (
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <div className="relative">
@@ -180,7 +183,7 @@ const Auth = () => {
             <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting ? (
                 <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Please wait...</>
-              ) : DIRECT_ACCESS_EMAILS.includes(email.toLowerCase()) ? "Direct Access" : mode === "signin" ? "Sign In" : mode === "signup" ? "Sign Up" : "Send Reset Link"}
+              ) : isDirectAccessEmail(email) ? "Direct Access" : mode === "signin" ? "Sign In" : mode === "signup" ? "Sign Up" : "Send Reset Link"}
             </Button>
           </form>
 
