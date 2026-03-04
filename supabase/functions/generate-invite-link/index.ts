@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.51.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 serve(async (req) => {
@@ -49,12 +49,15 @@ serve(async (req) => {
       }
     );
 
+    // Use the app's published URL for redirect
+    const siteUrl = Deno.env.get("SITE_URL") || "https://recaste-boards.lovable.app";
+    
     // Generate invite link (without sending email)
     const { data, error } = await supabaseAdmin.auth.admin.generateLink({
       type: 'invite',
       email: email,
       options: {
-        redirectTo: `${req.headers.get("origin") || "http://localhost:8080"}/`,
+        redirectTo: `${siteUrl}/`,
       }
     });
 
