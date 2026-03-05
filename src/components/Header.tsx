@@ -93,7 +93,7 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header ref={headerRef} className="sticky top-0 z-50 bg-background border-b">
+    <header ref={headerRef} className="sticky top-0 z-50 bg-blue-50/80 dark:bg-slate-900/90 backdrop-blur-sm border-b border-blue-100 dark:border-slate-700">
       <div className="container mx-auto px-2 sm:px-4 py-2 sm:py-3">
         {/* Top row: Logo + Title + Menu */}
         <div className="flex justify-between items-center mb-2 sm:mb-3">
