@@ -130,89 +130,88 @@ const Header: React.FC = () => {
           </div>
         </div>
 
-        {/* Navigation Tabs with filters on the right */}
-        <Tabs value={currentView} className="w-full">
-          <div className="flex items-center justify-between">
-            <TabsList className="h-8 sm:h-10">
-              <TabsTrigger value="projects" asChild className="text-xs sm:text-sm px-2 sm:px-3">
-                <Link to="/projects" className="gap-1 sm:gap-2">
-                  <span className="hidden sm:inline">📂</span> Projects
-                </Link>
-              </TabsTrigger>
-              <TabsTrigger value="tasks" asChild className="text-xs sm:text-sm px-2 sm:px-3">
-                <Link to="/" className="gap-1 sm:gap-2">
-                  <span className="hidden sm:inline">✅</span> Tasks
-                </Link>
-              </TabsTrigger>
-              <TabsTrigger value="calendar" asChild className="text-xs sm:text-sm px-2 sm:px-3">
-                <Link to="/?view=calendar" className="gap-1 sm:gap-2">
-                  <span className="hidden sm:inline">📅</span> Calendar
-                </Link>
-              </TabsTrigger>
-              <TabsTrigger value="chat" asChild className="text-xs sm:text-sm px-2 sm:px-3">
-                <Link to="/chat" className="gap-1 sm:gap-2">
-                  <span className="hidden sm:inline">💬</span> Chat
-                </Link>
-              </TabsTrigger>
-            </TabsList>
-
-            <div className="flex items-center gap-1">
-              {searchExpanded ? (
-                <div className="relative">
-                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
-                  <Input
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search..."
-                    className="h-7 w-28 sm:w-36 pl-7 pr-6 text-xs"
-                    autoFocus
-                    onBlur={() => {
-                      if (!searchQuery) setSearchExpanded(false);
-                    }}
-                  />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-1/2 -translate-y-1/2 h-5 w-5 p-0"
-                    onClick={() => {
-                      setSearchQuery('');
-                      setSearchExpanded(false);
-                    }}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                </div>
-              ) : (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7"
-                  onClick={() => setSearchExpanded(true)}
-                >
-                  <Search className="h-3 w-3" />
-                </Button>
-              )}
-              
-              <YearWheel 
-                value={selectedNumber} 
-                onValueChange={setSelectedNumber}
-                placeholder="Y"
-                className="w-12 sm:w-16 text-[10px] sm:text-xs h-7"
+        {/* Second row: Search, Year, Quarter */}
+        <div className="flex items-center gap-2 mb-2 sm:mb-3">
+          {searchExpanded ? (
+            <div className="relative flex-1 max-w-xs">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search..."
+                className="h-8 sm:h-10 w-full pl-7 pr-7 text-xs sm:text-sm"
+                autoFocus
+                onBlur={() => {
+                  if (!searchQuery) setSearchExpanded(false);
+                }}
               />
-              
-              <Select value={selectedQuarter} onValueChange={setSelectedQuarter}>
-                <SelectTrigger className="w-11 sm:w-14 text-[10px] sm:text-xs h-7">
-                  <SelectValue placeholder="Q" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Q1">Q1</SelectItem>
-                  <SelectItem value="Q2">Q2</SelectItem>
-                  <SelectItem value="Q3">Q3</SelectItem>
-                  <SelectItem value="Q4">Q4</SelectItem>
-                </SelectContent>
-              </Select>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute right-0 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+                onClick={() => {
+                  setSearchQuery('');
+                  setSearchExpanded(false);
+                }}
+              >
+                <X className="h-3 w-3" />
+              </Button>
             </div>
-          </div>
+          ) : (
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 sm:h-10 sm:w-10"
+              onClick={() => setSearchExpanded(true)}
+            >
+              <Search className="h-3 w-3 sm:h-4 sm:w-4" />
+            </Button>
+          )}
+          
+          <YearWheel 
+            value={selectedNumber} 
+            onValueChange={setSelectedNumber}
+            placeholder="Year"
+            className="w-16 sm:w-20 text-xs h-8 sm:h-10"
+          />
+          
+          <Select value={selectedQuarter} onValueChange={setSelectedQuarter}>
+            <SelectTrigger className="w-14 sm:w-16 text-xs h-8 sm:h-10">
+              <SelectValue placeholder="Q" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Q1">Q1</SelectItem>
+              <SelectItem value="Q2">Q2</SelectItem>
+              <SelectItem value="Q3">Q3</SelectItem>
+              <SelectItem value="Q4">Q4</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Navigation Tabs */}
+        <Tabs value={currentView} className="w-full">
+          <TabsList className="w-full justify-start h-8 sm:h-10">
+            <TabsTrigger value="projects" asChild className="text-xs sm:text-sm px-2 sm:px-3">
+              <Link to="/projects" className="gap-1 sm:gap-2">
+                <span className="hidden sm:inline">📂</span> Projects
+              </Link>
+            </TabsTrigger>
+            <TabsTrigger value="tasks" asChild className="text-xs sm:text-sm px-2 sm:px-3">
+              <Link to="/" className="gap-1 sm:gap-2">
+                <span className="hidden sm:inline">✅</span> Tasks
+              </Link>
+            </TabsTrigger>
+            <TabsTrigger value="calendar" asChild className="text-xs sm:text-sm px-2 sm:px-3">
+              <Link to="/?view=calendar" className="gap-1 sm:gap-2">
+                <span className="hidden sm:inline">📅</span> Calendar
+              </Link>
+            </TabsTrigger>
+            <TabsTrigger value="chat" asChild className="text-xs sm:text-sm px-2 sm:px-3">
+              <Link to="/chat" className="gap-1 sm:gap-2">
+                <span className="hidden sm:inline">💬</span> Chat
+              </Link>
+            </TabsTrigger>
+          </TabsList>
         </Tabs>
 
         {/* Slack Input (when shown) */}
