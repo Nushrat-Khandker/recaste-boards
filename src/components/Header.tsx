@@ -132,8 +132,8 @@ const Header: React.FC = () => {
 
         {/* Navigation Tabs + Filters */}
         <Tabs value={currentView} className="w-full">
-          <div className="flex items-center gap-1 sm:gap-2">
-            <TabsList className="flex-shrink-0 h-8 sm:h-10">
+          <TabsList className="w-full h-8 sm:h-10 justify-between px-1">
+            <div className="flex items-center">
               <TabsTrigger value="projects" asChild className="text-xs sm:text-sm px-2 sm:px-3">
                 <Link to="/projects" className="gap-1 sm:gap-2">
                   <span className="hidden sm:inline">📂</span> Projects
@@ -154,17 +154,17 @@ const Header: React.FC = () => {
                   <span className="hidden sm:inline">💬</span> Chat
                 </Link>
               </TabsTrigger>
-            </TabsList>
+            </div>
 
-            <div className="flex items-center gap-1 ml-auto flex-shrink-0">
+            <div className="flex items-center gap-1">
               {searchExpanded ? (
-                <div className="relative w-24 sm:w-32">
+                <div className="relative w-20 sm:w-28">
                   <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
                   <Input
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search..."
-                    className="h-8 sm:h-10 w-full pl-7 pr-7 text-xs sm:text-sm"
+                    className="h-6 sm:h-7 w-full pl-6 pr-6 text-xs border-none bg-background rounded-sm"
                     autoFocus
                     onBlur={() => {
                       if (!searchQuery) setSearchExpanded(false);
@@ -173,7 +173,7 @@ const Header: React.FC = () => {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="absolute right-0 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+                    className="absolute right-0 top-1/2 -translate-y-1/2 h-5 w-5 p-0"
                     onClick={() => {
                       setSearchQuery('');
                       setSearchExpanded(false);
@@ -183,25 +183,27 @@ const Header: React.FC = () => {
                   </Button>
                 </div>
               ) : (
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-8 w-8 sm:h-10 sm:w-10"
+                <button
+                  className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-2 py-1 text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                   onClick={() => setSearchExpanded(true)}
                 >
                   <Search className="h-3 w-3 sm:h-4 sm:w-4" />
-                </Button>
+                </button>
               )}
 
-              <YearWheel 
-                value={selectedNumber} 
-                onValueChange={setSelectedNumber}
-                placeholder="Y"
-                className="w-[4.5rem] sm:w-20 text-xs h-8 sm:h-10"
-              />
+              <Select value={selectedNumber} onValueChange={setSelectedNumber}>
+                <SelectTrigger className="w-14 sm:w-16 text-xs h-6 sm:h-7 border-none bg-transparent gap-0.5 px-1.5 font-medium text-muted-foreground">
+                  <SelectValue placeholder="Y" />
+                </SelectTrigger>
+                <SelectContent>
+                  {['1447', '1448', '1449', '1449+'].map((year) => (
+                    <SelectItem key={year} value={year}>{year}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               
               <Select value={selectedQuarter} onValueChange={setSelectedQuarter}>
-                <SelectTrigger className="w-12 sm:w-16 text-xs h-8 sm:h-10">
+                <SelectTrigger className="w-10 sm:w-14 text-xs h-6 sm:h-7 border-none bg-transparent gap-0.5 px-1.5 font-medium text-muted-foreground">
                   <SelectValue placeholder="Q" />
                 </SelectTrigger>
                 <SelectContent>
@@ -212,7 +214,7 @@ const Header: React.FC = () => {
                 </SelectContent>
               </Select>
             </div>
-          </div>
+          </TabsList>
         </Tabs>
 
         {/* Slack Input (when shown) */}
