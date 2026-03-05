@@ -1,0 +1,1 @@
+ALTER TABLE public.kanban_cards ADD COLUMN card_emoji text DEFAULT NULL;

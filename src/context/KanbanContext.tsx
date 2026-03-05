@@ -46,6 +46,7 @@ export interface KanbanCard {
   ownerId?: string;
   ownerName?: string;
   isHoliday?: boolean;
+  cardEmoji?: string;
 }
 
 export interface KanbanColumn {
@@ -249,6 +250,7 @@ const convertSupabaseDataToColumns = (cards: any[], columns: any[], profilesMap:
         ownerName: card.owner_id ? profilesMap.get(card.owner_id) : undefined,
         checklist: card.checklist ? (typeof card.checklist === 'string' ? JSON.parse(card.checklist) : card.checklist) : [],
         isHoliday: card.is_holiday || false,
+        cardEmoji: card.card_emoji || undefined,
       }))
   }));
 };
@@ -461,6 +463,7 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
         checklist: (card.checklist && card.checklist.length > 0 ? card.checklist : []) as any,
         owner_id: user.id,
         is_holiday: card.isHoliday || false,
+        card_emoji: card.cardEmoji || null,
       };
 
       // Only include assigned_to if it looks like a UUID
@@ -496,6 +499,7 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
         ownerId: data.owner_id,
         ownerName: card.ownerName,
         isHoliday: data.is_holiday || false,
+        cardEmoji: data.card_emoji || undefined,
       };
 
       setColumns(prevColumns => 
@@ -627,6 +631,7 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
         file_attachments: (updatedCard.fileAttachments && updatedCard.fileAttachments.length > 0 ? updatedCard.fileAttachments : null) as any,
         checklist: (updatedCard.checklist && updatedCard.checklist.length > 0 ? updatedCard.checklist : []) as any,
         is_holiday: updatedCard.isHoliday || false,
+        card_emoji: updatedCard.cardEmoji || null,
       };
 
       // Only include assigned_to if it looks like a UUID (not a name string)
@@ -675,6 +680,7 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
         ownerId: updatedData.owner_id || undefined,
         ownerName: updatedCard.ownerName,
         isHoliday: updatedData.is_holiday || false,
+        cardEmoji: updatedData.card_emoji || undefined,
       };
 
       setColumns(prevColumns => 

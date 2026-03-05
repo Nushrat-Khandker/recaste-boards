@@ -16,6 +16,7 @@ interface KanbanCard {
   tags?: any;
   project_name?: string;
   is_holiday?: boolean;
+  card_emoji?: string;
 }
 
 interface MoonPhaseData {
@@ -162,7 +163,7 @@ export function HijriCalendar() {
     try {
       const { data } = await supabase
         .from('kanban_cards')
-        .select('id, title, due_date, start_date, tags, project_name, is_holiday');
+        .select('id, title, due_date, start_date, tags, project_name, is_holiday, card_emoji');
       
       if (data) {
         setCards(data);
@@ -237,15 +238,20 @@ export function HijriCalendar() {
     return result;
   };
 
-  const isHolidayDate = (gregorianDate: Date) => {
+  const getEmojisForDate = (gregorianDate: Date) => {
     const dateKey = format(gregorianDate, 'yyyy-MM-dd');
     const filteredCards = filterCards(cards);
-    return filteredCards.some(card => {
-      if (!card.is_holiday || !card.start_date) return false;
+    const emojis: string[] = [];
+    filteredCards.forEach(card => {
+      const emoji = card.card_emoji || (card.is_holiday ? '🏖️' : null);
+      if (!emoji || !card.start_date) return;
       const start = format(new Date(card.start_date), 'yyyy-MM-dd');
       const end = card.due_date ? format(new Date(card.due_date), 'yyyy-MM-dd') : start;
-      return dateKey >= start && dateKey <= end;
+      if (dateKey >= start && dateKey <= end) {
+        emojis.push(emoji);
+      }
     });
+    return emojis;
   };
 
   const getDaysInMonth = () => {
@@ -329,7 +335,8 @@ export function HijriCalendar() {
           const isToday = format(new Date(), 'yyyy-MM-dd') === dateKey;
           const cardsForDate = getCardsForDate(gregorianDate);
           const isHovered = hoveredDate === dateKey;
-          const isHoliday = isHolidayDate(gregorianDate);
+          const dateEmojis = getEmojisForDate(gregorianDate);
+          const isHoliday = dateEmojis.includes('🏖️');
 
           return (
             <div
@@ -356,9 +363,10 @@ export function HijriCalendar() {
                 <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
               </button>
 
-              {/* Moon phase, solar events, and holiday */}
-              <div className="flex gap-0.5 sm:gap-1 mb-0.5 sm:mb-1">
-                {isHoliday && <span className="text-[10px] sm:text-base leading-none">🏖️</span>}
+              <div className="flex flex-wrap gap-0.5 sm:gap-1 mb-0.5 sm:mb-1">
+                {dateEmojis.map((emoji, i) => (
+                  <span key={i} className="text-[10px] sm:text-base leading-none">{emoji}</span>
+                ))}
                 {moonEmoji && <span className="text-[10px] sm:text-base leading-none">{moonEmoji}</span>}
                 {solarEmoji && <span className="text-[10px] sm:text-base leading-none">{solarEmoji}</span>}
               </div>

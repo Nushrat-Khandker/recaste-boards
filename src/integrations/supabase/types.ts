@@ -445,6 +445,7 @@ export type Database = {
       kanban_cards: {
         Row: {
           assigned_to: string | null
+          card_emoji: string | null
           checklist: Json | null
           column_id: string
           created_at: string
@@ -466,6 +467,7 @@ export type Database = {
         }
         Insert: {
           assigned_to?: string | null
+          card_emoji?: string | null
           checklist?: Json | null
           column_id: string
           created_at?: string
@@ -487,6 +489,7 @@ export type Database = {
         }
         Update: {
           assigned_to?: string | null
+          card_emoji?: string | null
           checklist?: Json | null
           column_id?: string
           created_at?: string

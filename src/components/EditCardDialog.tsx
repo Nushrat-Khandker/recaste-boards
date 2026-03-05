@@ -96,6 +96,8 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
   const [checklist, setChecklist] = useState<ChecklistItem[]>(card.checklist || []);
   const [newChecklistItem, setNewChecklistItem] = useState('');
   const [isHoliday, setIsHoliday] = useState(card.isHoliday || false);
+  const [cardEmoji, setCardEmoji] = useState(card.cardEmoji || '');
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [editingChecklistId, setEditingChecklistId] = useState<string | null>(null);
   const [editingChecklistText, setEditingChecklistText] = useState('');
 
@@ -126,6 +128,8 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
     setChecklist(card.checklist || []);
     setNewChecklistItem('');
     setIsHoliday(card.isHoliday || false);
+    setCardEmoji(card.cardEmoji || '');
+    setShowEmojiPicker(false);
     setEditingChecklistId(null);
   }, [card, isOpen]);
 
@@ -210,6 +214,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
       assignedTo: assignedTo || undefined,
       assignedToName: selectedMember?.full_name || undefined,
       isHoliday,
+      cardEmoji: cardEmoji || undefined,
     };
     
     onSave(columnId, updatedCard);
@@ -369,12 +374,51 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
               </Select>
             </div>
 
-            {/* Holiday Toggle */}
-            <div className="flex items-center justify-between">
-              <label className="text-sm font-medium flex items-center gap-1.5">
-                🏖️ Holiday / Time Off
-              </label>
-              <Switch checked={isHoliday} onCheckedChange={setIsHoliday} />
+            {/* Calendar Emoji */}
+            <div className="grid gap-1.5">
+              <label className="text-sm font-medium">Calendar Emoji</label>
+              <p className="text-xs text-muted-foreground">Select an emoji to display on the calendar from start date to due date</p>
+              <div className="flex items-center gap-2">
+                <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-9 px-3 text-lg">
+                      {cardEmoji || '😀'} <span className="ml-2 text-sm text-muted-foreground">{cardEmoji ? 'Change' : 'Pick emoji'}</span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-72 p-3" align="start">
+                    <div className="grid grid-cols-8 gap-1">
+                      {['🏖️', '🎉', '🔥', '⭐', '💡', '🚀', '❤️', '✅',
+                        '📌', '🎯', '🏆', '💪', '📅', '🌟', '🎊', '🎁',
+                        '⚡', '🌈', '🍕', '☕', '🎵', '📚', '✈️', '🏠',
+                        '🌺', '🦋', '🐝', '🍂', '❄️', '☀️', '🌙', '🌸'].map(emoji => (
+                        <button
+                          key={emoji}
+                          type="button"
+                          className="text-xl p-1 rounded hover:bg-accent transition-colors"
+                          onClick={() => {
+                            setCardEmoji(emoji);
+                            setIsHoliday(emoji === '🏖️');
+                            setShowEmojiPicker(false);
+                          }}
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+                {cardEmoji && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-9 px-2"
+                    onClick={() => { setCardEmoji(''); setIsHoliday(false); }}
+                  >
+                    <X className="h-4 w-4" />
+                    <span className="ml-1 text-xs">Clear</span>
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
 
