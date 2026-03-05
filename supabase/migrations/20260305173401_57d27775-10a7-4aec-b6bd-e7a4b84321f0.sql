@@ -1,0 +1,1 @@
+ALTER TABLE public.kanban_cards ADD COLUMN IF NOT EXISTS is_holiday boolean NOT NULL DEFAULT false;

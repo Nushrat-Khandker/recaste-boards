@@ -2,7 +2,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
-import { Paperclip, Loader2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Paperclip, Loader2, Search, X } from 'lucide-react';
 import { useChatMessages } from './useChatMessages';
 import { useMediaRecording } from './useMediaRecording';
 import { useReactions } from './useReactions';
@@ -49,6 +50,8 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
   const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -236,10 +239,15 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
   const messageIds = messages.filter(m => !m.pending && !m.failed).map(m => m.id);
   const { reactionsMap, toggleReaction } = useReactions(messageIds);
 
+  // Filter messages by search
+  const filteredMessages = searchQuery.trim()
+    ? messages.filter(m => m.content?.toLowerCase().includes(searchQuery.toLowerCase()) || m.file_name?.toLowerCase().includes(searchQuery.toLowerCase()))
+    : messages;
+
   // Group messages by date
   const groupedMessages: { label: string; msgs: ChatMessage[] }[] = [];
   let lastLabel = '';
-  for (const msg of messages) {
+  for (const msg of filteredMessages) {
     const label = getDateLabel(msg.created_at);
     if (label !== lastLabel) {
       groupedMessages.push({ label, msgs: [msg] });
@@ -256,6 +264,30 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
+      {/* Search bar */}
+      <div className="flex items-center gap-2 px-3 py-2 border-b bg-background/50">
+        {isSearchOpen ? (
+          <div className="flex items-center gap-2 flex-1">
+            <Search className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <Input
+              placeholder="Search messages..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="h-8 text-sm"
+              autoFocus
+            />
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => { setIsSearchOpen(false); setSearchQuery(''); }}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        ) : (
+          <Button variant="ghost" size="sm" className="ml-auto h-8 px-2" onClick={() => setIsSearchOpen(true)}>
+            <Search className="h-4 w-4 mr-1" />
+            <span className="text-xs">Search</span>
+          </Button>
+        )}
+      </div>
+
       {isDragging && (
         <div className="absolute inset-0 bg-primary/10 border-2 border-dashed border-primary z-50 flex items-center justify-center rounded-xl">
           <div className="text-center">
