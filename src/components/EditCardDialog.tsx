@@ -385,32 +385,59 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
                       {cardEmoji || '😀'} <span className="ml-2 text-sm text-muted-foreground">{cardEmoji ? 'Change' : 'Pick emoji'}</span>
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-72 p-3 z-[9999]" align="start" onOpenAutoFocus={(e) => e.preventDefault()}>
-                    <div className="grid grid-cols-8 gap-1">
-                      {['🏖️', '🎉', '🔥', '⭐', '💡', '🚀', '❤️', '✅',
-                        '📌', '🎯', '🏆', '💪', '📅', '🌟', '🎊', '🎁',
-                        '⚡', '🌈', '🍕', '☕', '🎵', '📚', '✈️', '🏠',
-                        '🌺', '🦋', '🐝', '🍂', '❄️', '☀️', '🌙', '🌸'].map(emoji => (
-                        <button
-                          key={emoji}
-                          type="button"
-                          className={`text-xl p-1 rounded transition-colors ${cardEmoji === emoji ? 'bg-primary/20 ring-2 ring-primary' : 'hover:bg-accent'}`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (cardEmoji === emoji) {
-                              setCardEmoji('');
-                              setIsHoliday(false);
-                            } else {
-                              setCardEmoji(emoji);
-                              setIsHoliday(emoji === '🏖️');
-                            }
-                            setShowEmojiPicker(false);
-                          }}
-                        >
-                          {emoji}
-                        </button>
-                      ))}
-                    </div>
+                  <PopoverContent className="w-80 p-3 z-[9999] max-h-[320px] overflow-hidden flex flex-col" align="start" onOpenAutoFocus={(e) => e.preventDefault()}>
+                    {(() => {
+                      const emojiCategories: Record<string, string[]> = {
+                        '😀 People': ['😀','😂','🥰','😎','🤔','😴','🥳','😤','🤩','😇','🫡','🤝','👋','👍','👎','💪','🙏','❤️','💔','💯'],
+                        '🐾 Animals': ['🐶','🐱','🦁','🐻','🐼','🦊','🐝','🦋','🐢','🐬','🦅','🐎','🐄','🐑','🐓','🦜','🐙','🐳','🐿️','🦎'],
+                        '🌿 Nature': ['🌸','🌺','🌻','🌹','🌷','🍀','🌿','🌴','🌵','🍂','🍁','❄️','☀️','🌙','⭐','🌈','🔥','💧','🌊','⚡'],
+                        '🍕 Food': ['🍕','🍔','🍟','🌮','🍜','🍣','🍩','🍰','🍎','🍇','🥑','🍋','☕','🍵','🥤','🍺','🧁','🥐','🍓','🥕'],
+                        '⚽ Sports': ['⚽','🏀','🏈','⚾','🎾','🏐','🏉','🎱','🏓','🏸','🥊','🏋️','🚴','🏊','🧗','🎿','🏄','🤸','🥇','🏆'],
+                        '✈️ Travel': ['✈️','🚀','🚗','🚂','🚢','🏠','🏰','⛺','🗼','🎡','🏖️','⛰️','🗽','🌍','🧭','🛒','🎒','🚁','🛳️','🏕️'],
+                        '🎉 Events': ['🎉','🎊','🎁','🎂','🎈','🎃','🎄','💐','🕯️','🎆','🎇','🏮','🎗️','🎀','💌','📅','🔔','✨','🌟','💫'],
+                        '📦 Objects': ['📌','📎','✏️','📚','💻','📱','🔑','🔒','💡','🔧','🎵','🎬','📷','🎨','✅','❌','⏰','📊','🗂️','🧰'],
+                      };
+                      const tabs = Object.keys(emojiCategories);
+                      const [activeTab, setActiveTab] = React.useState(tabs[0]);
+                      return (
+                        <>
+                          <div className="flex gap-0.5 mb-2 overflow-x-auto pb-1 flex-shrink-0">
+                            {tabs.map(tab => (
+                              <button
+                                key={tab}
+                                type="button"
+                                className={`text-xs px-2 py-1 rounded whitespace-nowrap transition-colors ${activeTab === tab ? 'bg-primary text-primary-foreground' : 'hover:bg-accent text-muted-foreground'}`}
+                                onClick={(e) => { e.stopPropagation(); setActiveTab(tab); }}
+                              >
+                                {tab.split(' ')[0]}
+                              </button>
+                            ))}
+                          </div>
+                          <div className="grid grid-cols-8 gap-1 overflow-y-auto">
+                            {emojiCategories[activeTab]?.map(emoji => (
+                              <button
+                                key={emoji}
+                                type="button"
+                                className={`text-xl p-1 rounded transition-colors ${cardEmoji === emoji ? 'bg-primary/20 ring-2 ring-primary' : 'hover:bg-accent'}`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (cardEmoji === emoji) {
+                                    setCardEmoji('');
+                                    setIsHoliday(false);
+                                  } else {
+                                    setCardEmoji(emoji);
+                                    setIsHoliday(emoji === '🏖️');
+                                  }
+                                  setShowEmojiPicker(false);
+                                }}
+                              >
+                                {emoji}
+                              </button>
+                            ))}
+                          </div>
+                        </>
+                      );
+                    })()}
                   </PopoverContent>
                 </Popover>
                 {cardEmoji && (
