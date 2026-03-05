@@ -379,13 +379,13 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
               <label className="text-sm font-medium">Calendar Emoji</label>
               <p className="text-xs text-muted-foreground">Select an emoji to display on the calendar from start date to due date</p>
               <div className="flex items-center gap-2">
-                <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
+                <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker} modal={true}>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-9 px-3 text-lg">
+                    <Button variant="outline" size="sm" className="h-9 px-3 text-lg" type="button">
                       {cardEmoji || '😀'} <span className="ml-2 text-sm text-muted-foreground">{cardEmoji ? 'Change' : 'Pick emoji'}</span>
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-72 p-3" align="start">
+                  <PopoverContent className="w-72 p-3 z-[9999]" align="start" onOpenAutoFocus={(e) => e.preventDefault()}>
                     <div className="grid grid-cols-8 gap-1">
                       {['🏖️', '🎉', '🔥', '⭐', '💡', '🚀', '❤️', '✅',
                         '📌', '🎯', '🏆', '💪', '📅', '🌟', '🎊', '🎁',
@@ -394,10 +394,16 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
                         <button
                           key={emoji}
                           type="button"
-                          className="text-xl p-1 rounded hover:bg-accent transition-colors"
-                          onClick={() => {
-                            setCardEmoji(emoji);
-                            setIsHoliday(emoji === '🏖️');
+                          className={`text-xl p-1 rounded transition-colors ${cardEmoji === emoji ? 'bg-primary/20 ring-2 ring-primary' : 'hover:bg-accent'}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (cardEmoji === emoji) {
+                              setCardEmoji('');
+                              setIsHoliday(false);
+                            } else {
+                              setCardEmoji(emoji);
+                              setIsHoliday(emoji === '🏖️');
+                            }
                             setShowEmojiPicker(false);
                           }}
                         >
