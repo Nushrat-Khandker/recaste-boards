@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { X, Plus, Check, Link as LinkIcon, ExternalLink, User, CheckSquare, Square, Trash2 } from "lucide-react"; 
+import { X, Plus, Check, Link as LinkIcon, ExternalLink, User, CheckSquare, Square, Trash2, Pencil } from "lucide-react"; 
 import { KanbanCard, Tag, ChecklistItem, useKanban } from '../context/KanbanContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
@@ -15,6 +15,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { supabase } from '@/integrations/supabase/client';
 
 interface TeamMember {
@@ -94,6 +95,9 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
   const [assignedTo, setAssignedTo] = useState<string | undefined>(card.assignedTo);
   const [checklist, setChecklist] = useState<ChecklistItem[]>(card.checklist || []);
   const [newChecklistItem, setNewChecklistItem] = useState('');
+  const [isHoliday, setIsHoliday] = useState(card.isHoliday || false);
+  const [editingChecklistId, setEditingChecklistId] = useState<string | null>(null);
+  const [editingChecklistText, setEditingChecklistText] = useState('');
 
   // Load team members from profiles
   useEffect(() => {
@@ -121,6 +125,8 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
     setAssignedTo(card.assignedTo);
     setChecklist(card.checklist || []);
     setNewChecklistItem('');
+    setIsHoliday(card.isHoliday || false);
+    setEditingChecklistId(null);
   }, [card, isOpen]);
 
   const handleAddTag = () => {
@@ -203,6 +209,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
       checklist: checklist.length > 0 ? checklist : undefined,
       assignedTo: assignedTo || undefined,
       assignedToName: selectedMember?.full_name || undefined,
+      isHoliday,
     };
     
     onSave(columnId, updatedCard);
@@ -361,6 +368,14 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Holiday Toggle */}
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium flex items-center gap-1.5">
+                🏖️ Holiday / Time Off
+              </label>
+              <Switch checked={isHoliday} onCheckedChange={setIsHoliday} />
+            </div>
           </div>
 
           {/* RIGHT COLUMN - Tags, Checklist, Files */}
@@ -455,9 +470,46 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
                       checked={item.completed}
                       onCheckedChange={() => handleToggleChecklistItem(item.id)}
                     />
-                    <span className={`flex-1 text-sm ${item.completed ? 'line-through text-muted-foreground' : ''}`}>
-                      {item.text}
-                    </span>
+                    {editingChecklistId === item.id ? (
+                      <Input
+                        value={editingChecklistText}
+                        onChange={(e) => setEditingChecklistText(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            if (editingChecklistText.trim()) {
+                              setChecklist(checklist.map(ci => ci.id === item.id ? { ...ci, text: editingChecklistText.trim() } : ci));
+                            }
+                            setEditingChecklistId(null);
+                          }
+                          if (e.key === 'Escape') setEditingChecklistId(null);
+                        }}
+                        onBlur={() => {
+                          if (editingChecklistText.trim()) {
+                            setChecklist(checklist.map(ci => ci.id === item.id ? { ...ci, text: editingChecklistText.trim() } : ci));
+                          }
+                          setEditingChecklistId(null);
+                        }}
+                        className="flex-1 h-7 text-sm"
+                        autoFocus
+                      />
+                    ) : (
+                      <span
+                        className={`flex-1 text-sm cursor-pointer ${item.completed ? 'line-through text-muted-foreground' : ''}`}
+                        onDoubleClick={() => { setEditingChecklistId(item.id); setEditingChecklistText(item.text); }}
+                      >
+                        {item.text}
+                      </span>
+                    )}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => { setEditingChecklistId(item.id); setEditingChecklistText(item.text); }}
+                      className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Pencil className="h-3 w-3 text-muted-foreground" />
+                    </Button>
                     <Button
                       type="button"
                       variant="ghost"

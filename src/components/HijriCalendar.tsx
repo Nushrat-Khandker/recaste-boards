@@ -15,6 +15,7 @@ interface KanbanCard {
   start_date?: string;
   tags?: any;
   project_name?: string;
+  is_holiday?: boolean;
 }
 
 interface MoonPhaseData {
@@ -161,7 +162,7 @@ export function HijriCalendar() {
     try {
       const { data } = await supabase
         .from('kanban_cards')
-        .select('id, title, due_date, start_date, tags, project_name');
+        .select('id, title, due_date, start_date, tags, project_name, is_holiday');
       
       if (data) {
         setCards(data);
@@ -234,6 +235,17 @@ export function HijriCalendar() {
     });
     
     return result;
+  };
+
+  const isHolidayDate = (gregorianDate: Date) => {
+    const dateKey = format(gregorianDate, 'yyyy-MM-dd');
+    const filteredCards = filterCards(cards);
+    return filteredCards.some(card => {
+      if (!card.is_holiday || !card.start_date) return false;
+      const start = format(new Date(card.start_date), 'yyyy-MM-dd');
+      const end = card.due_date ? format(new Date(card.due_date), 'yyyy-MM-dd') : start;
+      return dateKey >= start && dateKey <= end;
+    });
   };
 
   const getDaysInMonth = () => {
@@ -317,6 +329,7 @@ export function HijriCalendar() {
           const isToday = format(new Date(), 'yyyy-MM-dd') === dateKey;
           const cardsForDate = getCardsForDate(gregorianDate);
           const isHovered = hoveredDate === dateKey;
+          const isHoliday = isHolidayDate(gregorianDate);
 
           return (
             <div
@@ -325,6 +338,7 @@ export function HijriCalendar() {
                 "aspect-square border border-border/70 sm:border-2 rounded-sm sm:rounded-lg p-0.5 sm:p-2 relative flex flex-col overflow-hidden bg-white dark:bg-slate-800 group",
                 weekday === 5 && "bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700",
                 weekday === 6 && "bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700",
+                isHoliday && "bg-orange-50 dark:bg-orange-900/20 border-orange-300 dark:border-orange-700",
                 isToday && "ring-1 sm:ring-2 ring-primary"
               )}
               onMouseEnter={() => setHoveredDate(dateKey)}
@@ -342,8 +356,9 @@ export function HijriCalendar() {
                 <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
               </button>
 
-              {/* Moon phase and solar events */}
+              {/* Moon phase, solar events, and holiday */}
               <div className="flex gap-0.5 sm:gap-1 mb-0.5 sm:mb-1">
+                {isHoliday && <span className="text-[10px] sm:text-base leading-none">🏖️</span>}
                 {moonEmoji && <span className="text-[10px] sm:text-base leading-none">{moonEmoji}</span>}
                 {solarEmoji && <span className="text-[10px] sm:text-base leading-none">{solarEmoji}</span>}
               </div>

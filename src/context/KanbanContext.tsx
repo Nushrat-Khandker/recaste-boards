@@ -45,6 +45,7 @@ export interface KanbanCard {
   assignedToName?: string;
   ownerId?: string;
   ownerName?: string;
+  isHoliday?: boolean;
 }
 
 export interface KanbanColumn {
@@ -247,6 +248,7 @@ const convertSupabaseDataToColumns = (cards: any[], columns: any[], profilesMap:
         ownerId: card.owner_id,
         ownerName: card.owner_id ? profilesMap.get(card.owner_id) : undefined,
         checklist: card.checklist ? (typeof card.checklist === 'string' ? JSON.parse(card.checklist) : card.checklist) : [],
+        isHoliday: card.is_holiday || false,
       }))
   }));
 };
@@ -458,6 +460,7 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
         file_attachments: (card.fileAttachments && card.fileAttachments.length > 0 ? card.fileAttachments : null) as any,
         checklist: (card.checklist && card.checklist.length > 0 ? card.checklist : []) as any,
         owner_id: user.id,
+        is_holiday: card.isHoliday || false,
       };
 
       // Only include assigned_to if it looks like a UUID
@@ -492,6 +495,7 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
         assignedToName: card.assignedToName,
         ownerId: data.owner_id,
         ownerName: card.ownerName,
+        isHoliday: data.is_holiday || false,
       };
 
       setColumns(prevColumns => 
@@ -622,6 +626,7 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
         due_date: toISOOrNull(updatedCard.dueDate),
         file_attachments: (updatedCard.fileAttachments && updatedCard.fileAttachments.length > 0 ? updatedCard.fileAttachments : null) as any,
         checklist: (updatedCard.checklist && updatedCard.checklist.length > 0 ? updatedCard.checklist : []) as any,
+        is_holiday: updatedCard.isHoliday || false,
       };
 
       // Only include assigned_to if it looks like a UUID (not a name string)
@@ -669,6 +674,7 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
         assignedToName: updatedCard.assignedToName,
         ownerId: updatedData.owner_id || undefined,
         ownerName: updatedCard.ownerName,
+        isHoliday: updatedData.is_holiday || false,
       };
 
       setColumns(prevColumns => 

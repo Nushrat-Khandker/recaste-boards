@@ -452,6 +452,7 @@ export type Database = {
           due_date: string | null
           file_attachments: Json | null
           id: string
+          is_holiday: boolean
           moved_date: string | null
           number: string | null
           owner_id: string | null
@@ -472,6 +473,7 @@ export type Database = {
           due_date?: string | null
           file_attachments?: Json | null
           id?: string
+          is_holiday?: boolean
           moved_date?: string | null
           number?: string | null
           owner_id?: string | null
@@ -492,6 +494,7 @@ export type Database = {
           due_date?: string | null
           file_attachments?: Json | null
           id?: string
+          is_holiday?: boolean
           moved_date?: string | null
           number?: string | null
           owner_id?: string | null
