@@ -31,6 +31,7 @@ const KanbanBoard: React.FC = () => {
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedCards, setSelectedCards] = useState<Map<string, string>>(new Map()); // cardId -> columnId
   const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const { toast } = useToast();
 
   const toggleCardSelection = (cardId: string, columnId: string) => {
@@ -63,6 +64,15 @@ const KanbanBoard: React.FC = () => {
     toast({ title: "Archived", description: `${selectedCards.size} card(s) archived.` });
     handleCancelSelection();
     setShowArchiveConfirm(false);
+  };
+
+  const handleDeleteSelected = async () => {
+    for (const [cardId, columnId] of selectedCards) {
+      await deleteCard(columnId, cardId);
+    }
+    toast({ title: "Deleted", description: `${selectedCards.size} card(s) permanently deleted.` });
+    handleCancelSelection();
+    setShowDeleteConfirm(false);
   };
 
   if (loading) {
@@ -172,7 +182,7 @@ const KanbanBoard: React.FC = () => {
             {selectedCards.size} selected
           </span>
           <Button
-            variant="destructive"
+            variant="outline"
             size="sm"
             className="rounded-full"
             onClick={() => setShowArchiveConfirm(true)}
@@ -180,6 +190,16 @@ const KanbanBoard: React.FC = () => {
           >
             <Trash2 className="h-4 w-4 mr-1" />
             Archive
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            className="rounded-full"
+            onClick={() => setShowDeleteConfirm(true)}
+            disabled={selectedCards.size === 0}
+          >
+            <Trash2 className="h-4 w-4 mr-1" />
+            Delete
           </Button>
           <Button
             variant="ghost"
@@ -205,6 +225,24 @@ const KanbanBoard: React.FC = () => {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleArchiveSelected} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Archive
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete confirmation */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Permanently delete {selectedCards.size} card{selectedCards.size !== 1 ? 's' : ''}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the selected cards. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteSelected} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete Permanently
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
