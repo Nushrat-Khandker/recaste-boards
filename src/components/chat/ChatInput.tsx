@@ -144,7 +144,7 @@ export const ChatInput = ({
               value={newMessage}
               onChange={(e) => handleMessageChange(e.target.value)}
               placeholder={`Type a message...`}
-              className="min-h-[42px] max-h-[120px] resize-none rounded-2xl bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary/30 focus-visible:ring-offset-0 py-2.5 px-4 text-sm"
+              className="min-h-[42px] max-h-[120px] resize-none rounded-2xl bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary/30 focus-visible:ring-offset-0 py-2.5 px-4 text-sm text-foreground placeholder:text-muted-foreground"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey && !showMentionPicker) {
                   e.preventDefault();
