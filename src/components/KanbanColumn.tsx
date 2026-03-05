@@ -23,6 +23,10 @@ interface KanbanColumnProps {
   onDragOver: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent, columnId: string, dropIndex?: number) => void;
   onDragStart: (e: React.DragEvent, cardId: string, columnId: string) => void;
+  selectionMode?: boolean;
+  selectedCards?: Map<string, string>;
+  onToggleSelect?: (cardId: string, columnId: string) => void;
+  onEnterSelectionMode?: (cardId: string, columnId: string) => void;
 }
 
 const KanbanColumn: React.FC<KanbanColumnProps> = ({
@@ -31,7 +35,11 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
   cards,
   onDragOver,
   onDrop,
-  onDragStart
+  onDragStart,
+  selectionMode = false,
+  selectedCards = new Map(),
+  onToggleSelect,
+  onEnterSelectionMode
 }) => {
   const { addCard, deleteCard } = useKanban();
   const [showArchiveAll, setShowArchiveAll] = useState(false);
@@ -156,6 +164,10 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
             onDelete={() => deleteCard(id, card.id)}
             onDragStart={onDragStart}
             columnId={id}
+            selectionMode={selectionMode}
+            isSelected={selectedCards.has(card.id)}
+            onToggleSelect={onToggleSelect ? () => onToggleSelect(card.id, id) : undefined}
+            onLongPress={onEnterSelectionMode ? () => onEnterSelectionMode(card.id, id) : undefined}
           />
         ))}
       </div>
