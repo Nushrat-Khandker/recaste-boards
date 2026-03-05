@@ -41,10 +41,10 @@ const MOON_PHASE_EMOJIS: Record<string, string> = {
 };
 
 const SOLAR_EVENT_EMOJIS: Record<string, string> = {
-  'spring_equinox': '🌸',
-  'summer_solstice': '☀️',
-  'autumn_equinox': '🍂',
-  'winter_solstice': '❄️',
+  'equinox_spring': '🌸',
+  'solstice_summer': '☀️',
+  'equinox_autumn': '🍂',
+  'solstice_winter': '❄️',
 };
 
 export function HijriCalendar() {
@@ -399,7 +399,7 @@ export function HijriCalendar() {
 
               {/* Gregorian date - only on Jumuah */}
               {weekday === 5 && (
-                <div className="text-[8px] sm:text-xs text-muted-foreground mt-auto pt-0.5 sm:pt-1 border-t hidden sm:block">
+                <div className="text-[8px] sm:text-xs text-muted-foreground mt-auto pt-0.5 sm:pt-1 border-t">
                   {format(gregorianDate, 'MMM d, yyyy')}
                 </div>
               )}
