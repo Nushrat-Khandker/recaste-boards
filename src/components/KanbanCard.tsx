@@ -1,11 +1,12 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { Card } from "@/components/ui/card";
 import { X, Move, Pencil, CalendarClock, Link as LinkIcon, User, CheckSquare } from 'lucide-react';
 import EditCardDialog from './EditCardDialog';
 import { useKanban, Tag, ChecklistItem } from '../context/KanbanContext';
 import { Badge } from '@/components/ui/badge';
 import { formatDate, formatDateRange } from '../lib/utils';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface KanbanCardProps {
   id: string;
@@ -28,6 +29,10 @@ interface KanbanCardProps {
   onDelete: () => void;
   onDragStart: (e: React.DragEvent, cardId: string, columnId: string) => void;
   columnId: string;
+  selectionMode?: boolean;
+  isSelected?: boolean;
+  onToggleSelect?: () => void;
+  onLongPress?: () => void;
 }
 
 const tagColors: Record<string, string> = {
@@ -41,21 +46,12 @@ const tagColors: Record<string, string> = {
   'high': 'bg-red-50 text-red-600',
 };
 
-// Helper function to determine if a color is dark
 const isColorDark = (hexColor: string): boolean => {
-  // Remove the # if it exists
   const hex = hexColor.replace('#', '');
-  
-  // Convert hex to RGB
   const r = parseInt(hex.substr(0, 2), 16);
   const g = parseInt(hex.substr(2, 2), 16);
   const b = parseInt(hex.substr(4, 2), 16);
-  
-  // Calculate luminance (perceived brightness)
-  // Using the formula: (0.299*R + 0.587*G + 0.114*B)
   const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-  
-  // Return true if the color is dark (luminance < 0.5)
   return luminance < 0.5;
 };
 
@@ -79,11 +75,40 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
   ownerName,
   onDelete,
   onDragStart,
-  columnId
+  columnId,
+  selectionMode = false,
+  isSelected = false,
+  onToggleSelect,
+  onLongPress
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const { updateCard } = useKanban();
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleTouchStart = useCallback(() => {
+    if (!selectionMode && onLongPress) {
+      longPressTimer.current = setTimeout(() => {
+        onLongPress();
+        longPressTimer.current = null;
+      }, 500);
+    }
+  }, [selectionMode, onLongPress]);
+
+  const handleTouchEnd = useCallback(() => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  }, []);
+
+  const handleCardClick = () => {
+    if (selectionMode && onToggleSelect) {
+      onToggleSelect();
+    } else {
+      setIsEditDialogOpen(true);
+    }
+  };
 
   const handleDragStart = (e: React.DragEvent) => {
     e.dataTransfer.effectAllowed = 'move';
@@ -134,35 +159,48 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
   return (
     <>
       <Card 
-        className="kanban-card animate-hover group cursor-pointer"
-        draggable="true"
+        className={`kanban-card animate-hover group cursor-pointer relative ${isSelected ? 'ring-2 ring-primary bg-primary/5' : ''}`}
+        draggable={selectionMode ? "false" : "true"}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        onClick={() => setIsEditDialogOpen(true)}
+        onClick={handleCardClick}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onTouchMove={handleTouchEnd}
         data-card-id={id}
       >
         <div className="flex items-start justify-between">
-          <div className="flex-1">
+          <div className="flex items-start gap-2 flex-1">
+            {selectionMode && (
+              <Checkbox
+                checked={isSelected}
+                onCheckedChange={() => onToggleSelect?.()}
+                onClick={(e) => e.stopPropagation()}
+                className="mt-0.5 shrink-0"
+              />
+            )}
             <h3 className="font-medium text-sm mb-2">{title}</h3>
           </div>
           
-          <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-            <button 
-              className="text-gray-400 hover:text-gray-600 transition-colors p-0.5 rounded"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete();
-              }}
-              aria-label="Delete card"
-            >
-              <X size={14} />
-            </button>
-            <div className="text-gray-400 cursor-grab p-0.5 rounded">
-              <Move size={14} />
+          {!selectionMode && (
+            <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <button 
+                className="text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete();
+                }}
+                aria-label="Delete card"
+              >
+                <X size={14} />
+              </button>
+              <div className="text-muted-foreground cursor-grab p-0.5 rounded">
+                <Move size={14} />
+              </div>
             </div>
-          </div>
+          )}
         </div>
         
         {/* Display project name if it exists */}
