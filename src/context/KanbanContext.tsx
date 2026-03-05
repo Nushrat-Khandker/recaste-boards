@@ -306,8 +306,8 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
       setColumns(columns);
     } catch (error) {
       console.error('Error loading data:', error);
-      // Fallback to default columns if database is empty or error occurs
-      setColumns(defaultColumns);
+      // Don't fallback to demo data - show empty board
+      setColumns([]);
     } finally {
       setLoading(false);
     }
