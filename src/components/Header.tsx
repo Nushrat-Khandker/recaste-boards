@@ -95,79 +95,16 @@ const Header: React.FC = () => {
   return (
     <header ref={headerRef} className="sticky top-0 z-50 bg-background border-b">
       <div className="container mx-auto px-2 sm:px-4 py-2 sm:py-3">
+        {/* Top row: Logo + Title + Menu */}
         <div className="flex justify-between items-center mb-2 sm:mb-3">
-          {/* Logo */}
-          <Link to="/" className="text-xs sm:text-xl font-bold hover:opacity-80 transition-opacity flex-shrink-0">
+          <Link to="/" className="text-sm sm:text-xl font-bold hover:opacity-80 transition-opacity flex-shrink-0">
             re<span className="text-[#FE446F]">*</span>caste
           </Link>
           
-          {/* Center Title */}
-          <div className="absolute left-[45%] sm:left-1/2 transform -translate-x-1/2 pointer-events-none">
-            <h1 className="text-xl sm:text-2xl font-bold text-foreground whitespace-nowrap">Kanban</h1>
-          </div>
+          <h1 className="text-lg sm:text-2xl font-bold text-foreground whitespace-nowrap">Community</h1>
           
-          {/* Right Side Controls */}
           <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-            {/* Search - Icon only, expands on click */}
-            {searchExpanded ? (
-              <div className="relative">
-                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
-                <Input
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search..."
-                  className="h-8 sm:h-10 w-32 sm:w-40 pl-7 pr-7 text-xs sm:text-sm"
-                  autoFocus
-                  onBlur={() => {
-                    if (!searchQuery) setSearchExpanded(false);
-                  }}
-                />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
-                  onClick={() => {
-                    setSearchQuery('');
-                    setSearchExpanded(false);
-                  }}
-                >
-                  <X className="h-3 w-3" />
-                </Button>
-              </div>
-            ) : (
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8 sm:h-10 sm:w-10"
-                onClick={() => setSearchExpanded(true)}
-              >
-                <Search className="h-3 w-3 sm:h-4 sm:w-4" />
-              </Button>
-            )}
-            
-            <YearWheel 
-              value={selectedNumber} 
-              onValueChange={setSelectedNumber}
-              placeholder="Year"
-              className="w-[46px] sm:w-16 text-[10px] sm:text-xs h-7 sm:h-8"
-            />
-            
-            <Select value={selectedQuarter} onValueChange={setSelectedQuarter}>
-              <SelectTrigger className="w-[36px] sm:w-14 text-[10px] sm:text-xs h-7 sm:h-8">
-                <SelectValue placeholder="Q" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Q1">Q1</SelectItem>
-                <SelectItem value="Q2">Q2</SelectItem>
-                <SelectItem value="Q3">Q3</SelectItem>
-                <SelectItem value="Q4">Q4</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {/* Notifications */}
             <NotificationCenter />
-
-            {/* More Options Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="icon" className="h-8 w-8 sm:h-10 sm:w-10">
@@ -191,6 +128,64 @@ const Header: React.FC = () => {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
+        </div>
+
+        {/* Second row: Search, Year, Quarter */}
+        <div className="flex items-center gap-2 mb-2 sm:mb-3">
+          {searchExpanded ? (
+            <div className="relative flex-1 max-w-xs">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search..."
+                className="h-8 sm:h-10 w-full pl-7 pr-7 text-xs sm:text-sm"
+                autoFocus
+                onBlur={() => {
+                  if (!searchQuery) setSearchExpanded(false);
+                }}
+              />
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute right-0 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+                onClick={() => {
+                  setSearchQuery('');
+                  setSearchExpanded(false);
+                }}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
+          ) : (
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 sm:h-10 sm:w-10"
+              onClick={() => setSearchExpanded(true)}
+            >
+              <Search className="h-3 w-3 sm:h-4 sm:w-4" />
+            </Button>
+          )}
+          
+          <YearWheel 
+            value={selectedNumber} 
+            onValueChange={setSelectedNumber}
+            placeholder="Year"
+            className="w-16 sm:w-20 text-xs h-8 sm:h-10"
+          />
+          
+          <Select value={selectedQuarter} onValueChange={setSelectedQuarter}>
+            <SelectTrigger className="w-14 sm:w-16 text-xs h-8 sm:h-10">
+              <SelectValue placeholder="Q" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Q1">Q1</SelectItem>
+              <SelectItem value="Q2">Q2</SelectItem>
+              <SelectItem value="Q3">Q3</SelectItem>
+              <SelectItem value="Q4">Q4</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Navigation Tabs */}
