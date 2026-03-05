@@ -45,16 +45,7 @@ serve(async (req) => {
       );
     }
 
-    // If user already exists, update their name if a new one was provided
-    if (userError?.code === 'email_exists' && full_name?.trim()) {
-      const { data: listData } = await supabaseAdmin.auth.admin.listUsers();
-      const existingUser = listData?.users?.find(u => u.email === email.toLowerCase());
-      if (existingUser) {
-        await supabaseAdmin.auth.admin.updateUser(existingUser.id, {
-          user_metadata: { full_name: displayName },
-        });
-      }
-    }
+    // If user already exists, just proceed to generate the magic link
 
     // Generate magic link token for instant sign-in
     const { data, error } = await supabaseAdmin.auth.admin.generateLink({
