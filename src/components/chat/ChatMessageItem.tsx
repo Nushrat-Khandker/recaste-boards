@@ -208,7 +208,7 @@ export const ChatMessageItem = ({
         onMouseLeave={handleMouseLeave}
         className={`relative max-w-[75%] min-w-[140px] rounded-2xl px-3.5 py-2 shadow-sm transition-all
           ${isOwnMessage 
-            ? 'bg-primary text-primary-foreground rounded-br-md' 
+            ? 'bg-[hsl(195,60%,46%)] text-white rounded-br-md' 
             : 'bg-card border border-border rounded-bl-md'
           }
           ${message.pending ? 'opacity-70' : ''}
@@ -219,12 +219,12 @@ export const ChatMessageItem = ({
           <div 
             className={`mb-1.5 px-2.5 py-1.5 rounded-lg border-l-3 text-xs
               ${isOwnMessage 
-                ? 'bg-primary-foreground/10 border-primary-foreground/40 text-primary-foreground/80' 
+                ? 'bg-white/10 border-white/40 text-white/80' 
                 : 'bg-muted/60 border-primary/40 text-muted-foreground'
               }
             `}
           >
-            <span className={`font-semibold block text-[11px] ${isOwnMessage ? 'text-primary-foreground/90' : 'text-primary'}`}>
+            <span className={`font-semibold block text-[11px] ${isOwnMessage ? 'text-white/90' : 'text-primary'}`}>
               {replyToUserName || 'Unknown'}
             </span>
             <span className="line-clamp-1">
@@ -293,14 +293,14 @@ export const ChatMessageItem = ({
         )}
 
         <div className={`flex items-center gap-1 mt-0.5 ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
-          <span className={`text-[10px] ${isOwnMessage ? 'text-primary-foreground/60' : 'text-muted-foreground'}`}>
+          <span className={`text-[10px] ${isOwnMessage ? 'text-white/60' : 'text-muted-foreground'}`}>
             {format(new Date(message.created_at), 'HH:mm')}
           </span>
           {isOwnMessage && !message.pending && !message.failed && (
-            <CheckCheck className={`h-3.5 w-3.5 ${isOwnMessage ? 'text-primary-foreground/60' : 'text-muted-foreground'}`} />
+            <CheckCheck className={`h-3.5 w-3.5 ${isOwnMessage ? 'text-white/60' : 'text-muted-foreground'}`} />
           )}
           {message.pending && (
-            <Loader2 className="h-3 w-3 animate-spin text-primary-foreground/60" />
+            <Loader2 className="h-3 w-3 animate-spin text-white/60" />
           )}
           {message.failed && (
             <span className="text-[10px] text-destructive font-medium">Failed</span>
