@@ -247,7 +247,7 @@ export function HijriCalendar() {
       if (!emoji || !card.start_date) return;
       const start = format(new Date(card.start_date), 'yyyy-MM-dd');
       const end = card.due_date ? format(new Date(card.due_date), 'yyyy-MM-dd') : start;
-      if (dateKey >= start && dateKey <= end) {
+      if (dateKey > start && dateKey < end) {
         emojis.push(emoji);
       }
     });
