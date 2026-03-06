@@ -58,7 +58,7 @@ const FileAttachmentCard = ({ fileName, fileUrl }: { fileName: string | null; fi
 // URL regex for detecting links in text
 const URL_REGEX = /(https?:\/\/[^\s<>\"')\]]+)/gi;
 
-const renderMessageContent = (content: string) => {
+const renderMessageContent = (content: string, isOwnMessage: boolean) => {
   // First split by mentions
   const mentionParts = content.split(/(@\[([^\]]+)\]\([^)]+\))/g);
   const elements: React.ReactNode[] = [];
@@ -70,7 +70,11 @@ const renderMessageContent = (content: string) => {
       elements.push(
         <span 
           key={`mention-${keyIdx++}`} 
-          className="inline-flex items-center bg-primary/20 text-primary font-semibold rounded-full px-2 py-0.5 text-[13px] mx-0.5 cursor-default"
+          className={`inline-flex items-center font-semibold rounded-full px-2 py-0.5 text-[13px] mx-0.5 cursor-default ${
+            isOwnMessage 
+              ? 'bg-white/25 text-white' 
+              : 'bg-primary/20 text-primary'
+          }`}
         >
           @{mentionMatch[1]}
         </span>
@@ -259,7 +263,7 @@ export const ChatMessageItem = ({
           <>
             {message.message_type === 'text' && message.content && (
               <p className="text-[14px] leading-relaxed whitespace-pre-wrap break-words">
-                {renderMessageContent(message.content)}
+                {renderMessageContent(message.content, isOwnMessage)}
               </p>
             )}
             {message.message_type === 'file' && message.file_url && (
