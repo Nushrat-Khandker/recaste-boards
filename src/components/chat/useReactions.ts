@@ -6,7 +6,7 @@ export interface Reaction {
   users: string[];
 }
 
-export const QUICK_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
+export const QUICK_EMOJIS = ['👍', '👌', '❤️', '😂', '😮', '😢', '🙏'];
 
 export const useReactions = (messageIds: string[]) => {
   const [reactionsMap, setReactionsMap] = useState<Record<string, Reaction[]>>({});
