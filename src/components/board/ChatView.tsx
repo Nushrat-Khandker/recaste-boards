@@ -223,7 +223,8 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
     for (const file of Array.from(files)) {
       try {
         const fileExt = file.name.split('.').pop();
-        const fileName = `${actualContextType}/${actualContextId || 'general'}/${Date.now()}-${file.name}`;
+        const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const fileName = `${actualContextType}/${actualContextId || 'general'}/${Date.now()}-${sanitizedName}`;
         
         const { error: uploadError } = await supabase.storage
           .from('board-files')
