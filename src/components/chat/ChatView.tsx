@@ -201,7 +201,8 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
 
   const sendRecording = async () => {
     if (!recordedBlob || !recordingType) return;
-    const file = new File([recordedBlob], `${recordingType}-${Date.now()}.webm`, { type: recordedBlob.type });
+    const ext = getRecordingExtension();
+    const file = new File([recordedBlob], `${recordingType}-${Date.now()}.${ext}`, { type: recordedBlob.type });
     const dt = new DataTransfer(); dt.items.add(file);
     await handleFileUpload(dt.files);
     clearRecording();
