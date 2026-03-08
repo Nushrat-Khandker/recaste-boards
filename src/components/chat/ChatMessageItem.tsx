@@ -285,7 +285,6 @@ export const ChatMessageItem = ({
                   </div>
                 ) : isPdfFile(message.file_name, message.file_url) ? (
                   <div className="space-y-1">
-                    <iframe src={message.file_url} className="w-full max-w-md h-48 rounded-lg border" title={message.file_name || 'PDF'} />
                     <FileAttachmentCard fileName={message.file_name} fileUrl={message.file_url} />
                   </div>
                 ) : (
