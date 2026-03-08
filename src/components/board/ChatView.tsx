@@ -268,11 +268,24 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
   const startRecording = async (type: 'audio' | 'video') => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: type === 'video',
+        audio: { echoCancellation: true, noiseSuppression: true },
+        video: type === 'video' ? { facingMode: 'user' } : false,
       });
 
-      const mediaRecorder = new MediaRecorder(stream);
+      // Pick iOS-compatible MIME type
+      let mimeType = '';
+      if (type === 'video') {
+        if (MediaRecorder.isTypeSupported('video/webm')) mimeType = 'video/webm';
+        else if (MediaRecorder.isTypeSupported('video/mp4')) mimeType = 'video/mp4';
+      } else {
+        if (MediaRecorder.isTypeSupported('audio/webm')) mimeType = 'audio/webm';
+        else if (MediaRecorder.isTypeSupported('audio/mp4')) mimeType = 'audio/mp4';
+      }
+
+      const options: MediaRecorderOptions = {};
+      if (mimeType) options.mimeType = mimeType;
+
+      const mediaRecorder = new MediaRecorder(stream, options);
       mediaRecorderRef.current = mediaRecorder;
       recordedChunksRef.current = [];
 
@@ -283,15 +296,13 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
       };
 
       mediaRecorder.onstop = async () => {
-        const blob = new Blob(recordedChunksRef.current, {
-          type: type === 'video' ? 'video/webm' : 'audio/webm',
-        });
-        
+        const actualMime = mimeType || (type === 'video' ? 'video/webm' : 'audio/webm');
+        const blob = new Blob(recordedChunksRef.current, { type: actualMime });
         stream.getTracks().forEach(track => track.stop());
         setRecordedBlob(blob);
       };
 
-      mediaRecorder.start();
+      mediaRecorder.start(1000);
       setIsRecording(true);
       setRecordingType(type);
 
@@ -299,11 +310,13 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
         title: 'Recording started',
         description: `${type === 'video' ? 'Video' : 'Audio'} recording in progress`,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error starting recording:', error);
       toast({
         title: 'Error',
-        description: 'Failed to start recording. Please check your permissions.',
+        description: error?.name === 'NotAllowedError'
+          ? 'Microphone/camera access denied. Check browser permissions.'
+          : 'Failed to start recording. Please check your permissions.',
         variant: 'destructive',
       });
     }
