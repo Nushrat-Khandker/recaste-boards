@@ -45,7 +45,7 @@ export const ChatInput = ({
   const [mentionQuery, setMentionQuery] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
-  const commonEmojis = ['😀', '😂', '❤️', '👍', '🎉', '🔥', '✅', '👀', '🙌', '💯', '🚀', '💪'];
+  const commonEmojis = ['😀', '😂', '❤️', '👍', '👌', '🎉', '🔥', '✅', '👀', '🙌', '💯', '🚀', '💪'];
 
   const extractMentions = (text: string): string[] => {
     const mentionRegex = /@\[([^\]]+)\]\(([^)]+)\)/g;

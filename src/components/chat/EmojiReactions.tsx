@@ -5,7 +5,7 @@ import { SmilePlus } from 'lucide-react';
 import { Reaction, QUICK_EMOJIS } from './useReactions';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 
-const ALL_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🙏', '🔥', '👏', '🎉', '💯', '👎', '🤔', '😍', '🥳', '💪', '✅'];
+const ALL_EMOJIS = ['👍', '👌', '❤️', '😂', '😮', '😢', '🙏', '🔥', '👏', '🎉', '💯', '👎', '🤔', '😍', '🥳', '💪', '✅'];
 
 interface EmojiReactionsProps {
   reactions: Reaction[];
