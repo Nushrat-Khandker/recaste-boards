@@ -132,8 +132,9 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
     }).select().single();
 
     if (error) {
+      console.error('Failed to send message:', error);
       updateMessage(tempId, { failed: true, pending: false });
-      toast({ title: 'Error', description: 'Failed to send message.', variant: 'destructive' });
+      toast({ title: 'Error', description: `Failed to send message: ${error.message || error.code || 'Unknown error'}`, variant: 'destructive' });
     } else if (data) {
       updateMessage(tempId, { ...data, pending: false, failed: false });
     }
