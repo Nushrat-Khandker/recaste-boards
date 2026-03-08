@@ -178,7 +178,8 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
       if (file.size > MAX_FILE_SIZE) { toast({ title: 'File too large', description: `${file.name} exceeds 200MB`, variant: 'destructive' }); continue; }
       try {
         setUploadProgress(0);
-        const fileName = `${actualContextType}/${actualContextId || 'general'}/${Date.now()}-${file.name}`;
+        const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const fileName = `${actualContextType}/${actualContextId || 'general'}/${Date.now()}-${sanitizedName}`;
         await uploadFileWithTus('board-files', fileName, file, (p) => setUploadProgress(p));
         setUploadProgress(97);
         const { data: { publicUrl } } = supabase.storage.from('board-files').getPublicUrl(fileName);
