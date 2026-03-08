@@ -39,7 +39,7 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
 
   const {
     isRecording, recordingType, recordedBlob,
-    startRecording, stopRecording, clearRecording,
+    startRecording, stopRecording, clearRecording, getRecordingExtension,
   } = useMediaRecording();
 
   const [isDragging, setIsDragging] = useState(false);
