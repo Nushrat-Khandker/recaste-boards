@@ -331,10 +331,10 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
 
   const sendRecording = async () => {
     if (!recordedBlob || !recordingType) return;
-
+    const ext = recordedBlob.type.includes('mp4') ? 'mp4' : 'webm';
     const file = new File(
       [recordedBlob],
-      `${recordingType}-${Date.now()}.webm`,
+      `${recordingType}-${Date.now()}.${ext}`,
       { type: recordedBlob.type }
     );
     
