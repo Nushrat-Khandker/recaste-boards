@@ -332,7 +332,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
   const completedCount = checklist.filter(i => i.completed).length;
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-hidden p-0">
         <DialogHeader className="px-6 pt-6 pb-2">
           <div className="flex items-center justify-between">
