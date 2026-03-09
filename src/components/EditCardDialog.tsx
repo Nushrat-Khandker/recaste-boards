@@ -749,7 +749,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
         </div>
         
         <DialogFooter className="px-6 pb-6 pt-2">
-          <Button variant="outline" onClick={onClose}>
+         <Button variant="outline" onClick={handleClose}>
             {isNew ? 'Cancel' : 'Close'}
           </Button>
           {isNew && (
