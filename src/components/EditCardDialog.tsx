@@ -290,6 +290,18 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
     onClose();
   };
 
+  // Save on close - flush any pending changes immediately
+  const handleClose = () => {
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+      autoSaveTimeoutRef.current = null;
+    }
+    if (!isNew && hasUnsavedChanges && title.trim()) {
+      performAutoSave();
+    }
+    onClose();
+  };
+
   const handleInputKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && title.trim()) { e.preventDefault(); handleSave(); }
   };
