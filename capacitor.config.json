@@ -1,0 +1,9 @@
+{
+  "appId": "app.lovable.be2643595797435c9ba410eca8999ae9",
+  "appName": "recaste-boards",
+  "webDir": "dist",
+  "server": {
+    "url": "https://be264359-5797-435c-9ba4-10eca8999ae9.lovableproject.com?forceHideBadge=true",
+    "cleartext": true
+  }
+}

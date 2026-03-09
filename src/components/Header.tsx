@@ -117,6 +117,10 @@ const Header: React.FC = () => {
                   <TagFilter />
                 </div>
                 <DropdownMenuSeparator />
+                <div className="px-2 py-1">
+                  <PushNotificationToggle />
+                </div>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => setShowSlackInput(!showSlackInput)}>
                   <MessageSquare className="mr-2 h-4 w-4" />
                   Send to Slack
