@@ -116,10 +116,22 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
       return;
     }
 
+    // Convert @Name mentions back to @[Name](id) format for storage/rendering
+    let formattedContent = content;
+    for (const userId of mentionedUserIds) {
+      const mentionedUser = allUsers.find(u => u.id === userId);
+      if (mentionedUser) {
+        formattedContent = formattedContent.replace(
+          new RegExp(`@${mentionedUser.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?=\\s|$)`, 'g'),
+          `@[${mentionedUser.name}](${userId})`
+        );
+      }
+    }
+
     setIsSending(true);
     const tempId = `temp-${Date.now()}`;
     const optimisticMessage: ChatMessage = {
-      id: tempId, content, message_type: 'text', file_url: null, file_name: null,
+      id: tempId, content: formattedContent, message_type: 'text', file_url: null, file_name: null,
       created_at: new Date().toISOString(), user_id: user.id, reply_to: replyToId || null, pending: true,
     };
     addOptimisticMessage(optimisticMessage);
@@ -127,7 +139,7 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
 
     const { data, error } = await (supabase as any).from('chat_messages').insert({
       board_name: actualContextId, context_type: actualContextType, context_id: actualContextId,
-      user_id: user.id, content, message_type: 'text', mentioned_users: mentionedUserIds,
+      user_id: user.id, content: formattedContent, message_type: 'text', mentioned_users: mentionedUserIds,
       reply_to: replyToId || null,
     }).select().single();
 
