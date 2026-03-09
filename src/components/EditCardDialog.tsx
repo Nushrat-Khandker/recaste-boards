@@ -212,6 +212,31 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teamMembers, columnId, onSave, isNew]);
 
+  // Check if current form values differ from the card prop
+  const hasActualChanges = useCallback((): boolean => {
+    const c = cardRef.current;
+    if (title.trim() !== (c.title || '')) return true;
+    if ((description || '').trim() !== (c.description || '')) return true;
+    if ((projectName || '').trim() !== (c.projectName || '')) return true;
+    if ((quarter || '') !== (c.quarter || '')) return true;
+    if ((number || '') !== (c.number || '')) return true;
+    if (priority !== (c.priority || 'medium')) return true;
+    if ((assignedTo || '') !== (c.assignedTo || '')) return true;
+    if (isHoliday !== (c.isHoliday || false)) return true;
+    if ((cardEmoji || '') !== (c.cardEmoji || '')) return true;
+    if (JSON.stringify(tags) !== JSON.stringify(c.tags || [])) return true;
+    if (JSON.stringify(checklist) !== JSON.stringify(c.checklist || [])) return true;
+    if (JSON.stringify(fileAttachments) !== JSON.stringify(c.fileAttachments || [])) return true;
+    // Compare dates by time value
+    const sd = startDate?.getTime() ?? 0;
+    const csd = c.startDate ? new Date(c.startDate).getTime() : 0;
+    if (sd !== csd) return true;
+    const dd = dueDate?.getTime() ?? 0;
+    const cdd = c.dueDate ? new Date(c.dueDate).getTime() : 0;
+    if (dd !== cdd) return true;
+    return false;
+  }, [title, description, projectName, quarter, number, tags, priority, startDate, dueDate, fileAttachments, checklist, assignedTo, isHoliday, cardEmoji]);
+
   // Debounced auto-save effect
   useEffect(() => {
     // Skip auto-save on initial mount or for new cards
@@ -221,6 +246,12 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
     }
     
     if (isNew) return;
+    
+    // Only save if values actually differ from the card
+    if (!hasActualChanges()) {
+      setHasUnsavedChanges(false);
+      return;
+    }
     
     setHasUnsavedChanges(true);
     
@@ -239,7 +270,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
         clearTimeout(autoSaveTimeoutRef.current);
       }
     };
-  }, [title, description, projectName, quarter, number, tags, priority, startDate, dueDate, fileAttachments, checklist, assignedTo, isHoliday, cardEmoji, isNew, performAutoSave]);
+  }, [title, description, projectName, quarter, number, tags, priority, startDate, dueDate, fileAttachments, checklist, assignedTo, isHoliday, cardEmoji, isNew, performAutoSave, hasActualChanges]);
 
   const handleAddTag = () => {
     if (newTagText.trim()) {
