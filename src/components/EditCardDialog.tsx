@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { X, Plus, Check, Link as LinkIcon, ExternalLink, User, CheckSquare, Square, Trash2, Pencil } from "lucide-react"; 
+import { X, Plus, Check, Link as LinkIcon, ExternalLink, User, CheckSquare, Square, Trash2, Pencil, Loader2 } from "lucide-react"; 
 import { KanbanCard, Tag, ChecklistItem, useKanban } from '../context/KanbanContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
@@ -100,6 +100,11 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [editingChecklistId, setEditingChecklistId] = useState<string | null>(null);
   const [editingChecklistText, setEditingChecklistText] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  
+  const autoSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isInitialMount = useRef(true);
 
   // Load team members from profiles
   useEffect(() => {
@@ -131,7 +136,71 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
     setCardEmoji(card.cardEmoji || '');
     setShowEmojiPicker(false);
     setEditingChecklistId(null);
+    setHasUnsavedChanges(false);
+    isInitialMount.current = true;
   }, [card, isOpen]);
+
+  // Auto-save function
+  const performAutoSave = useCallback(() => {
+    if (!title.trim() || isNew) return;
+    
+    const selectedMember = teamMembers.find(m => m.id === assignedTo);
+    const updatedCard: KanbanCard = {
+      ...card,
+      title: title.trim(),
+      description: description.trim() || undefined,
+      projectName: projectName.trim() || undefined,
+      quarter: quarter || undefined,
+      number: number || undefined,
+      tags: tags.length > 0 ? tags : undefined,
+      priority,
+      startDate: startDate || undefined,
+      dueDate: dueDate || undefined,
+      movedDate: card.movedDate,
+      fileAttachments: fileAttachments.length > 0 ? fileAttachments : undefined,
+      checklist: checklist.length > 0 ? checklist : undefined,
+      assignedTo: assignedTo || undefined,
+      assignedToName: selectedMember?.full_name || undefined,
+      isHoliday,
+      cardEmoji: cardEmoji || undefined,
+    };
+    
+    setIsSaving(true);
+    onSave(columnId, updatedCard);
+    setTimeout(() => {
+      setIsSaving(false);
+      setHasUnsavedChanges(false);
+    }, 500);
+  }, [title, description, projectName, quarter, number, tags, priority, startDate, dueDate, fileAttachments, checklist, assignedTo, isHoliday, cardEmoji, teamMembers, card, columnId, onSave, isNew]);
+
+  // Debounced auto-save effect
+  useEffect(() => {
+    // Skip auto-save on initial mount or for new cards
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    
+    if (isNew) return;
+    
+    setHasUnsavedChanges(true);
+    
+    // Clear existing timeout
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+    
+    // Set new timeout for auto-save (800ms debounce)
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      performAutoSave();
+    }, 800);
+    
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+    };
+  }, [title, description, projectName, quarter, number, tags, priority, startDate, dueDate, fileAttachments, checklist, assignedTo, isHoliday, cardEmoji, performAutoSave, isNew]);
 
   const handleAddTag = () => {
     if (newTagText.trim()) {
@@ -254,9 +323,28 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-hidden p-0">
         <DialogHeader className="px-6 pt-6 pb-2">
-          <DialogTitle>{isNew ? 'Add New Card' : 'Edit Card'}</DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle>{isNew ? 'Add New Card' : 'Edit Card'}</DialogTitle>
+            {!isNew && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                {isSaving ? (
+                  <>
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    <span>Saving...</span>
+                  </>
+                ) : hasUnsavedChanges ? (
+                  <span>Unsaved changes</span>
+                ) : (
+                  <>
+                    <Check className="h-3 w-3 text-green-500" />
+                    <span>Saved</span>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
           <DialogDescription>
-            {isNew ? 'Create a new card by filling in the details below.' : 'Edit the card details and save your changes.'}
+            {isNew ? 'Create a new card by filling in the details below.' : 'Changes are saved automatically.'}
           </DialogDescription>
         </DialogHeader>
         
@@ -649,10 +737,14 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
         </div>
         
         <DialogFooter className="px-6 pb-6 pt-2">
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={handleSave} disabled={!title.trim()}>
-            {isNew ? 'Add Card' : 'Save Changes'}
+          <Button variant="outline" onClick={onClose}>
+            {isNew ? 'Cancel' : 'Close'}
           </Button>
+          {isNew && (
+            <Button onClick={handleSave} disabled={!title.trim()}>
+              Add Card
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
