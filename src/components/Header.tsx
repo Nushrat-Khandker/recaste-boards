@@ -15,6 +15,7 @@ import { useAuth } from '@/context/AuthContext';
 import { YearWheel } from './YearWheel';
 import TagFilter from './TagFilter';
 import { NotificationCenter } from './NotificationCenter';
+import { PushNotificationToggle } from './PushNotificationToggle';
 
 const Header: React.FC = () => {
   const location = useLocation();
@@ -114,6 +115,10 @@ const Header: React.FC = () => {
               <DropdownMenuContent align="end" className="w-56">
                 <div className="px-2 py-2">
                   <TagFilter />
+                </div>
+                <DropdownMenuSeparator />
+                <div className="px-2 py-1">
+                  <PushNotificationToggle />
                 </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => setShowSlackInput(!showSlackInput)}>
