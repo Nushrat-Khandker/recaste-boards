@@ -1,43 +1,38 @@
 
 
-## Current State: Where Notifications Come From
+## Push Notifications - Complete Setup
 
-Right now, there is **only one trigger** generating notifications:
+### Current State
+The code infrastructure is already built (edge function, service worker, toggle component, database table). The missing piece is the **VAPID keys** — two text strings that browsers require to verify push notifications come from your app.
 
-- **`on_chat_message_mention`** -- fires on `INSERT` into `chat_messages`, calls `create_mention_notifications()`. It only creates a notification when `mentioned_users` array is non-empty.
+### What I Can Do
+I don't have the ability to generate or store secrets directly. But here's exactly what you need to do — it's just two steps:
 
-That's it. No other events (replies, card assignments, card updates, new chat messages) generate notifications. The `NotificationCenter` UI and real-time subscription work fine -- they just have nothing to show beyond mentions.
+### Step 1: Generate the Keys
+Go to any terminal (or ask someone technical) and run:
+```
+npx web-push generate-vapid-keys
+```
+This prints two strings — a **Public Key** and a **Private Key**.
 
----
+### Step 2: Save Them in Supabase
+1. Go to your [Supabase Edge Function Secrets page](https://supabase.com/dashboard/project/usdhemikpmbcuwearsob/settings/functions)
+2. Add two secrets:
+   - Name: `VAPID_PUBLIC_KEY` → paste the Public Key
+   - Name: `VAPID_PRIVATE_KEY` → paste the Private Key
+3. Click Save
 
-## Plan: Add Notification Triggers
+That's it. After that, the push notification toggle in your app header will work — users can enable notifications and receive them on both mobile (PWA) and desktop browsers.
 
-### 1. Reply Notification Trigger (Database)
+### What Already Works Without Keys
+- The toggle UI in the header
+- The service worker registration
+- The database trigger that fires on new notifications
 
-Create a new trigger function `create_reply_notifications` on `chat_messages` INSERT:
-- When `reply_to` is not null, look up the original message's `user_id`
-- If the replier is not the same person, insert a notification for the original author
-- Title: "{sender_name} replied to your message"
-- Link: `/chat` (or board-specific link based on context_type/context_id)
+### What the Keys Enable
+- Actually delivering push messages to users' devices
+- The browser permission prompt when toggling on
 
-### 2. Card Assignment Notification Trigger (Database)
-
-Create a new trigger function `create_assignment_notifications` on `kanban_cards` INSERT and UPDATE:
-- On INSERT: if `assigned_to` is set and differs from `owner_id`, notify the assignee
-- On UPDATE: if `assigned_to` changed (old != new), notify the new assignee
-- Title: "{assigner} assigned you a task: {card_title}"
-- Link: `/?card={card_id}` or similar
-
-### 3. Migration SQL
-
-Single migration with both trigger functions and their triggers attached to the respective tables.
-
-### 4. No Frontend Changes Needed
-
-The existing `NotificationCenter` component already:
-- Subscribes to real-time `INSERT` on `notifications` table
-- Displays title, message, link, and timestamps
-- Handles read/unread state
-
-The new triggers will automatically populate the same `notifications` table, and the UI will pick them up in real-time.
+### Native App (Capacitor)
+For the native iOS/Android app via Capacitor, push notifications require additional setup (Firebase Cloud Messaging for Android, APNs for iOS) which is separate from the web push flow. The current setup covers PWA and browser notifications. If you want native app push too, let me know and I can plan that separately.
 
