@@ -105,6 +105,10 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
   
   const autoSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isInitialMount = useRef(true);
+  const latestValuesRef = useRef({
+    title, description, projectName, quarter, number, tags, priority,
+    startDate, dueDate, fileAttachments, checklist, assignedTo, isHoliday, cardEmoji
+  });
 
   // Load team members from profiles - only specific allowed assignees
   const ALLOWED_ASSIGNEES = ['Sabih', 'Nushrat', 'Imam Mahedi', 'Nasir', 'Oishorjo', 'Naomi'];
@@ -147,29 +151,38 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
     isInitialMount.current = true;
   }, [card, isOpen]);
 
-  // Auto-save function
+  // Keep ref updated with latest values
+  useEffect(() => {
+    latestValuesRef.current = {
+      title, description, projectName, quarter, number, tags, priority,
+      startDate, dueDate, fileAttachments, checklist, assignedTo, isHoliday, cardEmoji
+    };
+  });
+
+  // Auto-save function - reads from ref to always get latest values
   const performAutoSave = useCallback(() => {
-    if (!title.trim() || isNew) return;
+    const vals = latestValuesRef.current;
+    if (!vals.title.trim() || isNew) return;
     
-    const selectedMember = teamMembers.find(m => m.id === assignedTo);
+    const selectedMember = teamMembers.find(m => m.id === vals.assignedTo);
     const updatedCard: KanbanCard = {
       ...card,
-      title: title.trim(),
-      description: description.trim() || undefined,
-      projectName: projectName.trim() || undefined,
-      quarter: quarter || undefined,
-      number: number || undefined,
-      tags: tags.length > 0 ? tags : undefined,
-      priority,
-      startDate: startDate || undefined,
-      dueDate: dueDate || undefined,
+      title: vals.title.trim(),
+      description: vals.description.trim() || undefined,
+      projectName: vals.projectName.trim() || undefined,
+      quarter: vals.quarter || undefined,
+      number: vals.number || undefined,
+      tags: vals.tags.length > 0 ? vals.tags : undefined,
+      priority: vals.priority,
+      startDate: vals.startDate || undefined,
+      dueDate: vals.dueDate || undefined,
       movedDate: card.movedDate,
-      fileAttachments: fileAttachments.length > 0 ? fileAttachments : undefined,
-      checklist: checklist.length > 0 ? checklist : undefined,
-      assignedTo: assignedTo || undefined,
+      fileAttachments: vals.fileAttachments.length > 0 ? vals.fileAttachments : undefined,
+      checklist: vals.checklist.length > 0 ? vals.checklist : undefined,
+      assignedTo: vals.assignedTo || undefined,
       assignedToName: selectedMember?.full_name || undefined,
-      isHoliday,
-      cardEmoji: cardEmoji || undefined,
+      isHoliday: vals.isHoliday,
+      cardEmoji: vals.cardEmoji || undefined,
     };
     
     setIsSaving(true);
@@ -178,7 +191,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
       setIsSaving(false);
       setHasUnsavedChanges(false);
     }, 500);
-  }, [title, description, projectName, quarter, number, tags, priority, startDate, dueDate, fileAttachments, checklist, assignedTo, isHoliday, cardEmoji, teamMembers, card, columnId, onSave, isNew]);
+  }, [teamMembers, card, columnId, onSave, isNew]);
 
   // Debounced auto-save effect
   useEffect(() => {
@@ -207,7 +220,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
         clearTimeout(autoSaveTimeoutRef.current);
       }
     };
-  }, [title, description, projectName, quarter, number, tags, priority, startDate, dueDate, fileAttachments, checklist, assignedTo, isHoliday, cardEmoji, performAutoSave, isNew]);
+  }, [title, description, projectName, quarter, number, tags, priority, startDate, dueDate, fileAttachments, checklist, assignedTo, isHoliday, cardEmoji, isNew, performAutoSave]);
 
   const handleAddTag = () => {
     if (newTagText.trim()) {
