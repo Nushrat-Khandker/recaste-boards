@@ -44,6 +44,7 @@ export const ChatInput = ({
   const [showMentionPicker, setShowMentionPicker] = useState(false);
   const [mentionQuery, setMentionQuery] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [mentionedUserIds, setMentionedUserIds] = useState<string[]>([]);
 
   const commonEmojis = [
     '😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '😊', '😇', '🥰', '😍', '🤩', '😘', '😗',
