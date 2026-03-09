@@ -44,6 +44,7 @@ export const ChatInput = ({
   const [showMentionPicker, setShowMentionPicker] = useState(false);
   const [mentionQuery, setMentionQuery] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [mentionedUserIds, setMentionedUserIds] = useState<string[]>([]);
 
   const commonEmojis = [
     '😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '😊', '😇', '🥰', '😍', '🤩', '😘', '😗',
@@ -64,21 +65,11 @@ export const ChatInput = ({
     '🍔', '🍟', '🌮', '🍣', '🍩', '🍪', '🎂', '🍰', '☕', '🍵', '🥤', '🍺', '🍷', '🥂', '👀', '💬',
   ];
 
-  const extractMentions = (text: string): string[] => {
-    const mentionRegex = /@\[([^\]]+)\]\(([^)]+)\)/g;
-    const mentions: string[] = [];
-    let match;
-    while ((match = mentionRegex.exec(text)) !== null) {
-      mentions.push(match[2]);
-    }
-    return mentions;
-  };
-
   const handleSend = () => {
     if (!newMessage.trim()) return;
-    const mentionedUserIds = extractMentions(newMessage);
     onSendMessage(newMessage, mentionedUserIds, replyingTo?.id);
     setNewMessage('');
+    setMentionedUserIds([]);
   };
 
   const handleMessageChange = (text: string) => {
@@ -99,7 +90,8 @@ export const ChatInput = ({
 
   const insertMention = (user: ChatUser) => {
     const beforeCursor = newMessage.substring(0, newMessage.lastIndexOf('@'));
-    setNewMessage(`${beforeCursor}@[${user.name}](${user.id}) `);
+    setNewMessage(`${beforeCursor}@${user.name} `);
+    setMentionedUserIds(prev => prev.includes(user.id) ? prev : [...prev, user.id]);
     setShowMentionPicker(false);
     setMentionQuery('');
   };
