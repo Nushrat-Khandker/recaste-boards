@@ -68,14 +68,50 @@ export const useReactions = (messageIds: string[]) => {
     const hasReacted = existing?.users.includes(user.id);
 
     if (hasReacted) {
-      await (supabase as any).from('chat_reactions').delete()
+      // Optimistic removal
+      setReactionsMap(prev => {
+        const next = { ...prev };
+        const reactions = (next[messageId] || []).map(r => {
+          if (r.emoji === emoji) {
+            return { ...r, users: r.users.filter(uid => uid !== user.id) };
+          }
+          return r;
+        }).filter(r => r.users.length > 0);
+        if (reactions.length) next[messageId] = reactions;
+        else delete next[messageId];
+        return next;
+      });
+
+      const { error } = await (supabase as any).from('chat_reactions').delete()
         .eq('message_id', messageId).eq('user_id', user.id).eq('emoji', emoji);
+      if (error) {
+        console.error('Failed to remove reaction:', error);
+        loadReactions([messageId]);
+      }
     } else {
-      await (supabase as any).from('chat_reactions').insert({
+      // Optimistic add
+      setReactionsMap(prev => {
+        const next = { ...prev };
+        const reactions = [...(next[messageId] || [])];
+        const existingReaction = reactions.find(r => r.emoji === emoji);
+        if (existingReaction) {
+          existingReaction.users = [...existingReaction.users, user.id];
+        } else {
+          reactions.push({ emoji, users: [user.id] });
+        }
+        next[messageId] = reactions;
+        return next;
+      });
+
+      const { error } = await (supabase as any).from('chat_reactions').insert({
         message_id: messageId, user_id: user.id, emoji,
       });
+      if (error) {
+        console.error('Failed to add reaction:', error);
+        loadReactions([messageId]);
+      }
     }
-  }, [reactionsMap]);
+  }, [reactionsMap, loadReactions]);
 
   return { reactionsMap, toggleReaction };
 };
