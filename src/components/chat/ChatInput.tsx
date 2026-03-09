@@ -65,21 +65,11 @@ export const ChatInput = ({
     '🍔', '🍟', '🌮', '🍣', '🍩', '🍪', '🎂', '🍰', '☕', '🍵', '🥤', '🍺', '🍷', '🥂', '👀', '💬',
   ];
 
-  const extractMentions = (text: string): string[] => {
-    const mentionRegex = /@\[([^\]]+)\]\(([^)]+)\)/g;
-    const mentions: string[] = [];
-    let match;
-    while ((match = mentionRegex.exec(text)) !== null) {
-      mentions.push(match[2]);
-    }
-    return mentions;
-  };
-
   const handleSend = () => {
     if (!newMessage.trim()) return;
-    const mentionedUserIds = extractMentions(newMessage);
     onSendMessage(newMessage, mentionedUserIds, replyingTo?.id);
     setNewMessage('');
+    setMentionedUserIds([]);
   };
 
   const handleMessageChange = (text: string) => {
