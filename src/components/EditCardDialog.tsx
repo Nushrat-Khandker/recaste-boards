@@ -737,10 +737,14 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
         </div>
         
         <DialogFooter className="px-6 pb-6 pt-2">
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={handleSave} disabled={!title.trim()}>
-            {isNew ? 'Add Card' : 'Save Changes'}
+          <Button variant="outline" onClick={onClose}>
+            {isNew ? 'Cancel' : 'Close'}
           </Button>
+          {isNew && (
+            <Button onClick={handleSave} disabled={!title.trim()}>
+              Add Card
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
