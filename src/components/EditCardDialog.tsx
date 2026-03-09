@@ -105,6 +105,10 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
   
   const autoSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isInitialMount = useRef(true);
+  const latestValuesRef = useRef({
+    title, description, projectName, quarter, number, tags, priority,
+    startDate, dueDate, fileAttachments, checklist, assignedTo, isHoliday, cardEmoji
+  });
 
   // Load team members from profiles - only specific allowed assignees
   const ALLOWED_ASSIGNEES = ['Sabih', 'Nushrat', 'Imam Mahedi', 'Nasir', 'Oishorjo', 'Naomi'];
