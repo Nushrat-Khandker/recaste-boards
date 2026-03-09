@@ -5,7 +5,13 @@ import { SmilePlus } from 'lucide-react';
 import { Reaction, QUICK_EMOJIS } from './useReactions';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 
-const ALL_EMOJIS = ['👍', '👌', '❤️', '😂', '😮', '😢', '🙏', '🔥', '👏', '🎉', '💯', '👎', '🤔', '😍', '🥳', '💪', '✅'];
+const ALL_EMOJIS = [
+  '👍', '👎', '👌', '❤️', '😂', '😮', '😢', '🙏', '🔥', '👏', '🎉', '💯', '🤔', '😍', '🥳', '💪', '✅',
+  '😀', '😁', '😅', '🤣', '😊', '🥰', '🤩', '😘', '😋', '😜', '🤗', '🤭', '🤫', '😏', '🙄', '😬',
+  '😴', '🤯', '😎', '🤓', '🥺', '😭', '😤', '😡', '🤬', '😈', '💀', '💩', '🤡', '👻', '👽', '🤖',
+  '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '💔', '💕', '💖', '✨', '⚡', '💥', '🌟', '🎊', '🎁',
+  '🏆', '🥇', '🚀', '🌈', '☀️', '🌙', '🌊', '🌸', '🍕', '🍔', '☕', '🍺', '🥂', '👀', '💬', '🤝',
+];
 
 interface EmojiReactionsProps {
   reactions: Reaction[];
@@ -64,7 +70,7 @@ export const EmojiPickerButton = ({ onSelect }: EmojiPickerButtonProps) => {
           <SmilePlus className="h-3 w-3" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-2" side="top" align="center">
+      <PopoverContent className="w-auto p-2 max-h-48 overflow-y-auto" side="top" align="center">
         <div className="grid grid-cols-8 gap-0.5">
           {ALL_EMOJIS.map(emoji => (
             <button

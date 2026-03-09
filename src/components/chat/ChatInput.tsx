@@ -45,7 +45,24 @@ export const ChatInput = ({
   const [mentionQuery, setMentionQuery] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
-  const commonEmojis = ['😀', '😂', '❤️', '👍', '👌', '🎉', '🔥', '✅', '👀', '🙌', '💯', '🚀', '💪'];
+  const commonEmojis = [
+    '😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '😊', '😇', '🥰', '😍', '🤩', '😘', '😗',
+    '😚', '😙', '🥲', '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭', '🤫', '🤔', '🫡', '🤐', '🤨',
+    '😐', '😑', '😶', '🫥', '😏', '😒', '🙄', '😬', '🤥', '🫨', '😌', '😔', '😪', '🤤', '😴', '😷',
+    '🤒', '🤕', '🤢', '🤮', '🥵', '🥶', '🥴', '😵', '🤯', '🤠', '🥳', '🥸', '😎', '🤓', '🧐', '😕',
+    '🫤', '😟', '🙁', '😮', '😯', '😲', '😳', '🥺', '🥹', '😦', '😧', '😨', '😰', '😥', '😢', '😭',
+    '😱', '😖', '😣', '😞', '😓', '😩', '😫', '🥱', '😤', '😡', '😠', '🤬', '😈', '👿', '💀', '☠️',
+    '💩', '🤡', '👹', '👺', '👻', '👽', '👾', '🤖', '😺', '😸', '😹', '😻', '😼', '😽', '🙀', '😿', '😾',
+    '👋', '🤚', '🖐️', '✋', '🖖', '🫱', '🫲', '🫳', '🫴', '👌', '🤌', '🤏', '✌️', '🤞', '🫰', '🤟',
+    '🤘', '🤙', '👈', '👉', '👆', '🖕', '👇', '☝️', '🫵', '👍', '👎', '✊', '👊', '🤛', '🤜', '👏',
+    '🙌', '🫶', '👐', '🤲', '🤝', '🙏', '💪', '🦾', '🦿', '🦵', '🦶', '👂', '🦻', '👃', '🧠', '🫀',
+    '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❤️‍🔥', '❤️‍🩹', '💕', '💞', '💓', '💗',
+    '💖', '💘', '💝', '💟', '🔥', '⭐', '🌟', '✨', '⚡', '💥', '💫', '🎉', '🎊', '🎈', '🎁', '🏆',
+    '🥇', '🥈', '🥉', '⚽', '🏀', '🎯', '🎮', '🎲', '🔔', '🎵', '🎶', '🎤', '🎧', '📱', '💻', '⌨️',
+    '📷', '📹', '📞', '📧', '📝', '📌', '📎', '🔗', '📁', '🗂️', '✅', '❌', '⭕', '❗', '❓', '💯',
+    '🚀', '🛸', '🌍', '🌙', '☀️', '🌈', '☁️', '🌊', '🌸', '🌺', '🌻', '🌹', '🍀', '🌳', '🍎', '🍕',
+    '🍔', '🍟', '🌮', '🍣', '🍩', '🍪', '🎂', '🍰', '☕', '🍵', '🥤', '🍺', '🍷', '🥂', '👀', '💬',
+  ];
 
   const extractMentions = (text: string): string[] => {
     const mentionRegex = /@\[([^\]]+)\]\(([^)]+)\)/g;
@@ -168,13 +185,13 @@ export const ChatInput = ({
             )}
 
             {showEmojiPicker && (
-              <Card className="absolute bottom-full mb-2 left-0 z-50 p-2 shadow-lg">
-                <div className="grid grid-cols-6 gap-1">
+              <Card className="absolute bottom-full mb-2 left-0 z-50 p-2 shadow-lg max-h-64 overflow-y-auto w-72">
+                <div className="grid grid-cols-8 gap-0.5">
                   {commonEmojis.map((emoji) => (
                     <button
                       key={emoji}
                       onClick={() => insertEmoji(emoji)}
-                      className="text-xl hover:bg-muted rounded p-1 transition-colors"
+                      className="text-lg hover:bg-muted rounded p-1 transition-colors h-8 w-8 flex items-center justify-center"
                     >
                       {emoji}
                     </button>
