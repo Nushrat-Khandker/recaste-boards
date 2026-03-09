@@ -105,10 +105,16 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
   
   const autoSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isInitialMount = useRef(true);
+  const cardRef = useRef(card);
   const latestValuesRef = useRef({
     title, description, projectName, quarter, number, tags, priority,
     startDate, dueDate, fileAttachments, checklist, assignedTo, isHoliday, cardEmoji
   });
+  
+  // Keep card ref updated
+  useEffect(() => {
+    cardRef.current = card;
+  }, [card]);
 
   // Load team members from profiles - only specific allowed assignees
   const ALLOWED_ASSIGNEES = ['Sabih', 'Nushrat', 'Imam Mahedi', 'Nasir', 'Oishorjo', 'Naomi'];
@@ -169,14 +175,15 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
     };
   });
 
-  // Auto-save function - reads from ref to always get latest values
+  // Auto-save function - reads from refs to avoid stale closures & prevent recreation on card prop changes
   const performAutoSave = useCallback(() => {
     const vals = latestValuesRef.current;
+    const currentCard = cardRef.current;
     if (!vals.title.trim() || isNew) return;
     
     const selectedMember = teamMembers.find(m => m.id === vals.assignedTo);
     const updatedCard: KanbanCard = {
-      ...card,
+      ...currentCard,
       title: vals.title.trim(),
       description: vals.description.trim() || undefined,
       projectName: vals.projectName.trim() || undefined,
@@ -186,7 +193,7 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
       priority: vals.priority,
       startDate: vals.startDate || undefined,
       dueDate: vals.dueDate || undefined,
-      movedDate: card.movedDate,
+      movedDate: currentCard.movedDate,
       fileAttachments: vals.fileAttachments.length > 0 ? vals.fileAttachments : undefined,
       checklist: vals.checklist.length > 0 ? vals.checklist : undefined,
       assignedTo: vals.assignedTo || undefined,
@@ -201,7 +208,9 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
       setIsSaving(false);
       setHasUnsavedChanges(false);
     }, 500);
-  }, [teamMembers, card, columnId, onSave, isNew]);
+  // NOTE: card intentionally excluded — using cardRef to avoid loop
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [teamMembers, columnId, onSave, isNew]);
 
   // Debounced auto-save effect
   useEffect(() => {
