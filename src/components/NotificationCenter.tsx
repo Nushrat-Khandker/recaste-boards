@@ -29,27 +29,36 @@ export const NotificationCenter = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    loadNotifications();
+    let channel: any;
 
-    // Subscribe to new notifications
-    const channel = supabase
-      .channel('notifications')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications',
-        },
-        (payload) => {
-          setNotifications((prev) => [payload.new as Notification, ...prev]);
-          setUnreadCount((prev) => prev + 1);
-        }
-      )
-      .subscribe();
+    const setup = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      loadNotifications();
+
+      channel = supabase
+        .channel(`notifications-${user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'notifications',
+            filter: `user_id=eq.${user.id}`,
+          },
+          (payload) => {
+            setNotifications((prev) => [payload.new as Notification, ...prev]);
+            setUnreadCount((prev) => prev + 1);
+          }
+        )
+        .subscribe();
+    };
+
+    setup();
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) supabase.removeChannel(channel);
     };
   }, []);
 

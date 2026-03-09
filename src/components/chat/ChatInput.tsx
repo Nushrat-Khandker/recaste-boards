@@ -90,7 +90,8 @@ export const ChatInput = ({
 
   const insertMention = (user: ChatUser) => {
     const beforeCursor = newMessage.substring(0, newMessage.lastIndexOf('@'));
-    setNewMessage(`${beforeCursor}@[${user.name}](${user.id}) `);
+    setNewMessage(`${beforeCursor}@${user.name} `);
+    setMentionedUserIds(prev => prev.includes(user.id) ? prev : [...prev, user.id]);
     setShowMentionPicker(false);
     setMentionQuery('');
   };
