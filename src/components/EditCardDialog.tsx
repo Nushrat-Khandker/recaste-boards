@@ -106,12 +106,19 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
   const autoSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isInitialMount = useRef(true);
 
-  // Load team members from profiles
+  // Load team members from profiles - only specific allowed assignees
+  const ALLOWED_ASSIGNEES = ['Sabih', 'Nushrat', 'Imam Mahedi', 'Nasir', 'Oishorjo', 'Naomi'];
+  
   useEffect(() => {
     const loadTeamMembers = async () => {
       const { data } = await supabase.from('profiles').select('id, full_name');
       if (data) {
-        setTeamMembers(data.filter(p => p.full_name).map(p => ({ id: p.id, full_name: p.full_name! })));
+        const filteredMembers = data
+          .filter(p => p.full_name && ALLOWED_ASSIGNEES.some(name => 
+            p.full_name!.toLowerCase().includes(name.toLowerCase())
+          ))
+          .map(p => ({ id: p.id, full_name: p.full_name! }));
+        setTeamMembers(filteredMembers);
       }
     };
     loadTeamMembers();
