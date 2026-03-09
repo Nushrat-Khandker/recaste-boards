@@ -58,38 +58,49 @@ const FileAttachmentCard = ({ fileName, fileUrl }: { fileName: string | null; fi
 // URL regex for detecting links in text
 const URL_REGEX = /(https?:\/\/[^\s<>\"')\]]+)/gi;
 
+const MENTION_REGEX = /@\[([^\]]+)\]\(([^)]+)\)/g;
+
 const renderMessageContent = (content: string, isOwnMessage: boolean) => {
-  // First split by mentions
-  const mentionParts = content.split(/(@\[([^\]]+)\]\([^)]+\))/g);
   const elements: React.ReactNode[] = [];
-  let i = 0;
+  let lastIndex = 0;
   let keyIdx = 0;
-  while (i < mentionParts.length) {
-    const mentionMatch = mentionParts[i].match(/^@\[([^\]]+)\]\(([^)]+)\)$/);
-    if (mentionMatch) {
-      elements.push(
-        <span 
-          key={`mention-${keyIdx++}`} 
-          className={`inline-flex items-center font-semibold rounded-full px-2 py-0.5 text-[13px] mx-0.5 cursor-default ${
-            isOwnMessage 
-              ? 'bg-white/25 text-white' 
-              : 'bg-primary/20 text-primary'
-          }`}
-        >
-          @{mentionMatch[1]}
-        </span>
-      );
-      i += 3;
-    } else {
-      // For non-mention text, detect and render URLs as clickable links
-      if (mentionParts[i]) {
-        const textWithLinks = renderTextWithLinks(mentionParts[i], keyIdx);
-        elements.push(...textWithLinks.elements);
-        keyIdx = textWithLinks.nextKey;
-      }
-      i++;
+  let match: RegExpExecArray | null;
+
+  MENTION_REGEX.lastIndex = 0;
+
+  while ((match = MENTION_REGEX.exec(content)) !== null) {
+    // Add text before the mention
+    if (match.index > lastIndex) {
+      const textBefore = content.slice(lastIndex, match.index);
+      const textWithLinks = renderTextWithLinks(textBefore, keyIdx);
+      elements.push(...textWithLinks.elements);
+      keyIdx = textWithLinks.nextKey;
     }
+
+    // Add the mention pill
+    elements.push(
+      <span 
+        key={`mention-${keyIdx++}`} 
+        className={`inline-flex items-center font-semibold rounded-full px-2 py-0.5 text-[13px] mx-0.5 cursor-default ${
+          isOwnMessage 
+            ? 'bg-white/25 text-white' 
+            : 'bg-primary/20 text-primary'
+        }`}
+      >
+        @{match[1]}
+      </span>
+    );
+
+    lastIndex = match.index + match[0].length;
   }
+
+  // Add remaining text after last mention
+  if (lastIndex < content.length) {
+    const remaining = content.slice(lastIndex);
+    const textWithLinks = renderTextWithLinks(remaining, keyIdx);
+    elements.push(...textWithLinks.elements);
+  }
+
   return elements;
 };
 
