@@ -128,7 +128,17 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
     loadTeamMembers();
   }, []);
 
+  // Reset state only when opening a different card (not on every card prop change from auto-save)
+  const prevCardIdRef = useRef<string | null>(null);
   useEffect(() => {
+    if (!isOpen) {
+      prevCardIdRef.current = null;
+      return;
+    }
+    // Only reset when opening a new/different card
+    if (prevCardIdRef.current === card.id) return;
+    prevCardIdRef.current = card.id;
+
     setTitle(card.title);
     setDescription(card.description || '');
     setProjectName(card.projectName || '');
