@@ -323,9 +323,28 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-hidden p-0">
         <DialogHeader className="px-6 pt-6 pb-2">
-          <DialogTitle>{isNew ? 'Add New Card' : 'Edit Card'}</DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle>{isNew ? 'Add New Card' : 'Edit Card'}</DialogTitle>
+            {!isNew && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                {isSaving ? (
+                  <>
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    <span>Saving...</span>
+                  </>
+                ) : hasUnsavedChanges ? (
+                  <span>Unsaved changes</span>
+                ) : (
+                  <>
+                    <Check className="h-3 w-3 text-green-500" />
+                    <span>Saved</span>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
           <DialogDescription>
-            {isNew ? 'Create a new card by filling in the details below.' : 'Edit the card details and save your changes.'}
+            {isNew ? 'Create a new card by filling in the details below.' : 'Changes are saved automatically.'}
           </DialogDescription>
         </DialogHeader>
         
