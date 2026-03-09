@@ -15,6 +15,7 @@ import { useAuth } from '@/context/AuthContext';
 import { YearWheel } from './YearWheel';
 import TagFilter from './TagFilter';
 import { NotificationCenter } from './NotificationCenter';
+import { PushNotificationToggle } from './PushNotificationToggle';
 
 const Header: React.FC = () => {
   const location = useLocation();
