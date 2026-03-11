@@ -270,6 +270,10 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
   const [archivedProjects, setArchivedProjects] = useState<string[]>([]);
   const [showArchived, setShowArchived] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
+  
+  // Flag to suppress realtime reloads during user-initiated updates
+  const suppressRealtimeRef = React.useRef(false);
+  const suppressTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Load archived projects
   const loadArchivedProjects = async () => {
