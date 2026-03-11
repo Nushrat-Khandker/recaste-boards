@@ -352,11 +352,15 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
       .channel('kanban-realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'kanban_cards' }, (payload) => {
         console.log('Realtime card change:', payload);
-        loadData();
+        if (!suppressRealtimeRef.current) {
+          loadData();
+        }
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'kanban_columns' }, (payload) => {
         console.log('Realtime column change:', payload);
-        loadData();
+        if (!suppressRealtimeRef.current) {
+          loadData();
+        }
       })
       .subscribe((status) => {
         console.log('Realtime subscription status:', status);
