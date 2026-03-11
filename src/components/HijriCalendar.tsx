@@ -230,14 +230,14 @@ export function HijriCalendar() {
     const result: Array<{ card: KanbanCard; type: 'start' | 'due' }> = [];
     
     filteredCards.forEach(card => {
-      if (card.start_date) {
-        const startDateKey = format(new Date(card.start_date), 'yyyy-MM-dd');
+      if (card.startDate) {
+        const startDateKey = format(new Date(card.startDate), 'yyyy-MM-dd');
         if (startDateKey === dateKey) {
           result.push({ card, type: 'start' });
         }
       }
-      if (card.due_date) {
-        const dueDateKey = format(new Date(card.due_date), 'yyyy-MM-dd');
+      if (card.dueDate) {
+        const dueDateKey = format(new Date(card.dueDate), 'yyyy-MM-dd');
         if (dueDateKey === dateKey) {
           result.push({ card, type: 'due' });
         }
