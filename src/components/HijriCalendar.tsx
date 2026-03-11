@@ -5,19 +5,9 @@ import { format } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { useKanban, KanbanCard as KanbanContextCard } from '@/context/KanbanContext';
+import { useKanban, KanbanCard } from '@/context/KanbanContext';
 import EditCardDialog from '@/components/EditCardDialog';
 import { Plus } from 'lucide-react';
-interface KanbanCard {
-  id: string;
-  title: string;
-  due_date?: string;
-  start_date?: string;
-  tags?: any;
-  project_name?: string;
-  is_holiday?: boolean;
-  card_emoji?: string;
-}
 
 interface MoonPhaseData {
   date: string;
@@ -163,10 +153,29 @@ export function HijriCalendar() {
     try {
       const { data } = await supabase
         .from('kanban_cards')
-        .select('id, title, due_date, start_date, tags, project_name, is_holiday, card_emoji');
+        .select('id, title, due_date, start_date, tags, project_name, is_holiday, card_emoji, column_id, description, priority, assigned_to, number, quarter, checklist, file_attachments, owner_id');
       
       if (data) {
-        setCards(data);
+        const mapped: KanbanCard[] = data.map((c: any) => ({
+          id: c.id,
+          title: c.title,
+          description: c.description || '',
+          projectName: c.project_name || '',
+          tags: Array.isArray(c.tags) ? c.tags : (typeof c.tags === 'string' ? (() => { try { return JSON.parse(c.tags); } catch { return []; } })() : []),
+          priority: c.priority || 'medium',
+          number: c.number,
+          quarter: c.quarter,
+          startDate: c.start_date ? new Date(c.start_date) : undefined,
+          dueDate: c.due_date ? new Date(c.due_date) : undefined,
+          isHoliday: c.is_holiday,
+          cardEmoji: c.card_emoji,
+          assignedTo: c.assigned_to,
+          ownerId: c.owner_id,
+          checklist: c.checklist,
+          fileAttachments: c.file_attachments,
+          _columnId: c.column_id,
+        }));
+        setCards(mapped);
       }
     } catch (error) {
       console.error('Error fetching cards:', error);
@@ -176,7 +185,7 @@ export function HijriCalendar() {
   const filterCards = (cards: KanbanCard[]) => {
     return cards.filter(card => {
       // Filter by project
-      if (selectedProject && card.project_name !== selectedProject) {
+      if (selectedProject && card.projectName !== selectedProject) {
         return false;
       }
 
@@ -221,14 +230,14 @@ export function HijriCalendar() {
     const result: Array<{ card: KanbanCard; type: 'start' | 'due' }> = [];
     
     filteredCards.forEach(card => {
-      if (card.start_date) {
-        const startDateKey = format(new Date(card.start_date), 'yyyy-MM-dd');
+      if (card.startDate) {
+        const startDateKey = format(new Date(card.startDate), 'yyyy-MM-dd');
         if (startDateKey === dateKey) {
           result.push({ card, type: 'start' });
         }
       }
-      if (card.due_date) {
-        const dueDateKey = format(new Date(card.due_date), 'yyyy-MM-dd');
+      if (card.dueDate) {
+        const dueDateKey = format(new Date(card.dueDate), 'yyyy-MM-dd');
         if (dueDateKey === dateKey) {
           result.push({ card, type: 'due' });
         }
@@ -243,10 +252,10 @@ export function HijriCalendar() {
     const filteredCards = filterCards(cards);
     const emojis: string[] = [];
     filteredCards.forEach(card => {
-      const emoji = card.card_emoji || (card.is_holiday ? '🏖️' : null);
-      if (!emoji || !card.start_date) return;
-      const start = format(new Date(card.start_date), 'yyyy-MM-dd');
-      const end = card.due_date ? format(new Date(card.due_date), 'yyyy-MM-dd') : start;
+      const emoji = card.cardEmoji || (card.isHoliday ? '🏖️' : null);
+      if (!emoji || !card.startDate) return;
+      const start = format(new Date(card.startDate), 'yyyy-MM-dd');
+      const end = card.dueDate ? format(new Date(card.dueDate), 'yyyy-MM-dd') : start;
       if (dateKey > start && dateKey < end) {
         emojis.push(emoji);
       }
@@ -389,7 +398,7 @@ export function HijriCalendar() {
                           : "bg-amber-100 dark:bg-amber-900/30 border-amber-300 dark:border-amber-700"
                       )}
                       title={`${card.title} (${type === 'start' ? 'Start' : 'Due'})`}
-                      onClick={() => cardColumn && setSelectedCard({ card, columnId: cardColumn.id })}
+                      onClick={() => setSelectedCard({ card, columnId: cardColumn?.id || (card as any)._columnId || 'todo' })}
                     >
                       {card.title}
                     </div>
@@ -434,7 +443,7 @@ export function HijriCalendar() {
             priority: 'medium',
             startDate: newCardDate,
             dueDate: newCardDate,
-          } as KanbanContextCard}
+          } as KanbanCard}
           columnId="todo"
           isOpen={!!newCardDate}
           onClose={() => setNewCardDate(null)}
