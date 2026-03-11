@@ -153,10 +153,29 @@ export function HijriCalendar() {
     try {
       const { data } = await supabase
         .from('kanban_cards')
-        .select('id, title, due_date, start_date, tags, project_name, is_holiday, card_emoji');
+        .select('id, title, due_date, start_date, tags, project_name, is_holiday, card_emoji, column_id, description, priority, assigned_to, number, quarter, checklist, file_attachments, owner_id');
       
       if (data) {
-        setCards(data);
+        const mapped: KanbanCard[] = data.map((c: any) => ({
+          id: c.id,
+          title: c.title,
+          description: c.description || '',
+          projectName: c.project_name || '',
+          tags: Array.isArray(c.tags) ? c.tags : (typeof c.tags === 'string' ? (() => { try { return JSON.parse(c.tags); } catch { return []; } })() : []),
+          priority: c.priority || 'medium',
+          number: c.number,
+          quarter: c.quarter,
+          startDate: c.start_date ? new Date(c.start_date) : undefined,
+          dueDate: c.due_date ? new Date(c.due_date) : undefined,
+          isHoliday: c.is_holiday,
+          cardEmoji: c.card_emoji,
+          assignedTo: c.assigned_to,
+          ownerId: c.owner_id,
+          checklist: c.checklist,
+          fileAttachments: c.file_attachments,
+          _columnId: c.column_id,
+        }));
+        setCards(mapped);
       }
     } catch (error) {
       console.error('Error fetching cards:', error);
