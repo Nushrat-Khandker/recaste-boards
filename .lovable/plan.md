@@ -1,43 +1,27 @@
 
 
-## Current State: Where Notifications Come From
+## Fix: Calendar Card Editing Not Working
 
-Right now, there is **only one trigger** generating notifications:
+### Root Cause
 
-- **`on_chat_message_mention`** -- fires on `INSERT` into `chat_messages`, calls `create_mention_notifications()`. It only creates a notification when `mentioned_users` array is non-empty.
+Two issues prevent editing cards from the calendar:
 
-That's it. No other events (replies, card assignments, card updates, new chat messages) generate notifications. The `NotificationCenter` UI and real-time subscription work fine -- they just have nothing to show beyond mentions.
+1. **Click guard fails silently**: When clicking a card, the code searches `columns` (from KanbanContext) to find which column it belongs to. If the card isn't found (e.g., columns haven't loaded, or the card belongs to a column not currently visible), `cardColumn` is `undefined` and the click is silently ignored — no dialog opens.
 
----
+2. **Field name mismatch**: The calendar fetches cards directly from Supabase with snake_case fields (`due_date`, `start_date`, `is_holiday`, `card_emoji`, `project_name`), but `EditCardDialog` expects the `KanbanCard` interface with camelCase fields (`dueDate`, `startDate`, `isHoliday`, `cardEmoji`, `projectName`). So even if the dialog opened, the dates and other fields would appear empty.
 
-## Plan: Add Notification Triggers
+### Fix Plan
 
-### 1. Reply Notification Trigger (Database)
+**In `src/components/HijriCalendar.tsx`:**
 
-Create a new trigger function `create_reply_notifications` on `chat_messages` INSERT:
-- When `reply_to` is not null, look up the original message's `user_id`
-- If the replier is not the same person, insert a notification for the original author
-- Title: "{sender_name} replied to your message"
-- Link: `/chat` (or board-specific link based on context_type/context_id)
+1. **Map DB fields to KanbanCard shape** when fetching cards — convert `due_date` → `dueDate`, `start_date` → `startDate`, `is_holiday` → `isHoliday`, `card_emoji` → `cardEmoji`, `project_name` → `projectName` so the data works with `EditCardDialog`.
 
-### 2. Card Assignment Notification Trigger (Database)
+2. **Remove the `cardColumn &&` guard** on click — instead, find the column from `columns` if possible for the correct `columnId`, but fall back to a default column (e.g., `"todo"`) so the dialog always opens. The card's actual column can be looked up, but shouldn't block editing.
 
-Create a new trigger function `create_assignment_notifications` on `kanban_cards` INSERT and UPDATE:
-- On INSERT: if `assigned_to` is set and differs from `owner_id`, notify the assignee
-- On UPDATE: if `assigned_to` changed (old != new), notify the new assignee
-- Title: "{assigner} assigned you a task: {card_title}"
-- Link: `/?card={card_id}` or similar
+3. **Pass properly shaped card data** to `EditCardDialog` using the `KanbanCard` interface from context, so all fields (dates, tags, emoji, holiday flag) display correctly in the edit form.
 
-### 3. Migration SQL
-
-Single migration with both trigger functions and their triggers attached to the respective tables.
-
-### 4. No Frontend Changes Needed
-
-The existing `NotificationCenter` component already:
-- Subscribes to real-time `INSERT` on `notifications` table
-- Displays title, message, link, and timestamps
-- Handles read/unread state
-
-The new triggers will automatically populate the same `notifications` table, and the UI will pick them up in real-time.
+### Scope
+- Single file change: `src/components/HijriCalendar.tsx`
+- The local `KanbanCard` interface at the top of the file will be removed in favor of using the context's `KanbanCard` type (already imported)
+- Card fetching will include field mapping from snake_case to camelCase
 
