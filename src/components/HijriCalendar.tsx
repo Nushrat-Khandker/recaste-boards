@@ -354,7 +354,6 @@ export function HijriCalendar() {
                 "aspect-square border border-border/70 sm:border-2 rounded-sm sm:rounded-lg p-0.5 sm:p-2 relative flex flex-col overflow-hidden bg-white dark:bg-slate-800 group",
                 weekday === 5 && "bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700",
                 weekday === 6 && "bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700",
-                isHoliday && "bg-orange-50 dark:bg-orange-900/20 border-orange-300 dark:border-orange-700",
                 isToday && "ring-1 sm:ring-2 ring-primary"
               )}
               onMouseEnter={() => setHoveredDate(dateKey)}
