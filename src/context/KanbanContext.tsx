@@ -552,7 +552,7 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
 
   const moveCard = async (cardId: string, sourceColumnId: string, destinationColumnId: string) => {
     try {
-      const currentTime = new Date();
+      suppressRealtime();
       
       // Update column and set moved_date to current time
       const { error } = await supabase
