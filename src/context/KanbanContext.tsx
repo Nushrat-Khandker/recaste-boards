@@ -616,6 +616,7 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
 
   const updateCard = async (columnId: string, updatedCard: KanbanCard) => {
     try {
+      suppressRealtime();
       // Validate input
       const validatedCard = cardSchema.parse({
         title: updatedCard.title,
