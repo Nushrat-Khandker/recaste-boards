@@ -5,19 +5,9 @@ import { format } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { useKanban, KanbanCard as KanbanContextCard } from '@/context/KanbanContext';
+import { useKanban, KanbanCard } from '@/context/KanbanContext';
 import EditCardDialog from '@/components/EditCardDialog';
 import { Plus } from 'lucide-react';
-interface KanbanCard {
-  id: string;
-  title: string;
-  due_date?: string;
-  start_date?: string;
-  tags?: any;
-  project_name?: string;
-  is_holiday?: boolean;
-  card_emoji?: string;
-}
 
 interface MoonPhaseData {
   date: string;
