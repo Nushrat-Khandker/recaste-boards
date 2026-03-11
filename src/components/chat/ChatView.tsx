@@ -149,6 +149,19 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
       toast({ title: 'Error', description: `Failed to send message: ${error.message || error.details || error.code || 'Unknown error'}`, variant: 'destructive' });
     } else if (data) {
       updateMessage(tempId, { ...data, pending: false, failed: false });
+      
+      // Send push notification to all other users (fire and forget)
+      const senderProfile = allUsers.find(u => u.id === user.id);
+      supabase.functions.invoke('push-notifications', {
+        body: {
+          action: 'broadcast',
+          senderId: user.id,
+          senderName: senderProfile?.name || 'Someone',
+          messageContent: formattedContent,
+          contextType: actualContextType,
+          contextId: actualContextId,
+        },
+      }).catch((e: any) => console.warn('Push broadcast failed:', e));
     }
     setIsSending(false);
   };
