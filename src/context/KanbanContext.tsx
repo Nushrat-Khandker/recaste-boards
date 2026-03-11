@@ -445,6 +445,7 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
 
   const addCard = async (columnId: string, card: Omit<KanbanCard, 'id'>) => {
     try {
+      suppressRealtime();
       if (!user?.id) {
         toast({
           title: "Please sign in",
