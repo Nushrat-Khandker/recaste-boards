@@ -217,6 +217,19 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
         setUploadProgress(100);
         setTimeout(() => setUploadProgress(null), 500);
         toast({ title: 'Success', description: `${file.name} uploaded` });
+        
+        // Send push notification for file upload
+        const senderProfile = allUsers.find(u => u.id === user.id);
+        supabase.functions.invoke('push-notifications', {
+          body: {
+            action: 'broadcast',
+            senderId: user.id,
+            senderName: senderProfile?.name || 'Someone',
+            messageContent: `📎 ${file.name}`,
+            contextType: actualContextType,
+            contextId: actualContextId,
+          },
+        }).catch((e: any) => console.warn('Push broadcast failed:', e));
       } catch (error: any) {
         setUploadProgress(null);
         toast({ title: 'Upload Failed', description: error?.message || `Failed to upload ${file.name}`, variant: 'destructive' });
