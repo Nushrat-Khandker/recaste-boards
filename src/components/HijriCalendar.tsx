@@ -443,7 +443,7 @@ export function HijriCalendar() {
             priority: 'medium',
             startDate: newCardDate,
             dueDate: newCardDate,
-          } as KanbanContextCard}
+          } as KanbanCard}
           columnId="todo"
           isOpen={!!newCardDate}
           onClose={() => setNewCardDate(null)}
