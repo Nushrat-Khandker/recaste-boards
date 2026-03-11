@@ -252,10 +252,10 @@ export function HijriCalendar() {
     const filteredCards = filterCards(cards);
     const emojis: string[] = [];
     filteredCards.forEach(card => {
-      const emoji = card.card_emoji || (card.is_holiday ? '🏖️' : null);
-      if (!emoji || !card.start_date) return;
-      const start = format(new Date(card.start_date), 'yyyy-MM-dd');
-      const end = card.due_date ? format(new Date(card.due_date), 'yyyy-MM-dd') : start;
+      const emoji = card.cardEmoji || (card.isHoliday ? '🏖️' : null);
+      if (!emoji || !card.startDate) return;
+      const start = format(new Date(card.startDate), 'yyyy-MM-dd');
+      const end = card.dueDate ? format(new Date(card.dueDate), 'yyyy-MM-dd') : start;
       if (dateKey > start && dateKey < end) {
         emojis.push(emoji);
       }
