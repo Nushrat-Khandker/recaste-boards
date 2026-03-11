@@ -289,6 +289,15 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
     }
   };
 
+  // Temporarily suppress realtime reloads during user-initiated DB writes
+  const suppressRealtime = (durationMs = 2000) => {
+    suppressRealtimeRef.current = true;
+    if (suppressTimeoutRef.current) clearTimeout(suppressTimeoutRef.current);
+    suppressTimeoutRef.current = setTimeout(() => {
+      suppressRealtimeRef.current = false;
+    }, durationMs);
+  };
+
   // Load data from Supabase database
   const loadData = async () => {
     try {
