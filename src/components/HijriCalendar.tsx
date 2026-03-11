@@ -398,7 +398,7 @@ export function HijriCalendar() {
                           : "bg-amber-100 dark:bg-amber-900/30 border-amber-300 dark:border-amber-700"
                       )}
                       title={`${card.title} (${type === 'start' ? 'Start' : 'Due'})`}
-                      onClick={() => cardColumn && setSelectedCard({ card, columnId: cardColumn.id })}
+                      onClick={() => setSelectedCard({ card, columnId: cardColumn?.id || (card as any)._columnId || 'todo' })}
                     >
                       {card.title}
                     </div>
