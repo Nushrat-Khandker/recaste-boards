@@ -594,6 +594,7 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
 
   const deleteCard = async (columnId: string, cardId: string) => {
     try {
+      suppressRealtime();
       const { error } = await supabase
         .from('kanban_cards')
         .delete()
