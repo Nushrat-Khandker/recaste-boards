@@ -185,7 +185,7 @@ export function HijriCalendar() {
   const filterCards = (cards: KanbanCard[]) => {
     return cards.filter(card => {
       // Filter by project
-      if (selectedProject && card.project_name !== selectedProject) {
+      if (selectedProject && card.projectName !== selectedProject) {
         return false;
       }
 
