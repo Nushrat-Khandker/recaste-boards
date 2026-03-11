@@ -270,6 +270,10 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
   const [archivedProjects, setArchivedProjects] = useState<string[]>([]);
   const [showArchived, setShowArchived] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
+  
+  // Flag to suppress realtime reloads during user-initiated updates
+  const suppressRealtimeRef = React.useRef(false);
+  const suppressTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Load archived projects
   const loadArchivedProjects = async () => {
@@ -283,6 +287,15 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
     } catch (error) {
       console.error('Error loading archived projects:', error);
     }
+  };
+
+  // Temporarily suppress realtime reloads during user-initiated DB writes
+  const suppressRealtime = (durationMs = 2000) => {
+    suppressRealtimeRef.current = true;
+    if (suppressTimeoutRef.current) clearTimeout(suppressTimeoutRef.current);
+    suppressTimeoutRef.current = setTimeout(() => {
+      suppressRealtimeRef.current = false;
+    }, durationMs);
   };
 
   // Load data from Supabase database
@@ -348,11 +361,15 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
       .channel('kanban-realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'kanban_cards' }, (payload) => {
         console.log('Realtime card change:', payload);
-        loadData();
+        if (!suppressRealtimeRef.current) {
+          loadData();
+        }
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'kanban_columns' }, (payload) => {
         console.log('Realtime column change:', payload);
-        loadData();
+        if (!suppressRealtimeRef.current) {
+          loadData();
+        }
       })
       .subscribe((status) => {
         console.log('Realtime subscription status:', status);
@@ -428,6 +445,7 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
 
   const addCard = async (columnId: string, card: Omit<KanbanCard, 'id'>) => {
     try {
+      suppressRealtime();
       if (!user?.id) {
         toast({
           title: "Please sign in",
@@ -534,6 +552,7 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
 
   const moveCard = async (cardId: string, sourceColumnId: string, destinationColumnId: string) => {
     try {
+      suppressRealtime();
       const currentTime = new Date();
       
       // Update column and set moved_date to current time
@@ -575,6 +594,7 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
 
   const deleteCard = async (columnId: string, cardId: string) => {
     try {
+      suppressRealtime();
       const { error } = await supabase
         .from('kanban_cards')
         .delete()
@@ -596,6 +616,7 @@ export const KanbanProvider: React.FC<{children: ReactNode}> = ({ children }) =>
 
   const updateCard = async (columnId: string, updatedCard: KanbanCard) => {
     try {
+      suppressRealtime();
       // Validate input
       const validatedCard = cardSchema.parse({
         title: updatedCard.title,
