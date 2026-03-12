@@ -260,10 +260,10 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
       clearTimeout(autoSaveTimeoutRef.current);
     }
     
-    // Set new timeout for auto-save (800ms debounce)
+    // Set new timeout for auto-save (200ms debounce for near-instant saves)
     autoSaveTimeoutRef.current = setTimeout(() => {
       performAutoSave();
-    }, 800);
+    }, 200);
     
     return () => {
       if (autoSaveTimeoutRef.current) {
@@ -373,7 +373,20 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
   };
 
   const handleInputKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && title.trim()) { e.preventDefault(); handleSave(); }
+    if (e.key === 'Enter' && title.trim()) {
+      e.preventDefault();
+      if (isNew) {
+        handleSave();
+      } else {
+        // Flush pending debounce and save immediately
+        if (autoSaveTimeoutRef.current) {
+          clearTimeout(autoSaveTimeoutRef.current);
+          autoSaveTimeoutRef.current = null;
+        }
+        performAutoSave();
+        onClose();
+      }
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
