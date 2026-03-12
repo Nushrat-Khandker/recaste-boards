@@ -65,7 +65,7 @@ serve(async (req) => {
     // Generate magic link token for instant sign-in
     const { data, error } = await supabaseAdmin.auth.admin.generateLink({
       type: 'magiclink',
-      email: email.toLowerCase(),
+      email: normalizedEmail,
     });
 
     if (error) {
