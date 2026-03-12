@@ -187,7 +187,20 @@ export function HijriCalendar() {
     }
   };
 
-  const filterCards = (cards: KanbanCard[]) => {
+  const fetchCalendarEvents = async () => {
+    try {
+      const { data } = await supabase.from('calendar_events').select('*').order('date');
+      if (data) setCalendarEvents(data);
+    } catch (error) {
+      console.error('Error fetching calendar events:', error);
+    }
+  };
+
+  const getEventsForDate = (gregorianDate: Date) => {
+    const dateKey = format(gregorianDate, 'yyyy-MM-dd');
+    return calendarEvents.filter(e => e.date === dateKey);
+  };
+
     return cards.filter(card => {
       // Filter by project
       if (selectedProject && card.projectName !== selectedProject) {
