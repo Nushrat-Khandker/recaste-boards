@@ -48,9 +48,11 @@ export function HijriCalendar() {
   const [moonPhases, setMoonPhases] = useState<Map<string, string>>(new Map());
   const [solarEvents, setSolarEvents] = useState<Map<string, string>>(new Map());
   const [cards, setCards] = useState<KanbanCard[]>([]);
+  const [calendarEvents, setCalendarEvents] = useState<any[]>([]);
   const [selectedCard, setSelectedCard] = useState<{ card: KanbanCard; columnId: string } | null>(null);
   const [newCardDate, setNewCardDate] = useState<Date | null>(null);
   const [hoveredDate, setHoveredDate] = useState<string | null>(null);
+  const [eventDialogState, setEventDialogState] = useState<{ open: boolean; date: string; event?: any }>({ open: false, date: '' });
 
   useEffect(() => {
     loadNewMoons();
