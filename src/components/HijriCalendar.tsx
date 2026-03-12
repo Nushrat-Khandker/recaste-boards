@@ -57,10 +57,12 @@ export function HijriCalendar() {
   useEffect(() => {
     loadNewMoons();
     fetchCards();
+    fetchCalendarEvents();
   }, []);
 
   useEffect(() => {
     fetchCards();
+    fetchCalendarEvents();
   }, [selectedTags, selectedProject]);
 
   // Anchor new moon for 1 Muharram 1447 AH
