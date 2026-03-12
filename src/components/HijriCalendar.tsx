@@ -429,6 +429,9 @@ export function HijriCalendar() {
                       onClick={() => setSelectedCard({ card, columnId: cardColumn?.id || (card as any)._columnId || 'todo' })}
                     >
                       {card.title}
+                    </div>
+                  );
+                })}
                 {/* Standalone calendar events */}
                 {eventsForDate.map((evt: any) => (
                   <div
@@ -441,8 +444,6 @@ export function HijriCalendar() {
                     {evt.title}
                   </div>
                 ))}
-                  );
-                })}
               </div>
 
               {/* Gregorian date - only on Jumuah */}
