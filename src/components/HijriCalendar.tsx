@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useKanban, KanbanCard } from '@/context/KanbanContext';
 import EditCardDialog from '@/components/EditCardDialog';
-import { Plus } from 'lucide-react';
+import CalendarEventDialog from '@/components/CalendarEventDialog';
+import { Plus, CalendarPlus } from 'lucide-react';
 
 interface MoonPhaseData {
   date: string;
