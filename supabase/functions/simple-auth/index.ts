@@ -27,25 +27,40 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
+    const normalizedEmail = email.toLowerCase().trim();
+
     // Derive a display name: use provided name, or capitalize email prefix
-    const displayName = full_name?.trim() || email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1);
+    const displayName = full_name?.trim() || normalizedEmail.split('@')[0].charAt(0).toUpperCase() + normalizedEmail.split('@')[0].slice(1);
 
-    // Create user with confirmed email (or ignore if exists)
-    const { error: userError } = await supabaseAdmin.auth.admin.createUser({
-      email: email.toLowerCase(),
-      email_confirm: true,
-      user_metadata: { full_name: displayName },
-    });
+    // Check if user already exists by email
+    const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
+    const existingUser = existingUsers?.users?.find(u => u.email?.toLowerCase() === normalizedEmail);
 
-    if (userError && userError.code !== 'email_exists') {
-      console.error("User creation error:", userError);
-      return new Response(
-        JSON.stringify({ error: userError.message }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    if (existingUser) {
+      // Update name if provided and different
+      if (full_name?.trim()) {
+        await supabaseAdmin.auth.admin.updateUserById(existingUser.id, {
+          user_metadata: { full_name: displayName },
+        });
+        // Also update profile
+        await supabaseAdmin.from('profiles').update({ full_name: displayName }).eq('id', existingUser.id);
+      }
+    } else {
+      // Create new user with confirmed email
+      const { error: userError } = await supabaseAdmin.auth.admin.createUser({
+        email: normalizedEmail,
+        email_confirm: true,
+        user_metadata: { full_name: displayName },
+      });
+
+      if (userError) {
+        console.error("User creation error:", userError);
+        return new Response(
+          JSON.stringify({ error: userError.message }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
     }
-
-    // If user already exists, just proceed to generate the magic link
 
     // Generate magic link token for instant sign-in
     const { data, error } = await supabaseAdmin.auth.admin.generateLink({
