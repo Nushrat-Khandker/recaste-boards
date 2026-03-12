@@ -429,7 +429,18 @@ export function HijriCalendar() {
                       onClick={() => setSelectedCard({ card, columnId: cardColumn?.id || (card as any)._columnId || 'todo' })}
                     >
                       {card.title}
-                    </div>
+                {/* Standalone calendar events */}
+                {eventsForDate.map((evt: any) => (
+                  <div
+                    key={evt.id}
+                    className="text-[8px] sm:text-xs p-0.5 sm:p-1 rounded truncate cursor-pointer hover:opacity-80 transition-opacity text-white"
+                    style={{ backgroundColor: evt.color }}
+                    title={evt.title}
+                    onClick={() => setEventDialogState({ open: true, date: dateKey, event: evt })}
+                  >
+                    {evt.title}
+                  </div>
+                ))}
                   );
                 })}
               </div>
