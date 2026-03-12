@@ -373,7 +373,20 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
   };
 
   const handleInputKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && title.trim()) { e.preventDefault(); handleSave(); }
+    if (e.key === 'Enter' && title.trim()) {
+      e.preventDefault();
+      if (isNew) {
+        handleSave();
+      } else {
+        // Flush pending debounce and save immediately
+        if (autoSaveTimeoutRef.current) {
+          clearTimeout(autoSaveTimeoutRef.current);
+          autoSaveTimeoutRef.current = null;
+        }
+        performAutoSave();
+        onClose();
+      }
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
