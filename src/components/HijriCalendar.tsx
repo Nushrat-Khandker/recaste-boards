@@ -503,6 +503,15 @@ export function HijriCalendar() {
           isNew={true}
         />
       )}
+
+      {/* Calendar Event Dialog */}
+      <CalendarEventDialog
+        isOpen={eventDialogState.open}
+        onClose={() => setEventDialogState({ open: false, date: '' })}
+        event={eventDialogState.event}
+        date={eventDialogState.date}
+        onSaved={fetchCalendarEvents}
+      />
     </div>
   );
 }
