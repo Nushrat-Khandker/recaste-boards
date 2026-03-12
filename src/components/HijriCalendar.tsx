@@ -362,6 +362,7 @@ export function HijriCalendar() {
           const solarEmoji = solarEvents.get(dateKey);
           const isToday = format(new Date(), 'yyyy-MM-dd') === dateKey;
           const cardsForDate = getCardsForDate(gregorianDate);
+          const eventsForDate = getEventsForDate(gregorianDate);
           const isHovered = hoveredDate === dateKey;
           const dateEmojis = getEmojisForDate(gregorianDate);
           const isHoliday = dateEmojis.includes('🏖️');
