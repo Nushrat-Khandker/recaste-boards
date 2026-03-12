@@ -379,17 +379,26 @@ export function HijriCalendar() {
               onMouseEnter={() => setHoveredDate(dateKey)}
               onMouseLeave={() => setHoveredDate(null)}
             >
-              {/* Add card button - shown on hover */}
-              <button
-                onClick={() => setNewCardDate(gregorianDate)}
-                className={cn(
-                  "absolute top-1 right-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-primary/90 hover:bg-primary text-primary-foreground flex items-center justify-center transition-opacity duration-200 z-10",
-                  isHovered ? "opacity-100" : "opacity-0"
-                )}
-                title="Add card"
-              >
-                <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
-              </button>
+              {/* Add buttons - shown on hover */}
+              <div className={cn(
+                "absolute top-0.5 right-0.5 flex gap-0.5 z-10 transition-opacity duration-200",
+                isHovered ? "opacity-100" : "opacity-0"
+              )}>
+                <button
+                  onClick={() => setEventDialogState({ open: true, date: dateKey })}
+                  className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-accent hover:bg-accent/80 text-accent-foreground flex items-center justify-center"
+                  title="Add event"
+                >
+                  <CalendarPlus className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                </button>
+                <button
+                  onClick={() => setNewCardDate(gregorianDate)}
+                  className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-primary/90 hover:bg-primary text-primary-foreground flex items-center justify-center"
+                  title="Add task card"
+                >
+                  <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+                </button>
+              </div>
 
               <div className="flex flex-wrap gap-0.5 sm:gap-1 mb-0.5 sm:mb-1">
                 {dateEmojis.map((emoji, i) => (
