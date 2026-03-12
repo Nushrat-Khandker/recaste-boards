@@ -260,10 +260,10 @@ const EditCardDialog: React.FC<EditCardDialogProps> = ({
       clearTimeout(autoSaveTimeoutRef.current);
     }
     
-    // Set new timeout for auto-save (800ms debounce)
+    // Set new timeout for auto-save (200ms debounce for near-instant saves)
     autoSaveTimeoutRef.current = setTimeout(() => {
       performAutoSave();
-    }, 800);
+    }, 200);
     
     return () => {
       if (autoSaveTimeoutRef.current) {
