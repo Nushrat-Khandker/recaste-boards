@@ -264,14 +264,19 @@ export function HijriCalendar() {
     const result: Array<{ card: KanbanCard; type: 'start' | 'due' }> = [];
     
     filteredCards.forEach(card => {
-      if (card.startDate) {
-        const startDateKey = format(new Date(card.startDate), 'yyyy-MM-dd');
+      const startDateKey = card.startDate ? format(new Date(card.startDate), 'yyyy-MM-dd') : null;
+      const dueDateKey = card.dueDate ? format(new Date(card.dueDate), 'yyyy-MM-dd') : null;
+      const sameDay = startDateKey && dueDateKey && startDateKey === dueDateKey;
+
+      if (sameDay) {
+        // Only show due when both dates are the same
+        if (dueDateKey === dateKey) {
+          result.push({ card, type: 'due' });
+        }
+      } else {
         if (startDateKey === dateKey) {
           result.push({ card, type: 'start' });
         }
-      }
-      if (card.dueDate) {
-        const dueDateKey = format(new Date(card.dueDate), 'yyyy-MM-dd');
         if (dueDateKey === dateKey) {
           result.push({ card, type: 'due' });
         }
