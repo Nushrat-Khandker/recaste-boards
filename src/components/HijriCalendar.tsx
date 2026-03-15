@@ -201,7 +201,13 @@ export function HijriCalendar() {
 
   const getEventsForDate = (gregorianDate: Date) => {
     const dateKey = format(gregorianDate, 'yyyy-MM-dd');
-    return calendarEvents.filter(e => e.date === dateKey);
+    let filtered = calendarEvents.filter(e => e.date === dateKey);
+    if (calendarFilter === 'mine' && user) {
+      filtered = filtered.filter(e => e.user_id === user.id);
+    } else if (calendarFilter === 'team') {
+      filtered = []; // hide personal events in team view
+    }
+    return filtered;
   };
 
   const filterCards = (cards: KanbanCard[]) => {
