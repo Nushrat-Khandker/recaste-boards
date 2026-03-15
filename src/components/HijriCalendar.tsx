@@ -351,6 +351,17 @@ export function HijriCalendar() {
         </Button>
       </div>
 
+      {/* Filter tabs */}
+      <div className="flex justify-center mb-3 sm:mb-4">
+        <Tabs value={calendarFilter} onValueChange={(v) => setCalendarFilter(v as 'all' | 'mine' | 'team')}>
+          <TabsList>
+            <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="mine">My Tasks</TabsTrigger>
+            <TabsTrigger value="team">Team</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+
       {/* Weekday headers */}
       <div className="grid grid-cols-7 gap-1 sm:gap-2 mb-2">
         {weekdays.map((day, index) => (
@@ -358,8 +369,8 @@ export function HijriCalendar() {
             key={day}
             className={cn(
               "text-center font-semibold py-1 sm:py-2 rounded-lg text-[10px] sm:text-sm",
-              index === 5 && "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300", // Jumuah
-              index === 6 && "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300" // As-sabt
+              index === 5 && "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300",
+              index === 6 && "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300"
             )}
           >
             <span className="hidden sm:inline">{index === 5 ? 'Jumuah' : index === 6 ? 'As-sabt' : `Day ${index + 1}`}</span>
