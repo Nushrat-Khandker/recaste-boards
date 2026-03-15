@@ -205,7 +205,8 @@ export function HijriCalendar() {
     if (calendarFilter === 'mine' && user) {
       filtered = filtered.filter(e => e.user_id === user.id);
     } else if (calendarFilter === 'team') {
-      filtered = []; // hide personal events in team view
+      // In team view: show events shared with team (visibility = 'team'), hide private ones
+      filtered = filtered.filter(e => e.visibility === 'team');
     }
     return filtered;
   };
@@ -464,17 +465,22 @@ export function HijriCalendar() {
                   );
                 })}
                 {/* Standalone calendar events */}
-                {eventsForDate.map((evt: any) => (
-                  <div
-                    key={evt.id}
-                    className="text-[8px] sm:text-xs p-0.5 sm:p-1 rounded truncate cursor-pointer hover:opacity-80 transition-opacity text-white"
-                    style={{ backgroundColor: evt.color }}
-                    title={evt.title}
-                    onClick={() => setEventDialogState({ open: true, date: dateKey, event: evt })}
-                  >
-                    {evt.title}
-                  </div>
-                ))}
+                {eventsForDate.map((evt: any) => {
+                  const isOwnEvent = user && evt.user_id === user.id;
+                  const typeIcon = evt.event_type === 'out_of_office' ? '🏖️' : evt.event_type === 'focus_time' ? '🎯' : evt.event_type === 'work' ? '💼' : '';
+                  return (
+                    <div
+                      key={evt.id}
+                      className="text-[8px] sm:text-xs p-0.5 sm:p-1 rounded truncate cursor-pointer hover:opacity-80 transition-opacity text-white"
+                      style={{ backgroundColor: evt.color }}
+                      title={`${evt.title}${!isOwnEvent ? ' (team)' : ''}`}
+                      onClick={() => isOwnEvent ? setEventDialogState({ open: true, date: dateKey, event: evt }) : null}
+                    >
+                      {typeIcon && <span className="mr-0.5">{typeIcon}</span>}
+                      {evt.title}
+                    </div>
+                  );
+                })}
               </div>
 
               {/* Gregorian date - only on Jumuah */}

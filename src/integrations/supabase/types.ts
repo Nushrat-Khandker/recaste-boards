@@ -98,30 +98,36 @@ export type Database = {
           created_at: string
           date: string
           description: string | null
+          event_type: string
           id: string
           title: string
           updated_at: string
           user_id: string
+          visibility: string
         }
         Insert: {
           color?: string
           created_at?: string
           date: string
           description?: string | null
+          event_type?: string
           id?: string
           title: string
           updated_at?: string
           user_id: string
+          visibility?: string
         }
         Update: {
           color?: string
           created_at?: string
           date?: string
           description?: string | null
+          event_type?: string
           id?: string
           title?: string
           updated_at?: string
           user_id?: string
+          visibility?: string
         }
         Relationships: []
       }
