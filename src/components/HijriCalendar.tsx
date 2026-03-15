@@ -210,8 +210,15 @@ export function HijriCalendar() {
     return filtered;
   };
 
-  const filterCards = (cards: KanbanCard[]) => {
-    return cards.filter(card => {
+  const filterCards = (cardsToFilter: KanbanCard[]) => {
+    return cardsToFilter.filter(card => {
+      // Filter by calendar view mode
+      if (calendarFilter === 'mine' && user) {
+        if (card.assignedTo !== user.id && card.ownerId !== user.id) {
+          return false;
+        }
+      }
+
       // Filter by project
       if (selectedProject && card.projectName !== selectedProject) {
         return false;
@@ -221,7 +228,6 @@ export function HijriCalendar() {
       if (selectedTags.length > 0) {
         const selectedTagTexts = selectedTags.map((t: any) => (typeof t === 'string' ? t : t.text));
 
-        // Normalize card tags: handle array, stringified JSON, or null
         let cardTagsArray: any[] = [];
         if (Array.isArray(card.tags)) {
           cardTagsArray = card.tags;
