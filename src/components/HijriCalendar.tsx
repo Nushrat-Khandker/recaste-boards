@@ -205,7 +205,8 @@ export function HijriCalendar() {
     if (calendarFilter === 'mine' && user) {
       filtered = filtered.filter(e => e.user_id === user.id);
     } else if (calendarFilter === 'team') {
-      filtered = []; // hide personal events in team view
+      // In team view: show events shared with team (visibility = 'team'), hide private ones
+      filtered = filtered.filter(e => e.visibility === 'team');
     }
     return filtered;
   };
