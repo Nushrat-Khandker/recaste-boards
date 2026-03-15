@@ -2,13 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { gregorianToHijri, getHijriMonthName, getHijriWeekdays, hijriToGregorian } from '@/lib/hijri-utils';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, CalendarPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useKanban, KanbanCard } from '@/context/KanbanContext';
 import EditCardDialog from '@/components/EditCardDialog';
 import CalendarEventDialog from '@/components/CalendarEventDialog';
-import { Plus, CalendarPlus } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface MoonPhaseData {
   date: string;
