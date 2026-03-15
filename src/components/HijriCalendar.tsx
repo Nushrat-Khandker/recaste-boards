@@ -2,13 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { gregorianToHijri, getHijriMonthName, getHijriWeekdays, hijriToGregorian } from '@/lib/hijri-utils';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, CalendarPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useKanban, KanbanCard } from '@/context/KanbanContext';
 import EditCardDialog from '@/components/EditCardDialog';
 import CalendarEventDialog from '@/components/CalendarEventDialog';
-import { Plus, CalendarPlus } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface MoonPhaseData {
   date: string;
@@ -39,7 +40,9 @@ const SOLAR_EVENT_EMOJIS: Record<string, string> = {
 };
 
 export function HijriCalendar() {
+  const { user } = useAuth();
   const { selectedTags, selectedProject, updateCard, addCard, columns } = useKanban();
+  const [calendarFilter, setCalendarFilter] = useState<'all' | 'mine' | 'team'>('all');
   const [newMoons, setNewMoons] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [monthRange, setMonthRange] = useState<{ start: Date; end: Date } | null>(null);
@@ -198,11 +201,24 @@ export function HijriCalendar() {
 
   const getEventsForDate = (gregorianDate: Date) => {
     const dateKey = format(gregorianDate, 'yyyy-MM-dd');
-    return calendarEvents.filter(e => e.date === dateKey);
+    let filtered = calendarEvents.filter(e => e.date === dateKey);
+    if (calendarFilter === 'mine' && user) {
+      filtered = filtered.filter(e => e.user_id === user.id);
+    } else if (calendarFilter === 'team') {
+      filtered = []; // hide personal events in team view
+    }
+    return filtered;
   };
 
-  const filterCards = (cards: KanbanCard[]) => {
-    return cards.filter(card => {
+  const filterCards = (cardsToFilter: KanbanCard[]) => {
+    return cardsToFilter.filter(card => {
+      // Filter by calendar view mode
+      if (calendarFilter === 'mine' && user) {
+        if (card.assignedTo !== user.id && card.ownerId !== user.id) {
+          return false;
+        }
+      }
+
       // Filter by project
       if (selectedProject && card.projectName !== selectedProject) {
         return false;
@@ -212,7 +228,6 @@ export function HijriCalendar() {
       if (selectedTags.length > 0) {
         const selectedTagTexts = selectedTags.map((t: any) => (typeof t === 'string' ? t : t.text));
 
-        // Normalize card tags: handle array, stringified JSON, or null
         let cardTagsArray: any[] = [];
         if (Array.isArray(card.tags)) {
           cardTagsArray = card.tags;
@@ -249,14 +264,19 @@ export function HijriCalendar() {
     const result: Array<{ card: KanbanCard; type: 'start' | 'due' }> = [];
     
     filteredCards.forEach(card => {
-      if (card.startDate) {
-        const startDateKey = format(new Date(card.startDate), 'yyyy-MM-dd');
+      const startDateKey = card.startDate ? format(new Date(card.startDate), 'yyyy-MM-dd') : null;
+      const dueDateKey = card.dueDate ? format(new Date(card.dueDate), 'yyyy-MM-dd') : null;
+      const sameDay = startDateKey && dueDateKey && startDateKey === dueDateKey;
+
+      if (sameDay) {
+        // Only show due when both dates are the same
+        if (dueDateKey === dateKey) {
+          result.push({ card, type: 'due' });
+        }
+      } else {
         if (startDateKey === dateKey) {
           result.push({ card, type: 'start' });
         }
-      }
-      if (card.dueDate) {
-        const dueDateKey = format(new Date(card.dueDate), 'yyyy-MM-dd');
         if (dueDateKey === dateKey) {
           result.push({ card, type: 'due' });
         }
@@ -331,6 +351,17 @@ export function HijriCalendar() {
         </Button>
       </div>
 
+      {/* Filter tabs */}
+      <div className="flex justify-center mb-3 sm:mb-4">
+        <Tabs value={calendarFilter} onValueChange={(v) => setCalendarFilter(v as 'all' | 'mine' | 'team')}>
+          <TabsList>
+            <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="mine">My Tasks</TabsTrigger>
+            <TabsTrigger value="team">Team</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+
       {/* Weekday headers */}
       <div className="grid grid-cols-7 gap-1 sm:gap-2 mb-2">
         {weekdays.map((day, index) => (
@@ -338,8 +369,8 @@ export function HijriCalendar() {
             key={day}
             className={cn(
               "text-center font-semibold py-1 sm:py-2 rounded-lg text-[10px] sm:text-sm",
-              index === 5 && "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300", // Jumuah
-              index === 6 && "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300" // As-sabt
+              index === 5 && "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300",
+              index === 6 && "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300"
             )}
           >
             <span className="hidden sm:inline">{index === 5 ? 'Jumuah' : index === 6 ? 'As-sabt' : `Day ${index + 1}`}</span>

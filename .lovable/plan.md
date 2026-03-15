@@ -1,41 +1,43 @@
 
 
-## Plan: Calendar View Filters + Deduplicate Same-Day Cards
+## Current State: Where Notifications Come From
 
-### Problems to Solve
-1. **No user-level filtering** — everyone sees all cards and events; no way to view "my calendar" vs "team calendar"
-2. **Duplicate entries when start date = due date** — both "start" and "due" entries appear for the same card on the same day
-3. **No separation between personal events and team/work cards**
+Right now, there is **only one trigger** generating notifications:
 
-### Approach
+- **`on_chat_message_mention`** -- fires on `INSERT` into `chat_messages`, calls `create_mention_notifications()`. It only creates a notification when `mentioned_users` array is non-empty.
 
-#### 1. Fix Duplicate Display (Same Start & Due Date)
-In `getCardsForDate()` in `HijriCalendar.tsx`, when a card's `startDate` and `dueDate` are the same day, only push a single `'due'` entry instead of both `'start'` and `'due'`.
+That's it. No other events (replies, card assignments, card updates, new chat messages) generate notifications. The `NotificationCenter` UI and real-time subscription work fine -- they just have nothing to show beyond mentions.
 
-#### 2. Add Calendar Filter Bar
-Add a filter toolbar above the calendar grid with three view modes:
+---
 
-- **All** — shows all team cards + all calendar events (current behavior)
-- **My Tasks** — shows only cards assigned to current user (`assignedTo`) or owned by them (`ownerId`), plus their personal calendar events (`user_id`)
-- **Team** — shows only work/team cards (cards not personal events), useful for seeing the full team workload
+## Plan: Add Notification Triggers
 
-This will be a simple toggle using existing `Tabs` UI component, placed in the calendar header area. Uses `useAuth()` to get the current user ID for filtering.
+### 1. Reply Notification Trigger (Database)
 
-#### 3. Personal vs Team Calendar Events
-Calendar events already have a `user_id` field. We'll use this to filter:
-- In "My Tasks" mode: only show events where `user_id` matches current user
-- In "All" mode: show all events
-- In "Team" mode: show all cards but hide personal calendar events
+Create a new trigger function `create_reply_notifications` on `chat_messages` INSERT:
+- When `reply_to` is not null, look up the original message's `user_id`
+- If the replier is not the same person, insert a notification for the original author
+- Title: "{sender_name} replied to your message"
+- Link: `/chat` (or board-specific link based on context_type/context_id)
 
-### Files to Change
+### 2. Card Assignment Notification Trigger (Database)
 
-1. **`src/components/HijriCalendar.tsx`**:
-   - Add `calendarFilter` state: `'all' | 'mine' | 'team'`
-   - Add filter tabs UI in the header section
-   - Modify `getCardsForDate()` to deduplicate same-day start/due
-   - Modify `filterCards()` to apply user filter based on `calendarFilter`
-   - Modify `getEventsForDate()` to filter by user when in "mine" mode
-   - Import `useAuth` for current user
+Create a new trigger function `create_assignment_notifications` on `kanban_cards` INSERT and UPDATE:
+- On INSERT: if `assigned_to` is set and differs from `owner_id`, notify the assignee
+- On UPDATE: if `assigned_to` changed (old != new), notify the new assignee
+- Title: "{assigner} assigned you a task: {card_title}"
+- Link: `/?card={card_id}` or similar
 
-No database changes needed — all fields (`assigned_to`, `owner_id`, `user_id`) already exist.
+### 3. Migration SQL
+
+Single migration with both trigger functions and their triggers attached to the respective tables.
+
+### 4. No Frontend Changes Needed
+
+The existing `NotificationCenter` component already:
+- Subscribes to real-time `INSERT` on `notifications` table
+- Displays title, message, link, and timestamps
+- Handles read/unread state
+
+The new triggers will automatically populate the same `notifications` table, and the UI will pick them up in real-time.
 
