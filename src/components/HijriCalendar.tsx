@@ -40,7 +40,9 @@ const SOLAR_EVENT_EMOJIS: Record<string, string> = {
 };
 
 export function HijriCalendar() {
+  const { user } = useAuth();
   const { selectedTags, selectedProject, updateCard, addCard, columns } = useKanban();
+  const [calendarFilter, setCalendarFilter] = useState<'all' | 'mine' | 'team'>('all');
   const [newMoons, setNewMoons] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [monthRange, setMonthRange] = useState<{ start: Date; end: Date } | null>(null);
