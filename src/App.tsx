@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Tags from "./pages/Tags";
 import SlackIntegrationPage from "./pages/SlackIntegration";
+import Profile from "./pages/Profile";
 import Projects from "./pages/Projects";
 import Auth from "./pages/Auth";
 import AdminProtected from "./pages/AdminProtected";
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/chat" element={<Chat />} />
             <Route path="/tags" element={<Tags />} />
             <Route path="/slack" element={<SlackIntegrationPage />} />
+            <Route path="/profile" element={<Profile />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/admin" element={<AdminProtected />} />

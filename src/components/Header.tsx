@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { MessageSquare, MoreVertical, Search, X, LogOut } from 'lucide-react';
+import { MoreVertical, Search, X, LogOut, UserCircle } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -31,9 +31,6 @@ const Header: React.FC = () => {
     setSearchQuery
   } = useKanban();
   
-  const [showSlackInput, setShowSlackInput] = useState(false);
-  const [slackChannel, setSlackChannel] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const [searchExpanded, setSearchExpanded] = useState(false);
 
   const headerRef = useRef<HTMLElement | null>(null);
@@ -53,45 +50,6 @@ const Header: React.FC = () => {
                     : location.pathname === '/' && location.search === '?view=calendar' ? 'calendar'
                     : 'tasks';
 
-  const handleSendToSlack = async () => {
-    if (!slackChannel.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a Slack channel",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('slack-integration', {
-        body: {
-          action: 'send_board_summary',
-          channel: slackChannel
-        }
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Board summary sent to Slack!",
-      });
-      
-      setShowSlackInput(false);
-      setSlackChannel('');
-    } catch (error) {
-      console.error('Error sending to Slack:', error);
-      toast({
-        title: "Error",
-        description: "Failed to send board summary to Slack",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <header ref={headerRef} className="sticky top-0 z-50 bg-background border-b">
@@ -121,9 +79,9 @@ const Header: React.FC = () => {
                   <PushNotificationToggle />
                 </div>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setShowSlackInput(!showSlackInput)}>
-                  <MessageSquare className="mr-2 h-4 w-4" />
-                  Send to Slack
+                <DropdownMenuItem onClick={() => navigate('/profile')}>
+                  <UserCircle className="mr-2 h-4 w-4" />
+                  Profile Settings
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={async () => { await signOut(); navigate('/auth'); }} className="text-destructive focus:text-destructive">
@@ -222,27 +180,6 @@ const Header: React.FC = () => {
           </TabsList>
         </Tabs>
 
-        {/* Slack Input (when shown) */}
-        {showSlackInput && (
-          <div className="mt-3 flex gap-2">
-            <Input
-              placeholder="Slack channel (e.g., #general)"
-              value={slackChannel}
-              onChange={(e) => setSlackChannel(e.target.value)}
-              className="max-w-xs"
-            />
-            <Button onClick={handleSendToSlack} disabled={isLoading} size="sm">
-              Send
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => setShowSlackInput(false)} 
-              size="sm"
-            >
-              Cancel
-            </Button>
-          </div>
-        )}
       </div>
     </header>
   );
