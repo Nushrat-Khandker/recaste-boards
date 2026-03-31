@@ -101,8 +101,21 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
     setCurrentUserId(user?.id || null);
   };
 
+  const VALID_TEAM_IDS = [
+    '4e96439c-dae4-49c0-a498-8be6015aeec0', // Nasir
+    'd81cbd5d-a223-4fce-905c-8146d73d1dd1', // Nushrat
+    '0f2ef6e4-9ca4-40e4-8b91-a6910a34bf65', // Sabih
+    'd3ecd098-c502-4495-88da-b27dc7e4f440', // Oishorjo
+    '75cb618a-4378-40bd-bcd8-1c417b64d8ad', // Naomi
+    '2eae1da1-9b86-4fd1-85e6-af4b2bb44176', // Inaya
+    '9c7131e4-0dd6-4ddd-be76-065020f0f975', // Mahedi
+  ];
+
   const loadUsers = async () => {
-    const { data } = await (supabase as any).from('profiles').select('id, full_name');
+    const { data } = await (supabase as any)
+      .from('profiles')
+      .select('id, full_name')
+      .in('id', VALID_TEAM_IDS);
     if (data) {
       setAllUsers(data.map((u: any) => ({ id: u.id, name: u.full_name || 'Unknown' })));
     }
