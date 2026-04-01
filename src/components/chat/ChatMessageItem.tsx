@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { 
   Paperclip, Trash2, Edit2, RefreshCw, Loader2, Download, 
   Reply, Check, CheckCheck 
