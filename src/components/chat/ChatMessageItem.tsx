@@ -256,19 +256,25 @@ export const ChatMessageItem = ({
         )}
 
         {isEditing ? (
-          <div className="flex gap-2">
-            <Input
+          <div className="space-y-2">
+            <Textarea
               value={editContent}
               onChange={(e) => setEditContent(e.target.value)}
-              className="flex-1 h-8 text-sm bg-background text-foreground"
+              className="w-full min-h-[60px] max-h-[200px] text-sm bg-background text-foreground resize-none rounded-lg border border-input p-2"
               onKeyDown={(e) => {
-                if (e.key === 'Enter') onSaveEdit(message.id, editContent);
-                else if (e.key === 'Escape') onCancelEdit();
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  onSaveEdit(message.id, editContent);
+                } else if (e.key === 'Escape') {
+                  onCancelEdit();
+                }
               }}
               autoFocus
             />
-            <Button size="sm" variant="secondary" className="h-8" onClick={() => onSaveEdit(message.id, editContent)}>Save</Button>
-            <Button size="sm" variant="ghost" className="h-8" onClick={onCancelEdit}>Cancel</Button>
+            <div className="flex gap-2 justify-end">
+              <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={onCancelEdit}>Cancel</Button>
+              <Button size="sm" variant="secondary" className="h-7 text-xs" onClick={() => onSaveEdit(message.id, editContent)}>Save</Button>
+            </div>
           </div>
         ) : (
           <>
