@@ -155,9 +155,13 @@ export const ChatInput = ({
               placeholder={`Type a message...`}
               className="min-h-[42px] max-h-[120px] resize-none rounded-2xl bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary/30 focus-visible:ring-offset-0 py-2.5 px-4 text-sm text-foreground placeholder:text-muted-foreground"
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey && !showMentionPicker) {
+                if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
-                  handleSend();
+                  if (showMentionPicker && filteredUsers.length > 0) {
+                    insertMention(filteredUsers[0]);
+                  } else {
+                    handleSend();
+                  }
                 }
               }}
             />
