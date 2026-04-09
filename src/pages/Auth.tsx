@@ -101,6 +101,28 @@ const Auth = () => {
                 <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Please wait...</>
               ) : "Get Started"}
             </Button>
+
+            <Button
+              type="button"
+              variant="link"
+              className="w-full text-sm text-muted-foreground"
+              onClick={async () => {
+                if (!email.trim()) {
+                  toast({ title: "Enter your email", description: "Please enter your email address first.", variant: "destructive" });
+                  return;
+                }
+                const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+                  redirectTo: `${window.location.origin}/reset-password`,
+                });
+                if (error) {
+                  toast({ title: "Error", description: error.message, variant: "destructive" });
+                } else {
+                  toast({ title: "Check your email", description: "A password reset link has been sent." });
+                }
+              }}
+            >
+              Forgot password?
+            </Button>
           </form>
         </CardContent>
       </Card>
