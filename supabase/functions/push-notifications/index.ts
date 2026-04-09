@@ -28,7 +28,7 @@ async function importVapidKeys(publicKeyB64: string, privateKeyB64: string) {
 
   const publicKey = await crypto.subtle.importKey(
     "raw",
-    pubRaw,
+    pubRaw as ArrayBuffer,
     { name: "ECDSA", namedCurve: "P-256" },
     true,
     []
@@ -136,7 +136,7 @@ async function encryptPayload(
   // Import client public key
   const clientPubKey = await crypto.subtle.importKey(
     "raw",
-    clientPubRaw,
+    clientPubRaw as ArrayBuffer,
     { name: "ECDH", namedCurve: "P-256" },
     false,
     []
@@ -158,7 +158,7 @@ async function encryptPayload(
     ...localPubRaw,
   ]);
 
-  const prkKey = await crypto.subtle.importKey("raw", clientAuth, "HKDF", false, ["deriveBits"]);
+  const prkKey = await crypto.subtle.importKey("raw", clientAuth as ArrayBuffer, "HKDF", false, ["deriveBits"]);
   const ikm = new Uint8Array(
     await crypto.subtle.deriveBits(
       { name: "HKDF", hash: "SHA-256", salt: sharedSecret, info: authInfo },

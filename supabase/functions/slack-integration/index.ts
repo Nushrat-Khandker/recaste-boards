@@ -128,7 +128,7 @@ serve(async (req) => {
         // "Fix login bug, Critical authentication issue" (title + description)  
         // "Fix login bug, Critical authentication issue, 2025-01-20" (title + description + due date)
         
-        const parts = text.split(',').map(part => part.trim());
+        const parts = text.split(',').map((part: string) => part.trim());
         const cardTitle = parts[0];
         const cardDescription = parts[1] || `Created by ${user_name} from Slack`;
         let dueDate: string | undefined;
@@ -362,7 +362,7 @@ serve(async (req) => {
     }
   } catch (error) {
     console.error('Error in slack-integration function:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: (error as Error).message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
