@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
 const SUPABASE_URL = "https://duthchas.tail6b1aa4.ts.net:8443"; // NAS Supabase
-const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJyb2xlIjogImFub24iLCAiaXNzIjogInN1cGFiYXNlIiwgImlhdCI6IDE3NDMyOTI4MDAsICJleHAiOiAxOTAwOTcyODAwfQ.4O_W21bD8gn2ZwEiwPcZFpcI1QOsnJqMyT-2OaMWI_4";
+const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzQzMjkyODAwLCJleHAiOjE5MDA5NzI4MDB9.V3_f7_xG2z5gu5Za6xdv57LAUl1NXCnUkQvjukd2YO4";
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
