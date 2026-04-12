@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
@@ -40,6 +41,7 @@ export const ChatInput = ({
   replyingToUserName,
   onCancelReply,
 }: ChatInputProps) => {
+  const isMobile = useIsMobile();
   const [newMessage, setNewMessage] = useState('');
   const [showMentionPicker, setShowMentionPicker] = useState(false);
   const [mentionQuery, setMentionQuery] = useState('');
@@ -155,7 +157,7 @@ export const ChatInput = ({
               placeholder={`Type a message...`}
               className="min-h-[42px] max-h-[120px] resize-none rounded-2xl bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary/30 focus-visible:ring-offset-0 py-2.5 px-4 text-sm text-foreground placeholder:text-muted-foreground"
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
+                if (e.key === 'Enter' && !e.shiftKey && !isMobile) {
                   e.preventDefault();
                   if (showMentionPicker && filteredUsers.length > 0) {
                     insertMention(filteredUsers[0]);
