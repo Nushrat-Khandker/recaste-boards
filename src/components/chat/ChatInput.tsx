@@ -41,6 +41,7 @@ export const ChatInput = ({
   replyingToUserName,
   onCancelReply,
 }: ChatInputProps) => {
+  const isMobile = useIsMobile();
   const [newMessage, setNewMessage] = useState('');
   const [showMentionPicker, setShowMentionPicker] = useState(false);
   const [mentionQuery, setMentionQuery] = useState('');
