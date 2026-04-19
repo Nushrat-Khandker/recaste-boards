@@ -28,58 +28,59 @@ serve(async (req) => {
     );
 
     const normalizedEmail = email.toLowerCase().trim();
+    const emailPrefix = normalizedEmail.split('@')[0];
+    const displayName = full_name?.trim() || (emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1));
 
-    // Derive a display name: use provided name, or capitalize email prefix
-    const displayName = full_name?.trim() || normalizedEmail.split('@')[0].charAt(0).toUpperCase() + normalizedEmail.split('@')[0].slice(1);
-
-    // Check if user already exists by email
+    // Look up existing user by email
     const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
-    const existingUser = existingUsers?.users?.find(u => u.email?.toLowerCase() === normalizedEmail);
+    let existingUser = existingUsers?.users?.find((u) => u.email?.toLowerCase() === normalizedEmail);
 
     if (existingUser) {
       // Update name if provided and different
-      if (full_name?.trim()) {
+      if (full_name?.trim() && existingUser.user_metadata?.full_name !== displayName) {
         await supabaseAdmin.auth.admin.updateUserById(existingUser.id, {
           user_metadata: { full_name: displayName },
         });
-        // Also update profile
-        await supabaseAdmin.from('profiles').update({ full_name: displayName }).eq('id', existingUser.id);
+        await supabaseAdmin.from("profiles").update({ full_name: displayName }).eq("id", existingUser.id);
       }
     } else {
-      // Create new user with confirmed email
-      const { error: userError } = await supabaseAdmin.auth.admin.createUser({
+      const { data: created, error: userError } = await supabaseAdmin.auth.admin.createUser({
         email: normalizedEmail,
         email_confirm: true,
         user_metadata: { full_name: displayName },
       });
 
-      if (userError) {
+      if (userError || !created?.user) {
         console.error("User creation error:", userError);
         return new Response(
-          JSON.stringify({ error: userError.message }),
+          JSON.stringify({ error: userError?.message || "Failed to create user" }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
+      existingUser = created.user;
     }
 
-    // Generate magic link token for instant sign-in
+    // Generate a fresh magic link token every call.
+    // Returning the hashed_token + email lets the client call verifyOtp with type=email,
+    // which works reliably even after cache refresh (each call creates a new token).
     const { data, error } = await supabaseAdmin.auth.admin.generateLink({
-      type: 'magiclink',
+      type: "magiclink",
       email: normalizedEmail,
     });
 
-    if (error) {
+    if (error || !data?.properties?.hashed_token) {
       console.error("Link generation error:", error);
       return new Response(
-        JSON.stringify({ error: error.message }),
+        JSON.stringify({ error: error?.message || "Failed to generate sign-in link" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         token_hash: data.properties.hashed_token,
-        type: 'magiclink'
+        email: normalizedEmail,
+        type: "email",
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
