@@ -40,7 +40,7 @@ const Auth = () => {
 
       const { error: verifyError } = await supabase.auth.verifyOtp({
         token_hash: data.token_hash,
-        type: 'magiclink',
+        type: data.type || 'email',
       });
 
       if (verifyError) {
