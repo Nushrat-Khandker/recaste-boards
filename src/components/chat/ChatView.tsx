@@ -187,6 +187,14 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
       if (!session) return reject(new Error('Not authenticated'));
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID 
         || (import.meta.env.VITE_SUPABASE_URL as string).match(/https:\/\/([^.]+)/)?.[1];
+      let lastProgressAt = Date.now();
+      const stallTimer = setInterval(() => {
+        if (Date.now() - lastProgressAt > 60_000) {
+          clearInterval(stallTimer);
+          try { upload.abort(); } catch {}
+          reject(new Error('Upload stalled (no progress for 60s). The file may exceed the 50MB server limit.'));
+        }
+      }, 5000);
       const upload = new tus.Upload(file, {
         endpoint: `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/upload/resumable`,
         retryDelays: [0, 3000, 5000, 10000, 20000],
@@ -194,9 +202,12 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
         headers: { authorization: `Bearer ${session.access_token}`, 'x-upsert': 'true' },
         uploadDataDuringCreation: true, removeFingerprintOnSuccess: true,
         metadata: { bucketName: bucket, objectName: path, contentType: file.type || 'application/octet-stream', cacheControl: '3600' },
-        onError: (error) => reject(new Error(error.message || 'Upload failed')),
-        onProgress: (bytesUploaded, bytesTotal) => onProgress(Math.round((bytesUploaded / bytesTotal) * 95)),
-        onSuccess: () => resolve(),
+        onError: (error) => { clearInterval(stallTimer); reject(new Error(error.message || 'Upload failed')); },
+        onProgress: (bytesUploaded, bytesTotal) => {
+          lastProgressAt = Date.now();
+          onProgress(Math.round((bytesUploaded / bytesTotal) * 95));
+        },
+        onSuccess: () => { clearInterval(stallTimer); resolve(); },
       });
       const previousUploads = await upload.findPreviousUploads();
       if (previousUploads.length > 0) upload.resumeFromPreviousUpload(previousUploads[0]);
