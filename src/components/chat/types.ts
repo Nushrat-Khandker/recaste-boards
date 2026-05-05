@@ -25,5 +25,5 @@ export interface ChatUser {
   name: string;
 }
 
-export const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200MB
+export const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB (Supabase Free Tier hard limit)
 export const MESSAGES_PER_PAGE = 50;
