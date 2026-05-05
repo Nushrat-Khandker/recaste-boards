@@ -7,9 +7,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { Send, Paperclip, Mic, Video, Square, Plus, Smile, AtSign, Code, Image as ImageIcon, Trash2, Edit2 } from 'lucide-react';
 import { format } from 'date-fns';
-import { MAX_FILE_SIZE } from '@/components/chat/types';
-import { formatFileSize } from '@/components/chat/fileUtils';
-import { CHAT_UPLOAD_BUCKET, createChatStoragePath, DB_WRITE_TIMEOUT_MS, uploadFileToStorage, withTimeout } from '@/components/chat/uploadUtils';
 
 interface ChatMessage {
   id: string;
@@ -46,7 +43,6 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
   const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
-  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [showMentionPicker, setShowMentionPicker] = useState(false);
   const [mentionQuery, setMentionQuery] = useState('');
   const [allUsers, setAllUsers] = useState<Array<{ id: string; name: string }>>([]);
@@ -225,26 +221,22 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
     setIsLoading(true);
 
     for (const file of Array.from(files)) {
-      if (file.size > MAX_FILE_SIZE) {
-        toast({
-          title: 'File too large',
-          description: `${file.name} exceeds the ${formatFileSize(MAX_FILE_SIZE)} limit`,
-          variant: 'destructive',
-        });
-        continue;
-      }
-
       try {
-        setUploadProgress(0);
-        const fileName = createChatStoragePath(actualContextType, actualContextId, file.name);
-        await uploadFileToStorage(CHAT_UPLOAD_BUCKET, fileName, file, (p) => setUploadProgress(p));
-        setUploadProgress(97);
+        const fileExt = file.name.split('.').pop();
+        const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const fileName = `${actualContextType}/${actualContextId || 'general'}/${Date.now()}-${sanitizedName}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('board-files')
+          .upload(fileName, file);
+
+        if (uploadError) throw uploadError;
 
         const { data: { publicUrl } } = supabase.storage
-          .from(CHAT_UPLOAD_BUCKET)
+          .from('board-files')
           .getPublicUrl(fileName);
 
-        const { error: dbError } = await withTimeout<any>((supabase as any).from('chat_messages').insert({
+        const { error: dbError } = await (supabase as any).from('chat_messages').insert({
           board_name: actualContextId, // Keep for backward compatibility
           context_type: actualContextType,
           context_id: actualContextId,
@@ -252,22 +244,19 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
           message_type: 'file',
           file_url: publicUrl,
           file_name: file.name,
-        }), DB_WRITE_TIMEOUT_MS, 'Upload succeeded, but saving the chat attachment timed out.');
+        });
 
         if (dbError) throw dbError;
-        setUploadProgress(100);
-        setTimeout(() => setUploadProgress(null), 500);
 
         toast({
           title: 'Success',
           description: `${file.name} uploaded successfully`,
         });
-      } catch (error: any) {
+      } catch (error) {
         console.error('Error uploading file:', error);
-        setUploadProgress(null);
         toast({
           title: 'Error',
-          description: error?.message || `Failed to upload ${file.name}`,
+          description: `Failed to upload ${file.name}`,
           variant: 'destructive',
         });
       }
@@ -573,17 +562,6 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
       </div>
       
       <div className="border-t bg-background">
-        {uploadProgress !== null && (
-          <div className="px-4 py-2 border-b">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>Uploading...</span>
-              <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
-                <div className="h-full bg-primary transition-all" style={{ width: `${uploadProgress}%` }} />
-              </div>
-              <span>{uploadProgress}%</span>
-            </div>
-          </div>
-        )}
         {recordedBlob && (
           <div className="px-4 py-3 bg-muted border-b">
             <div className="flex items-center justify-between gap-3">
