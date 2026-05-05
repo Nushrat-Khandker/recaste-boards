@@ -190,7 +190,7 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
         await uploadFileToStorage(CHAT_UPLOAD_BUCKET, fileName, file, (p) => setUploadProgress(p));
         setUploadProgress(97);
         const { data: { publicUrl } } = supabase.storage.from(CHAT_UPLOAD_BUCKET).getPublicUrl(fileName);
-        const { error: dbError } = await withTimeout((supabase as any).from('chat_messages').insert({
+        const { error: dbError } = await withTimeout<any>((supabase as any).from('chat_messages').insert({
           board_name: actualContextId, context_type: actualContextType, context_id: actualContextId,
           user_id: user.id, message_type: 'file', file_url: publicUrl, file_name: file.name,
         }), DB_WRITE_TIMEOUT_MS, 'Upload succeeded, but saving the chat attachment timed out.');
