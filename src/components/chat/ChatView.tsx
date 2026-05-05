@@ -187,16 +187,28 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
       if (!session) return reject(new Error('Not authenticated'));
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID 
         || (import.meta.env.VITE_SUPABASE_URL as string).match(/https:\/\/([^.]+)/)?.[1];
-      const upload = new tus.Upload(file, {
+      let lastProgressAt = Date.now();
+      let upload: tus.Upload;
+      const stallTimer = setInterval(() => {
+        if (Date.now() - lastProgressAt > 60_000) {
+          clearInterval(stallTimer);
+          try { upload?.abort(); } catch {}
+          reject(new Error('Upload stalled (no progress for 60s). The file may exceed the 50MB server limit.'));
+        }
+      }, 5000);
+      upload = new tus.Upload(file, {
         endpoint: `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/upload/resumable`,
         retryDelays: [0, 3000, 5000, 10000, 20000],
         chunkSize: 6 * 1024 * 1024,
         headers: { authorization: `Bearer ${session.access_token}`, 'x-upsert': 'true' },
         uploadDataDuringCreation: true, removeFingerprintOnSuccess: true,
         metadata: { bucketName: bucket, objectName: path, contentType: file.type || 'application/octet-stream', cacheControl: '3600' },
-        onError: (error) => reject(new Error(error.message || 'Upload failed')),
-        onProgress: (bytesUploaded, bytesTotal) => onProgress(Math.round((bytesUploaded / bytesTotal) * 95)),
-        onSuccess: () => resolve(),
+        onError: (error) => { clearInterval(stallTimer); reject(new Error(error.message || 'Upload failed')); },
+        onProgress: (bytesUploaded, bytesTotal) => {
+          lastProgressAt = Date.now();
+          onProgress(Math.round((bytesUploaded / bytesTotal) * 95));
+        },
+        onSuccess: () => { clearInterval(stallTimer); resolve(); },
       });
       const previousUploads = await upload.findPreviousUploads();
       if (previousUploads.length > 0) upload.resumeFromPreviousUpload(previousUploads[0]);
@@ -208,7 +220,7 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { toast({ title: 'Error', description: 'You must be logged in', variant: 'destructive' }); return; }
     for (const file of Array.from(files)) {
-      if (file.size > MAX_FILE_SIZE) { toast({ title: 'File too large', description: `${file.name} exceeds 200MB`, variant: 'destructive' }); continue; }
+      if (file.size > MAX_FILE_SIZE) { toast({ title: 'File too large', description: `${file.name} exceeds 50MB limit`, variant: 'destructive' }); continue; }
       try {
         setUploadProgress(0);
         const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
@@ -340,7 +352,7 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
         <div className="absolute inset-0 bg-primary/10 border-2 border-dashed border-primary z-50 flex items-center justify-center rounded-xl">
           <div className="text-center">
             <Paperclip className="h-12 w-12 mx-auto mb-2 text-primary" />
-            <p className="text-lg font-medium">Drop files to upload (max 200MB)</p>
+            <p className="text-lg font-medium">Drop files to upload (max 50MB)</p>
           </div>
         </div>
       )}
