@@ -573,6 +573,17 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
       </div>
       
       <div className="border-t bg-background">
+        {uploadProgress !== null && (
+          <div className="px-4 py-2 border-b">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>Uploading...</span>
+              <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                <div className="h-full bg-primary transition-all" style={{ width: `${uploadProgress}%` }} />
+              </div>
+              <span>{uploadProgress}%</span>
+            </div>
+          </div>
+        )}
         {recordedBlob && (
           <div className="px-4 py-3 bg-muted border-b">
             <div className="flex items-center justify-between gap-3">
