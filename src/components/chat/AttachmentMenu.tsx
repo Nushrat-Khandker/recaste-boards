@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Plus, Image, FileVideo, FileAudio, FileText, File, X } from 'lucide-react';
 import { MAX_FILE_SIZE } from './types';
 import { useToast } from '@/components/ui/use-toast';
+import { formatFileSize } from './fileUtils';
 
 interface AttachmentMenuProps {
   onFileUpload: (files: FileList) => void;
@@ -38,7 +39,7 @@ const ATTACHMENT_OPTIONS = [
     label: 'Any File',
     icon: File,
     accept: '*/*',
-    description: 'All file types (max 200MB)',
+    description: `All file types (max ${formatFileSize(MAX_FILE_SIZE)})`,
   },
 ];
 
@@ -55,7 +56,7 @@ export const AttachmentMenu = ({ onFileUpload, disabled }: AttachmentMenuProps) 
       if (file.size > MAX_FILE_SIZE) {
         toast({
           title: 'File too large',
-          description: `${file.name} exceeds the 200MB limit`,
+          description: `${file.name} exceeds the ${formatFileSize(MAX_FILE_SIZE)} limit`,
           variant: 'destructive',
         });
         return;
@@ -84,7 +85,7 @@ export const AttachmentMenu = ({ onFileUpload, disabled }: AttachmentMenuProps) 
           if (file.size > MAX_FILE_SIZE) {
             toast({
               title: 'File too large',
-              description: `${file.name} exceeds the 200MB limit`,
+              description: `${file.name} exceeds the ${formatFileSize(MAX_FILE_SIZE)} limit`,
               variant: 'destructive',
             });
             document.body.removeChild(input);

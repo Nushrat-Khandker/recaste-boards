@@ -11,7 +11,8 @@ import { ChatMessageItem } from './ChatMessageItem';
 import { ChatInput } from './ChatInput';
 import { RecordingPreview } from './RecordingPreview';
 import { ChatMessage, ChatUser, MAX_FILE_SIZE } from './types';
-import * as tus from 'tus-js-client';
+import { CHAT_UPLOAD_BUCKET, createChatStoragePath, DB_WRITE_TIMEOUT_MS, uploadFileToStorage, withTimeout } from './uploadUtils';
+import { formatFileSize } from './fileUtils';
 import { format, isToday, isYesterday } from 'date-fns';
 
 interface ChatViewProps {
@@ -179,59 +180,21 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
     await sendMessage(message.content, [], message.reply_to || undefined);
   };
 
-  const uploadFileWithTus = useCallback((
-    bucket: string, path: string, file: File, onProgress: (percent: number) => void,
-  ): Promise<void> => {
-    return new Promise(async (resolve, reject) => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return reject(new Error('Not authenticated'));
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID 
-        || (import.meta.env.VITE_SUPABASE_URL as string).match(/https:\/\/([^.]+)/)?.[1];
-      let lastProgressAt = Date.now();
-      let upload: tus.Upload;
-      const stallTimer = setInterval(() => {
-        if (Date.now() - lastProgressAt > 60_000) {
-          clearInterval(stallTimer);
-          try { upload?.abort(); } catch {}
-          reject(new Error('Upload stalled (no progress for 60s). The file may exceed the 50MB server limit.'));
-        }
-      }, 5000);
-      upload = new tus.Upload(file, {
-        endpoint: `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/upload/resumable`,
-        retryDelays: [0, 3000, 5000, 10000, 20000],
-        chunkSize: 6 * 1024 * 1024,
-        headers: { authorization: `Bearer ${session.access_token}`, 'x-upsert': 'true' },
-        uploadDataDuringCreation: true, removeFingerprintOnSuccess: true,
-        metadata: { bucketName: bucket, objectName: path, contentType: file.type || 'application/octet-stream', cacheControl: '3600' },
-        onError: (error) => { clearInterval(stallTimer); reject(new Error(error.message || 'Upload failed')); },
-        onProgress: (bytesUploaded, bytesTotal) => {
-          lastProgressAt = Date.now();
-          onProgress(Math.round((bytesUploaded / bytesTotal) * 95));
-        },
-        onSuccess: () => { clearInterval(stallTimer); resolve(); },
-      });
-      const previousUploads = await upload.findPreviousUploads();
-      if (previousUploads.length > 0) upload.resumeFromPreviousUpload(previousUploads[0]);
-      upload.start();
-    });
-  }, []);
-
   const handleFileUpload = async (files: FileList) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { toast({ title: 'Error', description: 'You must be logged in', variant: 'destructive' }); return; }
     for (const file of Array.from(files)) {
-      if (file.size > MAX_FILE_SIZE) { toast({ title: 'File too large', description: `${file.name} exceeds 50MB limit`, variant: 'destructive' }); continue; }
+      if (file.size > MAX_FILE_SIZE) { toast({ title: 'File too large', description: `${file.name} exceeds the ${formatFileSize(MAX_FILE_SIZE)} limit`, variant: 'destructive' }); continue; }
       try {
         setUploadProgress(0);
-        const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-        const fileName = `${actualContextType}/${actualContextId || 'general'}/${Date.now()}-${sanitizedName}`;
-        await uploadFileWithTus('board-files', fileName, file, (p) => setUploadProgress(p));
+        const fileName = createChatStoragePath(actualContextType, actualContextId, file.name);
+        await uploadFileToStorage(CHAT_UPLOAD_BUCKET, fileName, file, (p) => setUploadProgress(p));
         setUploadProgress(97);
-        const { data: { publicUrl } } = supabase.storage.from('board-files').getPublicUrl(fileName);
-        const { error: dbError } = await (supabase as any).from('chat_messages').insert({
+        const { data: { publicUrl } } = supabase.storage.from(CHAT_UPLOAD_BUCKET).getPublicUrl(fileName);
+        const { error: dbError } = await withTimeout<any>((supabase as any).from('chat_messages').insert({
           board_name: actualContextId, context_type: actualContextType, context_id: actualContextId,
           user_id: user.id, message_type: 'file', file_url: publicUrl, file_name: file.name,
-        });
+        }), DB_WRITE_TIMEOUT_MS, 'Upload succeeded, but saving the chat attachment timed out.');
         if (dbError) throw dbError;
         setUploadProgress(100);
         setTimeout(() => setUploadProgress(null), 500);
