@@ -188,7 +188,7 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID 
         || (import.meta.env.VITE_SUPABASE_URL as string).match(/https:\/\/([^.]+)/)?.[1];
       const upload = new tus.Upload(file, {
-        endpoint: `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/upload/resumable`,
+        endpoint: `https://${projectId}.supabase.co/storage/v1/upload/resumable`,
         retryDelays: [0, 3000, 5000, 10000, 20000],
         chunkSize: 6 * 1024 * 1024,
         headers: { authorization: `Bearer ${session.access_token}`, 'x-upsert': 'true' },
