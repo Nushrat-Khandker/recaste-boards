@@ -12,6 +12,7 @@ import { ChatInput } from './ChatInput';
 import { RecordingPreview } from './RecordingPreview';
 import { ChatMessage, ChatUser, MAX_FILE_SIZE } from './types';
 import { CHAT_UPLOAD_BUCKET, createChatStoragePath, DB_WRITE_TIMEOUT_MS, uploadFileToStorage, withTimeout } from './uploadUtils';
+import { formatFileSize } from './fileUtils';
 import { format, isToday, isYesterday } from 'date-fns';
 
 interface ChatViewProps {
@@ -183,7 +184,7 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { toast({ title: 'Error', description: 'You must be logged in', variant: 'destructive' }); return; }
     for (const file of Array.from(files)) {
-      if (file.size > MAX_FILE_SIZE) { toast({ title: 'File too large', description: `${file.name} exceeds 50MB limit`, variant: 'destructive' }); continue; }
+      if (file.size > MAX_FILE_SIZE) { toast({ title: 'File too large', description: `${file.name} exceeds the ${formatFileSize(MAX_FILE_SIZE)} limit`, variant: 'destructive' }); continue; }
       try {
         setUploadProgress(0);
         const fileName = createChatStoragePath(actualContextType, actualContextId, file.name);
