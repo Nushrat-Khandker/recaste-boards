@@ -10,12 +10,20 @@ self.addEventListener('push', (event) => {
     console.error('Error parsing push data:', e);
   }
 
+  // WhatsApp-style: group notifications per chat context using `tag`,
+  // replace previous unread for that chat with `renotify`, and vibrate.
+  const url = data.url || data.link || '/';
+  const tag = data.tag || `chat:${url}`;
+
   const options = {
     body: data.body || data.message || '',
     icon: '/pwa-192x192.png',
     badge: '/pwa-192x192.png',
-    vibrate: [100, 50, 100],
-    data: { url: data.url || data.link || '/' },
+    vibrate: [200, 100, 200],
+    tag,
+    renotify: true,
+    timestamp: Date.now(),
+    data: { url },
     actions: [
       { action: 'open', title: 'Open' },
       { action: 'dismiss', title: 'Dismiss' },

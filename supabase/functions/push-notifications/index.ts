@@ -444,7 +444,8 @@ serve(async (req) => {
           notifUrl = `/projects?project=${contextId}`;
         }
 
-        const payload = JSON.stringify({ title, body: notifBody, url: notifUrl });
+        const tag = `${contextType || 'chat'}:${contextId || 'general'}`;
+        const payload = JSON.stringify({ title, body: notifBody, url: notifUrl, tag });
 
         console.log(`Broadcasting to ${allSubscriptions.length} subscriptions`);
 
