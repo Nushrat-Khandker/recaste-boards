@@ -4,7 +4,4 @@ project_id = "usdhemikpmbcuwearsob"
 verify_jwt = false
 
 [functions.generate-invite-link]
-verify_jwt = false
-
-[functions.simple-auth]
-verify_jwt = false
+verify_jwt = true
