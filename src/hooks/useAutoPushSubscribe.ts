@@ -1,11 +1,11 @@
 import { useEffect, useRef } from 'react';
+import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
 import {
   isPushSupported,
   isPushSubscribed,
   subscribeToPush,
 } from '@/lib/push-notifications';
-import { toast } from '@/hooks/use-toast';
 
 const PROMPT_KEY = 'push_prompt_dismissed_at';
 const PROMPT_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -44,22 +44,17 @@ export function useAutoPushSubscribe() {
         const last = Number(localStorage.getItem(PROMPT_KEY) || 0);
         if (Date.now() - last < PROMPT_COOLDOWN_MS) return;
 
-        toast({
-          title: 'Enable chat notifications?',
+        toast('Enable chat notifications?', {
           description: 'Get a ping for every new message, like WhatsApp.',
+          duration: 12000,
           action: {
-            altText: 'Enable',
+            label: 'Enable',
             onClick: async () => {
               const ok = await subscribeToPush();
-              toast({
-                title: ok ? 'Notifications enabled' : 'Could not enable',
-                description: ok
-                  ? 'You will be notified of new messages.'
-                  : 'Allow notifications in your browser settings.',
-                variant: ok ? 'default' : 'destructive',
-              });
+              if (ok) toast.success('Notifications enabled');
+              else toast.error('Could not enable. Allow notifications in browser settings.');
             },
-          } as any,
+          },
         });
         localStorage.setItem(PROMPT_KEY, String(Date.now()));
       } catch (e) {
