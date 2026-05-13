@@ -12,6 +12,16 @@ serve(async (req) => {
   }
 
   try {
+    // Require authenticated admin caller
+    const authHeader = req.headers.get("Authorization") || "";
+    const jwt = authHeader.replace(/^Bearer\s+/i, "");
+    if (!jwt) {
+      return new Response(
+        JSON.stringify({ error: "Authentication required" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const { email } = await req.json();
 
     // Validate input
@@ -29,10 +39,11 @@ serve(async (req) => {
       );
     }
 
-    // Basic email format validation
-    if (!email.includes("@")) {
+    // Strict email format + domain restriction
+    const emailRegex = /^[^\s@]+@recaste\.com$/i;
+    if (!emailRegex.test(email)) {
       return new Response(
-        JSON.stringify({ error: "Invalid email format" }),
+        JSON.stringify({ error: "Only @recaste.com emails are allowed" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -48,6 +59,27 @@ serve(async (req) => {
         },
       }
     );
+
+    // Verify caller is an admin
+    const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(jwt);
+    if (userError || !userData?.user) {
+      return new Response(
+        JSON.stringify({ error: "Invalid authentication" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    const { data: roleRow } = await supabaseAdmin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userData.user.id)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (!roleRow) {
+      return new Response(
+        JSON.stringify({ error: "Admin role required" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // Use the app's published URL for redirect
     const siteUrl = Deno.env.get("SITE_URL") || "https://recaste-boards.lovable.app";
