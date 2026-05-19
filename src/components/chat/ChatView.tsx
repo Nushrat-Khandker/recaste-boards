@@ -11,12 +11,12 @@ import { ChatMessageItem } from './ChatMessageItem';
 import { ChatInput } from './ChatInput';
 import { RecordingPreview } from './RecordingPreview';
 import { SharedFilesPanel } from './SharedFilesPanel';
-import { ChatMessage, ChatUser, MAX_FILE_SIZE } from './types';
+import { ChatMessage, ChatUser, ChatContextType, MAX_FILE_SIZE } from './types';
 import * as tus from 'tus-js-client';
 import { format, isToday, isYesterday } from 'date-fns';
 
 interface ChatViewProps {
-  contextType: 'board' | 'project' | 'general';
+  contextType: ChatContextType;
   contextId?: string;
   boardName?: string;
 }
