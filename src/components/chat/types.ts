@@ -15,8 +15,10 @@ export interface ChatMessage {
   failed?: boolean;
 }
 
+export type ChatContextType = 'board' | 'project' | 'general' | 'channel' | 'dm';
+
 export interface ChatContextConfig {
-  contextType: 'board' | 'project' | 'general';
+  contextType: ChatContextType;
   contextId: string | null;
 }
 

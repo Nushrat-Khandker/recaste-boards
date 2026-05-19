@@ -20,7 +20,7 @@ interface SharedFile {
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  contextType: 'board' | 'project' | 'general';
+  contextType: 'board' | 'project' | 'general' | 'channel' | 'dm';
   contextId: string | null;
 }
 
