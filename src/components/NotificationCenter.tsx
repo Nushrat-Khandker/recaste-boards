@@ -13,6 +13,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 
+const playNotificationSound = () => {
+  try {
+    const audio = new Audio('/notification.mp3');
+    audio.volume = 0.5;
+    void audio.play().catch(() => {});
+  } catch {}
+};
+
 interface Notification {
   id: string;
   type: string;
@@ -50,6 +58,7 @@ export const NotificationCenter = () => {
           (payload) => {
             setNotifications((prev) => [payload.new as Notification, ...prev]);
             setUnreadCount((prev) => prev + 1);
+            playNotificationSound();
           }
         )
         .subscribe();
