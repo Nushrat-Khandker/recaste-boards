@@ -16,6 +16,7 @@ import Auth from "./pages/Auth";
 import AdminProtected from "./pages/AdminProtected";
 import ResetPassword from "./pages/ResetPassword";
 import Chat from "./pages/Chat";
+import Messages from "./pages/Messages";
 
 const queryClient = new QueryClient();
 
@@ -57,6 +58,7 @@ const App = () => (
             <Route path="/" element={<RequireAuth><Index /></RequireAuth>} />
             <Route path="/projects" element={<RequireAuth><Projects /></RequireAuth>} />
             <Route path="/chat" element={<RequireAuth><Chat /></RequireAuth>} />
+            <Route path="/messages" element={<RequireAuth><Messages /></RequireAuth>} />
             <Route path="/tags" element={<RequireAuth><Tags /></RequireAuth>} />
             <Route path="/slack" element={<RequireAuth><SlackIntegrationPage /></RequireAuth>} />
             <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
