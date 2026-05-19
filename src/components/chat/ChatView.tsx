@@ -3,13 +3,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Paperclip, Loader2, Search, X } from 'lucide-react';
+import { Paperclip, Loader2, Search, X, FolderOpen } from 'lucide-react';
 import { useChatMessages } from './useChatMessages';
 import { useMediaRecording } from './useMediaRecording';
 import { useReactions } from './useReactions';
 import { ChatMessageItem } from './ChatMessageItem';
 import { ChatInput } from './ChatInput';
 import { RecordingPreview } from './RecordingPreview';
+import { SharedFilesPanel } from './SharedFilesPanel';
 import { ChatMessage, ChatUser, MAX_FILE_SIZE } from './types';
 import * as tus from 'tus-js-client';
 import { format, isToday, isYesterday } from 'date-fns';
@@ -52,6 +53,7 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
   const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isFilesPanelOpen, setIsFilesPanelOpen] = useState(false);
   
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -329,12 +331,25 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
             </Button>
           </div>
         ) : (
-          <Button variant="ghost" size="sm" className="ml-auto h-8 px-2" onClick={() => setIsSearchOpen(true)}>
-            <Search className="h-4 w-4 mr-1" />
-            <span className="text-xs">Search</span>
-          </Button>
+          <div className="ml-auto flex items-center gap-1">
+            <Button variant="ghost" size="sm" className="h-8 px-2" onClick={() => setIsFilesPanelOpen(true)}>
+              <FolderOpen className="h-4 w-4 mr-1" />
+              <span className="text-xs">Files</span>
+            </Button>
+            <Button variant="ghost" size="sm" className="h-8 px-2" onClick={() => setIsSearchOpen(true)}>
+              <Search className="h-4 w-4 mr-1" />
+              <span className="text-xs">Search</span>
+            </Button>
+          </div>
         )}
       </div>
+
+      <SharedFilesPanel
+        open={isFilesPanelOpen}
+        onOpenChange={setIsFilesPanelOpen}
+        contextType={actualContextType}
+        contextId={actualContextId}
+      />
 
       {isDragging && (
         <div className="absolute inset-0 bg-primary/10 border-2 border-dashed border-primary z-50 flex items-center justify-center rounded-xl">
