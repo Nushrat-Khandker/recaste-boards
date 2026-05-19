@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { KanbanProvider } from '@/context/KanbanContext';
@@ -18,6 +18,15 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { Hash, Plus, MessageSquarePlus, Loader2, Users, Lock, LogIn } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
+
+const LAST_READ_KEY = 'messages_last_read_v1';
+const loadLastRead = (): Record<string, number> => {
+  try { return JSON.parse(localStorage.getItem(LAST_READ_KEY) || '{}'); } catch { return {}; }
+};
+const saveLastRead = (m: Record<string, number>) => {
+  try { localStorage.setItem(LAST_READ_KEY, JSON.stringify(m)); } catch {}
+};
 
 type Channel = {
   id: string;
@@ -45,6 +54,7 @@ type Selection =
 const MessagesContent = () => {
   const { user, loading } = useAuth();
   const { toast } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [channels, setChannels] = useState<Channel[]>([]);
   const [dms, setDms] = useState<DmConv[]>([]);
@@ -54,6 +64,10 @@ const MessagesContent = () => {
 
   const [newChannelOpen, setNewChannelOpen] = useState(false);
   const [newDmOpen, setNewDmOpen] = useState(false);
+
+  // Unread tracking — counts of messages since lastRead per context
+  const [unread, setUnread] = useState<Record<string, number>>({});
+  const [lastRead, setLastRead] = useState<Record<string, number>>(() => loadLastRead());
 
   const loadAll = async () => {
     if (!user) return;
@@ -111,6 +125,96 @@ const MessagesContent = () => {
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [user?.id]);
+
+  // Compute initial unread counts whenever channel/DM lists or lastRead change
+  useEffect(() => {
+    if (!user) return;
+    const channelIds = channels.filter(c => c.is_member).map(c => c.id);
+    const dmIds = dms.map(d => d.id);
+    if (channelIds.length === 0 && dmIds.length === 0) return;
+
+    (async () => {
+      const counts: Record<string, number> = {};
+      const ctxIds = [...channelIds, ...dmIds];
+      const { data } = await (supabase as any)
+        .from('chat_messages')
+        .select('context_id, created_at, user_id, context_type')
+        .in('context_id', ctxIds)
+        .in('context_type', ['channel', 'dm'])
+        .order('created_at', { ascending: false })
+        .limit(500);
+      (data || []).forEach((m: any) => {
+        if (m.user_id === user.id) return;
+        const last = lastRead[m.context_id] || 0;
+        if (new Date(m.created_at).getTime() > last) {
+          counts[m.context_id] = (counts[m.context_id] || 0) + 1;
+        }
+      });
+      setUnread(counts);
+    })();
+  }, [user?.id, channels, dms, lastRead]);
+
+  // Realtime: bump unread count on new messages in any of my channels/DMs
+  useEffect(() => {
+    if (!user) return;
+    const myCtx = new Set<string>([
+      ...channels.filter(c => c.is_member).map(c => c.id),
+      ...dms.map(d => d.id),
+    ]);
+    if (myCtx.size === 0) return;
+
+    const ch = supabase
+      .channel('messages-unread')
+      .on('postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'chat_messages' },
+        (payload: any) => {
+          const m = payload.new;
+          if (!m || m.user_id === user.id) return;
+          if (!['channel', 'dm'].includes(m.context_type)) return;
+          if (!myCtx.has(m.context_id)) return;
+          // If user is actively viewing this conversation, mark as read instead
+          if (selection && selection.id === m.context_id) {
+            const next = { ...lastRead, [m.context_id]: Date.now() };
+            setLastRead(next); saveLastRead(next);
+            return;
+          }
+          setUnread(prev => ({ ...prev, [m.context_id]: (prev[m.context_id] || 0) + 1 }));
+        })
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [user?.id, channels, dms, selection?.id]);
+
+  // Mark current selection as read on open / switch
+  useEffect(() => {
+    if (!selection) return;
+    const next = { ...lastRead, [selection.id]: Date.now() };
+    setLastRead(next); saveLastRead(next);
+    setUnread(prev => {
+      if (!prev[selection.id]) return prev;
+      const { [selection.id]: _, ...rest } = prev;
+      return rest;
+    });
+  }, [selection?.id]);
+
+  // Deep-link via ?channel=<id> or ?dm=<id>
+  useEffect(() => {
+    if (loadingLists) return;
+    const channelId = searchParams.get('channel');
+    const dmId = searchParams.get('dm');
+    if (channelId) {
+      const c = channels.find(x => x.id === channelId);
+      if (c) {
+        setSelection({ kind: 'channel', id: c.id, label: c.name });
+        setSearchParams({}, { replace: true });
+      }
+    } else if (dmId) {
+      const d = dms.find(x => x.id === dmId);
+      if (d) {
+        setSelection({ kind: 'dm', id: d.id, label: d.name || (d.members.find(m => m.user_id !== user?.id)?.name || 'Direct message') });
+        setSearchParams({}, { replace: true });
+      }
+    }
+  }, [loadingLists, channels, dms, searchParams]);
 
   const joinChannel = async (channelId: string) => {
     if (!user) return;
@@ -171,11 +275,17 @@ const MessagesContent = () => {
                           onClick={() => setSelection({ kind: 'channel', id: c.id, label: c.name })}
                           className={cn(
                             "w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm hover:bg-accent transition-colors",
-                            selection?.kind === 'channel' && selection.id === c.id && "bg-accent font-medium"
+                            selection?.kind === 'channel' && selection.id === c.id && "bg-accent font-medium",
+                            unread[c.id] > 0 && !(selection?.kind === 'channel' && selection.id === c.id) && "font-bold text-foreground"
                           )}
                         >
                           {c.is_private ? <Lock className="h-3.5 w-3.5 text-muted-foreground" /> : <Hash className="h-3.5 w-3.5 text-muted-foreground" />}
-                          <span className="truncate">{c.name}</span>
+                          <span className="truncate flex-1 text-left">{c.name}</span>
+                          {unread[c.id] > 0 && (
+                            <Badge variant="destructive" className="h-4 min-w-[1rem] px-1 text-[10px] rounded-full flex items-center justify-center">
+                              {unread[c.id] > 9 ? '9+' : unread[c.id]}
+                            </Badge>
+                          )}
                         </button>
                       ))}
                     </div>
@@ -219,11 +329,17 @@ const MessagesContent = () => {
                         onClick={() => setSelection({ kind: 'dm', id: dm.id, label: dmLabel(dm) })}
                         className={cn(
                           "w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm hover:bg-accent transition-colors text-left",
-                          selection?.kind === 'dm' && selection.id === dm.id && "bg-accent font-medium"
+                          selection?.kind === 'dm' && selection.id === dm.id && "bg-accent font-medium",
+                          unread[dm.id] > 0 && !(selection?.kind === 'dm' && selection.id === dm.id) && "font-bold text-foreground"
                         )}
                       >
                         {dm.is_group ? <Users className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" /> : <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 flex-shrink-0" />}
-                        <span className="truncate">{dmLabel(dm)}</span>
+                        <span className="truncate flex-1">{dmLabel(dm)}</span>
+                        {unread[dm.id] > 0 && (
+                          <Badge variant="destructive" className="h-4 min-w-[1rem] px-1 text-[10px] rounded-full flex items-center justify-center">
+                            {unread[dm.id] > 9 ? '9+' : unread[dm.id]}
+                          </Badge>
+                        )}
                       </button>
                     ))}
                   </div>
