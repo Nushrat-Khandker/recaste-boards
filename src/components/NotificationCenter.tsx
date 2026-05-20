@@ -21,6 +21,30 @@ const playNotificationSound = () => {
   } catch {}
 };
 
+// Native pop-up — works automatically in Electron desktop wrapper and in
+// browsers/PWAs where the user has granted Notification permission.
+const showDesktopNotification = (n: { title: string; message: string | null; link: string | null }) => {
+  try {
+    if (typeof window === 'undefined' || !('Notification' in window)) return;
+    if (document.visibilityState === 'visible') return; // skip when tab is focused
+    const fire = () => {
+      const note = new Notification(n.title, {
+        body: n.message || '',
+        icon: '/placeholder.svg',
+        tag: 'recaste-' + Math.random(),
+      });
+      note.onclick = () => {
+        window.focus();
+        if (n.link) window.location.href = n.link;
+      };
+    };
+    if (Notification.permission === 'granted') fire();
+    else if (Notification.permission !== 'denied') {
+      Notification.requestPermission().then((p) => { if (p === 'granted') fire(); });
+    }
+  } catch {}
+};
+
 interface Notification {
   id: string;
   type: string;
@@ -59,6 +83,8 @@ export const NotificationCenter = () => {
             setNotifications((prev) => [payload.new as Notification, ...prev]);
             setUnreadCount((prev) => prev + 1);
             playNotificationSound();
+            const n = payload.new as Notification;
+            showDesktopNotification({ title: n.title, message: n.message, link: n.link });
           }
         )
         .subscribe();

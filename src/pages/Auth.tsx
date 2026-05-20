@@ -10,6 +10,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
 
+const ALLOWED_SIGNUP_DOMAINS = ['duthchas.ltd', 'recaste.com'];
+const isAllowedSignupEmail = (email: string) => {
+  const domain = email.toLowerCase().trim().split('@')[1] || '';
+  return ALLOWED_SIGNUP_DOMAINS.includes(domain);
+};
+
 const Auth = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
@@ -48,6 +54,12 @@ const Auth = () => {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
+    if (!isAllowedSignupEmail(email)) {
+      const msg = `Only ${ALLOWED_SIGNUP_DOMAINS.map(d => '@' + d).join(' or ')} emails can sign up directly. Ask an admin for an invite.`;
+      setErrorMsg(msg);
+      toast({ title: "Sign up blocked", description: msg, variant: "destructive" });
+      return;
+    }
     setIsSubmitting(true);
     const { error } = await supabase.auth.signUp({
       email: email.toLowerCase().trim(),

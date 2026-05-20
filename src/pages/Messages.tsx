@@ -16,9 +16,19 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Hash, Plus, MessageSquarePlus, Loader2, Users, Lock, LogIn } from 'lucide-react';
+import {
+  Hash, Plus, MessageSquarePlus, Loader2, Users, Lock, LogIn,
+  MoreVertical, Settings, UserPlus, Archive, ArchiveRestore, Trash2, Pencil, X as XIcon, LogOut,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 const LAST_READ_KEY = 'messages_last_read_v1';
 const loadLastRead = (): Record<string, number> => {
@@ -34,6 +44,7 @@ type Channel = {
   description: string | null;
   is_private: boolean;
   created_by: string;
+  archived_at: string | null;
   is_member?: boolean;
 };
 
@@ -78,6 +89,9 @@ const MessagesContent = () => {
 
   const [newChannelOpen, setNewChannelOpen] = useState(false);
   const [newDmOpen, setNewDmOpen] = useState(false);
+  const [channelSettingsFor, setChannelSettingsFor] = useState<Channel | null>(null);
+  const [channelMembersFor, setChannelMembersFor] = useState<Channel | null>(null);
+  const [showArchived, setShowArchived] = useState(false);
 
   // Unread tracking — counts of messages since lastRead per context
   const [unread, setUnread] = useState<Record<string, number>>({});
@@ -257,7 +271,27 @@ const MessagesContent = () => {
   if (!user) return <Navigate to="/auth" replace />;
 
   const myChannels = channels.filter(c => c.is_member);
-  const browseChannels = channels.filter(c => !c.is_member && !c.is_private);
+  const activeMyChannels = myChannels.filter(c => !c.archived_at);
+  const archivedMyChannels = myChannels.filter(c => !!c.archived_at);
+  const browseChannels = channels.filter(c => !c.is_member && !c.is_private && !c.archived_at);
+
+  const currentChannel = selection?.kind === 'channel'
+    ? channels.find(c => c.id === selection.id) || null
+    : null;
+
+  const leaveOrDeleteDm = async (dm: DmConv) => {
+    if (!user) return;
+    // Delete own membership; if conversation becomes empty, hard-delete the conversation
+    const { error } = await (supabase as any)
+      .from('dm_members').delete().eq('conversation_id', dm.id).eq('user_id', user.id);
+    if (error) {
+      toast({ title: 'Could not leave', description: error.message, variant: 'destructive' });
+      return;
+    }
+    if (selection?.kind === 'dm' && selection.id === dm.id) setSelection(null);
+    toast({ title: dm.is_group ? 'Left conversation' : 'Conversation removed' });
+    loadAll();
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
@@ -280,10 +314,10 @@ const MessagesContent = () => {
                     <Loader2 className="h-4 w-4 animate-spin text-muted-foreground mx-auto my-2" />
                   ) : (
                     <div className="space-y-0.5">
-                      {myChannels.length === 0 && (
+                      {activeMyChannels.length === 0 && (
                         <p className="text-xs text-muted-foreground px-2 py-1">No channels yet</p>
                       )}
-                      {myChannels.map(c => (
+                      {activeMyChannels.map(c => (
                         <button
                           key={c.id}
                           onClick={() => setSelection({ kind: 'channel', id: c.id, label: c.name })}
@@ -302,6 +336,30 @@ const MessagesContent = () => {
                           )}
                         </button>
                       ))}
+                    </div>
+                  )}
+                  {archivedMyChannels.length > 0 && (
+                    <div className="mt-3">
+                      <button
+                        onClick={() => setShowArchived(s => !s)}
+                        className="text-[10px] uppercase tracking-wide text-muted-foreground px-1 mb-1 hover:text-foreground"
+                      >
+                        {showArchived ? '▼' : '▶'} Archived ({archivedMyChannels.length})
+                      </button>
+                      {showArchived && (
+                        <div className="space-y-0.5">
+                          {archivedMyChannels.map(c => (
+                            <button
+                              key={c.id}
+                              onClick={() => setSelection({ kind: 'channel', id: c.id, label: c.name })}
+                              className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-muted-foreground hover:bg-accent transition-colors italic"
+                            >
+                              <Archive className="h-3.5 w-3.5" />
+                              <span className="truncate flex-1 text-left">{c.name}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
                   {browseChannels.length > 0 && (
@@ -338,23 +396,50 @@ const MessagesContent = () => {
                       <p className="text-xs text-muted-foreground px-2 py-1">No direct messages</p>
                     )}
                     {dms.map(dm => (
-                      <button
-                        key={dm.id}
-                        onClick={() => setSelection({ kind: 'dm', id: dm.id, label: dmLabel(dm) })}
-                        className={cn(
-                          "w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm hover:bg-accent transition-colors text-left",
-                          selection?.kind === 'dm' && selection.id === dm.id && "bg-accent font-medium",
-                          unread[dm.id] > 0 && !(selection?.kind === 'dm' && selection.id === dm.id) && "font-bold text-foreground"
-                        )}
-                      >
-                        {dm.is_group ? <Users className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" /> : <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 flex-shrink-0" />}
-                        <span className="truncate flex-1">{dmLabel(dm)}</span>
-                        {unread[dm.id] > 0 && (
-                          <Badge variant="destructive" className="h-4 min-w-[1rem] px-1 text-[10px] rounded-full flex items-center justify-center">
-                            {unread[dm.id] > 9 ? '9+' : unread[dm.id]}
-                          </Badge>
-                        )}
-                      </button>
+                      <div key={dm.id} className="group relative">
+                        <button
+                          onClick={() => setSelection({ kind: 'dm', id: dm.id, label: dmLabel(dm) })}
+                          className={cn(
+                            "w-full flex items-center gap-2 px-2 py-1.5 pr-8 rounded-md text-sm hover:bg-accent transition-colors text-left",
+                            selection?.kind === 'dm' && selection.id === dm.id && "bg-accent font-medium",
+                            unread[dm.id] > 0 && !(selection?.kind === 'dm' && selection.id === dm.id) && "font-bold text-foreground"
+                          )}
+                        >
+                          {dm.is_group ? <Users className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" /> : <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 flex-shrink-0" />}
+                          <span className="truncate flex-1">{dmLabel(dm)}</span>
+                          {unread[dm.id] > 0 && (
+                            <Badge variant="destructive" className="h-4 min-w-[1rem] px-1 text-[10px] rounded-full flex items-center justify-center">
+                              {unread[dm.id] > 9 ? '9+' : unread[dm.id]}
+                            </Badge>
+                          )}
+                        </button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <button
+                              className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 rounded-md opacity-0 group-hover:opacity-100 hover:bg-destructive/10 text-muted-foreground hover:text-destructive flex items-center justify-center transition-opacity"
+                              title={dm.is_group ? 'Leave conversation' : 'Remove conversation'}
+                            >
+                              <XIcon className="h-3.5 w-3.5" />
+                            </button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>{dm.is_group ? 'Leave group?' : 'Remove conversation?'}</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                {dm.is_group
+                                  ? 'You will stop seeing messages from this group. Other members keep their copy.'
+                                  : 'This will hide the conversation from your sidebar. Messages remain stored.'}
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => leaveOrDeleteDm(dm)}>
+                                {dm.is_group ? 'Leave' : 'Remove'}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -368,9 +453,89 @@ const MessagesContent = () => {
               <div>
                 <div className="mb-2 flex items-center gap-2">
                   {selection.kind === 'channel'
-                    ? <Hash className="h-4 w-4 text-muted-foreground" />
+                    ? (currentChannel?.is_private ? <Lock className="h-4 w-4 text-muted-foreground" /> : <Hash className="h-4 w-4 text-muted-foreground" />)
                     : <Users className="h-4 w-4 text-muted-foreground" />}
-                  <h2 className="text-lg font-semibold truncate">{selection.label}</h2>
+                  <h2 className="text-lg font-semibold truncate flex-1">
+                    {selection.label}
+                    {currentChannel?.archived_at && (
+                      <span className="ml-2 text-xs font-normal text-muted-foreground">(archived)</span>
+                    )}
+                  </h2>
+                  {selection.kind === 'channel' && currentChannel && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuItem onClick={() => setChannelMembersFor(currentChannel)}>
+                          <UserPlus className="h-4 w-4 mr-2" /> Members
+                        </DropdownMenuItem>
+                        {currentChannel.created_by === user.id && (
+                          <>
+                            <DropdownMenuItem onClick={() => setChannelSettingsFor(currentChannel)}>
+                              <Pencil className="h-4 w-4 mr-2" /> Edit channel
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={async () => {
+                                const newVal = currentChannel.archived_at ? null : new Date().toISOString();
+                                const { error } = await (supabase as any)
+                                  .from('chat_channels').update({ archived_at: newVal }).eq('id', currentChannel.id);
+                                if (error) toast({ title: 'Failed', description: error.message, variant: 'destructive' });
+                                else { toast({ title: newVal ? 'Channel archived' : 'Channel unarchived' }); loadAll(); }
+                              }}
+                            >
+                              {currentChannel.archived_at
+                                ? <><ArchiveRestore className="h-4 w-4 mr-2" /> Unarchive</>
+                                : <><Archive className="h-4 w-4 mr-2" /> Archive</>}
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={async () => {
+                            const { error } = await (supabase as any)
+                              .from('channel_members').delete().eq('channel_id', currentChannel.id).eq('user_id', user.id);
+                            if (error) toast({ title: 'Failed', description: error.message, variant: 'destructive' });
+                            else { toast({ title: 'Left channel' }); setSelection(null); loadAll(); }
+                          }}
+                        >
+                          <LogOut className="h-4 w-4 mr-2" /> Leave channel
+                        </DropdownMenuItem>
+                        {currentChannel.created_by === user.id && (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive focus:text-destructive">
+                                <Trash2 className="h-4 w-4 mr-2" /> Delete channel
+                              </DropdownMenuItem>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete #{currentChannel.name}?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This permanently removes the channel and all its messages. This cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  onClick={async () => {
+                                    await (supabase as any).from('chat_messages').delete().eq('context_type', 'channel').eq('context_id', currentChannel.id);
+                                    await (supabase as any).from('channel_members').delete().eq('channel_id', currentChannel.id);
+                                    const { error } = await (supabase as any).from('chat_channels').delete().eq('id', currentChannel.id);
+                                    if (error) toast({ title: 'Failed', description: error.message, variant: 'destructive' });
+                                    else { toast({ title: 'Channel deleted' }); setSelection(null); loadAll(); }
+                                  }}
+                                >Delete</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
                 </div>
                 <ChatView
                   key={`${selection.kind}-${selection.id}`}
@@ -409,6 +574,22 @@ const MessagesContent = () => {
           loadAll();
         }}
       />
+      {channelSettingsFor && (
+        <ChannelSettingsDialog
+          channel={channelSettingsFor}
+          onClose={() => setChannelSettingsFor(null)}
+          onSaved={() => { setChannelSettingsFor(null); loadAll(); }}
+        />
+      )}
+      {channelMembersFor && (
+        <ChannelMembersDialog
+          channel={channelMembersFor}
+          allProfiles={profiles}
+          currentUserId={user.id}
+          onClose={() => setChannelMembersFor(null)}
+          onChanged={() => loadAll()}
+        />
+      )}
     </div>
   );
 };
@@ -604,3 +785,173 @@ const Messages = () => (
 );
 
 export default Messages;
+
+const ChannelSettingsDialog = ({
+  channel, onClose, onSaved,
+}: {
+  channel: Channel;
+  onClose: () => void;
+  onSaved: () => void;
+}) => {
+  const { toast } = useToast();
+  const [name, setName] = useState(channel.name);
+  const [description, setDescription] = useState(channel.description || '');
+  const [isPrivate, setIsPrivate] = useState(channel.is_private);
+  const [busy, setBusy] = useState(false);
+
+  const submit = async () => {
+    const cleanName = name.trim().toLowerCase().replace(/[^a-z0-9-_]/g, '-').replace(/-+/g, '-');
+    if (!cleanName) return;
+    setBusy(true);
+    const { error } = await (supabase as any)
+      .from('chat_channels')
+      .update({ name: cleanName, description: description.trim() || null, is_private: isPrivate })
+      .eq('id', channel.id);
+    setBusy(false);
+    if (error) {
+      toast({ title: 'Could not update channel', description: error.message, variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Channel updated' });
+    onSaved();
+  };
+
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader><DialogTitle>Edit channel</DialogTitle></DialogHeader>
+        <div className="space-y-4 py-2">
+          <div>
+            <Label htmlFor="ed-name">Name</Label>
+            <div className="flex items-center gap-2 mt-1">
+              <Hash className="h-4 w-4 text-muted-foreground" />
+              <Input id="ed-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={40} />
+            </div>
+          </div>
+          <div>
+            <Label htmlFor="ed-desc">Description</Label>
+            <Textarea id="ed-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className="mt-1" />
+          </div>
+          <div className="flex items-center justify-between rounded-md border p-3">
+            <div>
+              <p className="text-sm font-medium">Private channel</p>
+              <p className="text-xs text-muted-foreground">Only invited members can join</p>
+            </div>
+            <Switch checked={isPrivate} onCheckedChange={setIsPrivate} />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={onClose}>Cancel</Button>
+          <Button onClick={submit} disabled={!name.trim() || busy}>
+            {busy && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+            Save
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const ChannelMembersDialog = ({
+  channel, allProfiles, currentUserId, onClose, onChanged,
+}: {
+  channel: Channel;
+  allProfiles: Profile[];
+  currentUserId: string;
+  onClose: () => void;
+  onChanged: () => void;
+}) => {
+  const { toast } = useToast();
+  const [memberIds, setMemberIds] = useState<Set<string>>(new Set());
+  const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await (supabase as any)
+        .from('channel_members').select('user_id').eq('channel_id', channel.id);
+      setMemberIds(new Set((data || []).map((m: any) => m.user_id)));
+      setLoading(false);
+    })();
+  }, [channel.id]);
+
+  const addMember = async (userId: string) => {
+    const { error } = await (supabase as any)
+      .from('channel_members').insert({ channel_id: channel.id, user_id: userId });
+    if (error) {
+      toast({ title: 'Could not add', description: error.message, variant: 'destructive' });
+      return;
+    }
+    setMemberIds(prev => new Set([...prev, userId]));
+    onChanged();
+  };
+
+  const removeMember = async (userId: string) => {
+    const { error } = await (supabase as any)
+      .from('channel_members').delete().eq('channel_id', channel.id).eq('user_id', userId);
+    if (error) {
+      toast({ title: 'Could not remove', description: error.message, variant: 'destructive' });
+      return;
+    }
+    setMemberIds(prev => { const n = new Set(prev); n.delete(userId); return n; });
+    onChanged();
+  };
+
+  const filtered = allProfiles.filter(p =>
+    (p.full_name || '').toLowerCase().includes(search.toLowerCase())
+  );
+  const isCreator = channel.created_by === currentUserId;
+
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>#{channel.name} members</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3 py-2">
+          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search team..." />
+          <ScrollArea className="h-72 border rounded-md">
+            <div className="p-1">
+              {loading && <Loader2 className="h-4 w-4 animate-spin mx-auto my-4 text-muted-foreground" />}
+              {!loading && filtered.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-6">No people found</p>
+              )}
+              {!loading && filtered.map(p => {
+                const inChannel = memberIds.has(p.id);
+                const isSelf = p.id === currentUserId;
+                return (
+                  <div key={p.id} className="flex items-center gap-3 px-2 py-2 rounded-md hover:bg-accent">
+                    <span className="text-sm flex-1 truncate">
+                      {p.full_name || 'Unknown'}
+                      {isSelf && <span className="text-xs text-muted-foreground"> (you)</span>}
+                    </span>
+                    {inChannel ? (
+                      <Button
+                        variant="ghost" size="sm"
+                        className="h-7 text-xs text-muted-foreground hover:text-destructive"
+                        disabled={isSelf && !isCreator}
+                        onClick={() => removeMember(p.id)}
+                      >Remove</Button>
+                    ) : (
+                      <Button variant="secondary" size="sm" className="h-7 text-xs" onClick={() => addMember(p.id)}>
+                        Add
+                      </Button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </ScrollArea>
+          <p className="text-xs text-muted-foreground">
+            {channel.is_private
+              ? 'Private channel — only added members can see and post.'
+              : 'Public channel — anyone can join, but adding people brings them straight in.'}
+          </p>
+        </div>
+        <DialogFooter>
+          <Button onClick={onClose}>Done</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
