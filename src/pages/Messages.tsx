@@ -785,3 +785,173 @@ const Messages = () => (
 );
 
 export default Messages;
+
+const ChannelSettingsDialog = ({
+  channel, onClose, onSaved,
+}: {
+  channel: Channel;
+  onClose: () => void;
+  onSaved: () => void;
+}) => {
+  const { toast } = useToast();
+  const [name, setName] = useState(channel.name);
+  const [description, setDescription] = useState(channel.description || '');
+  const [isPrivate, setIsPrivate] = useState(channel.is_private);
+  const [busy, setBusy] = useState(false);
+
+  const submit = async () => {
+    const cleanName = name.trim().toLowerCase().replace(/[^a-z0-9-_]/g, '-').replace(/-+/g, '-');
+    if (!cleanName) return;
+    setBusy(true);
+    const { error } = await (supabase as any)
+      .from('chat_channels')
+      .update({ name: cleanName, description: description.trim() || null, is_private: isPrivate })
+      .eq('id', channel.id);
+    setBusy(false);
+    if (error) {
+      toast({ title: 'Could not update channel', description: error.message, variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Channel updated' });
+    onSaved();
+  };
+
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader><DialogTitle>Edit channel</DialogTitle></DialogHeader>
+        <div className="space-y-4 py-2">
+          <div>
+            <Label htmlFor="ed-name">Name</Label>
+            <div className="flex items-center gap-2 mt-1">
+              <Hash className="h-4 w-4 text-muted-foreground" />
+              <Input id="ed-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={40} />
+            </div>
+          </div>
+          <div>
+            <Label htmlFor="ed-desc">Description</Label>
+            <Textarea id="ed-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className="mt-1" />
+          </div>
+          <div className="flex items-center justify-between rounded-md border p-3">
+            <div>
+              <p className="text-sm font-medium">Private channel</p>
+              <p className="text-xs text-muted-foreground">Only invited members can join</p>
+            </div>
+            <Switch checked={isPrivate} onCheckedChange={setIsPrivate} />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={onClose}>Cancel</Button>
+          <Button onClick={submit} disabled={!name.trim() || busy}>
+            {busy && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+            Save
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const ChannelMembersDialog = ({
+  channel, allProfiles, currentUserId, onClose, onChanged,
+}: {
+  channel: Channel;
+  allProfiles: Profile[];
+  currentUserId: string;
+  onClose: () => void;
+  onChanged: () => void;
+}) => {
+  const { toast } = useToast();
+  const [memberIds, setMemberIds] = useState<Set<string>>(new Set());
+  const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await (supabase as any)
+        .from('channel_members').select('user_id').eq('channel_id', channel.id);
+      setMemberIds(new Set((data || []).map((m: any) => m.user_id)));
+      setLoading(false);
+    })();
+  }, [channel.id]);
+
+  const addMember = async (userId: string) => {
+    const { error } = await (supabase as any)
+      .from('channel_members').insert({ channel_id: channel.id, user_id: userId });
+    if (error) {
+      toast({ title: 'Could not add', description: error.message, variant: 'destructive' });
+      return;
+    }
+    setMemberIds(prev => new Set([...prev, userId]));
+    onChanged();
+  };
+
+  const removeMember = async (userId: string) => {
+    const { error } = await (supabase as any)
+      .from('channel_members').delete().eq('channel_id', channel.id).eq('user_id', userId);
+    if (error) {
+      toast({ title: 'Could not remove', description: error.message, variant: 'destructive' });
+      return;
+    }
+    setMemberIds(prev => { const n = new Set(prev); n.delete(userId); return n; });
+    onChanged();
+  };
+
+  const filtered = allProfiles.filter(p =>
+    (p.full_name || '').toLowerCase().includes(search.toLowerCase())
+  );
+  const isCreator = channel.created_by === currentUserId;
+
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>#{channel.name} members</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3 py-2">
+          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search team..." />
+          <ScrollArea className="h-72 border rounded-md">
+            <div className="p-1">
+              {loading && <Loader2 className="h-4 w-4 animate-spin mx-auto my-4 text-muted-foreground" />}
+              {!loading && filtered.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-6">No people found</p>
+              )}
+              {!loading && filtered.map(p => {
+                const inChannel = memberIds.has(p.id);
+                const isSelf = p.id === currentUserId;
+                return (
+                  <div key={p.id} className="flex items-center gap-3 px-2 py-2 rounded-md hover:bg-accent">
+                    <span className="text-sm flex-1 truncate">
+                      {p.full_name || 'Unknown'}
+                      {isSelf && <span className="text-xs text-muted-foreground"> (you)</span>}
+                    </span>
+                    {inChannel ? (
+                      <Button
+                        variant="ghost" size="sm"
+                        className="h-7 text-xs text-muted-foreground hover:text-destructive"
+                        disabled={isSelf && !isCreator}
+                        onClick={() => removeMember(p.id)}
+                      >Remove</Button>
+                    ) : (
+                      <Button variant="secondary" size="sm" className="h-7 text-xs" onClick={() => addMember(p.id)}>
+                        Add
+                      </Button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </ScrollArea>
+          <p className="text-xs text-muted-foreground">
+            {channel.is_private
+              ? 'Private channel — only added members can see and post.'
+              : 'Public channel — anyone can join, but adding people brings them straight in.'}
+          </p>
+        </div>
+        <DialogFooter>
+          <Button onClick={onClose}>Done</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
