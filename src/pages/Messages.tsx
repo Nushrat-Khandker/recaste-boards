@@ -416,7 +416,7 @@ const MessagesContent = () => {
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <button
-                              className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 rounded-md opacity-0 group-hover:opacity-100 hover:bg-destructive/10 text-muted-foreground hover:text-destructive flex items-center justify-center transition-opacity"
+                              className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 rounded-md opacity-60 hover:opacity-100 hover:bg-destructive/10 text-muted-foreground hover:text-destructive flex items-center justify-center transition-opacity"
                               title={dm.is_group ? 'Leave conversation' : 'Remove conversation'}
                             >
                               <XIcon className="h-3.5 w-3.5" />
