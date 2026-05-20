@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
+import { InstallAppButton } from "@/components/InstallAppButton";
 
 const ALLOWED_SIGNUP_DOMAINS = ['duthchas.ltd', 'recaste.com'];
 const isAllowedSignupEmail = (email: string) => {
@@ -103,7 +104,7 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Welcome</CardTitle>
@@ -218,6 +219,7 @@ const Auth = () => {
           </Tabs>
         </CardContent>
       </Card>
+      <InstallAppButton variant="ghost" size="sm" />
     </div>
   );
 };
