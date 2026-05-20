@@ -89,6 +89,9 @@ const MessagesContent = () => {
 
   const [newChannelOpen, setNewChannelOpen] = useState(false);
   const [newDmOpen, setNewDmOpen] = useState(false);
+  const [channelSettingsFor, setChannelSettingsFor] = useState<Channel | null>(null);
+  const [channelMembersFor, setChannelMembersFor] = useState<Channel | null>(null);
+  const [showArchived, setShowArchived] = useState(false);
 
   // Unread tracking — counts of messages since lastRead per context
   const [unread, setUnread] = useState<Record<string, number>>({});
@@ -268,7 +271,27 @@ const MessagesContent = () => {
   if (!user) return <Navigate to="/auth" replace />;
 
   const myChannels = channels.filter(c => c.is_member);
-  const browseChannels = channels.filter(c => !c.is_member && !c.is_private);
+  const activeMyChannels = myChannels.filter(c => !c.archived_at);
+  const archivedMyChannels = myChannels.filter(c => !!c.archived_at);
+  const browseChannels = channels.filter(c => !c.is_member && !c.is_private && !c.archived_at);
+
+  const currentChannel = selection?.kind === 'channel'
+    ? channels.find(c => c.id === selection.id) || null
+    : null;
+
+  const leaveOrDeleteDm = async (dm: DmConv) => {
+    if (!user) return;
+    // Delete own membership; if conversation becomes empty, hard-delete the conversation
+    const { error } = await (supabase as any)
+      .from('dm_members').delete().eq('conversation_id', dm.id).eq('user_id', user.id);
+    if (error) {
+      toast({ title: 'Could not leave', description: error.message, variant: 'destructive' });
+      return;
+    }
+    if (selection?.kind === 'dm' && selection.id === dm.id) setSelection(null);
+    toast({ title: dm.is_group ? 'Left conversation' : 'Conversation removed' });
+    loadAll();
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
