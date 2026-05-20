@@ -453,9 +453,89 @@ const MessagesContent = () => {
               <div>
                 <div className="mb-2 flex items-center gap-2">
                   {selection.kind === 'channel'
-                    ? <Hash className="h-4 w-4 text-muted-foreground" />
+                    ? (currentChannel?.is_private ? <Lock className="h-4 w-4 text-muted-foreground" /> : <Hash className="h-4 w-4 text-muted-foreground" />)
                     : <Users className="h-4 w-4 text-muted-foreground" />}
-                  <h2 className="text-lg font-semibold truncate">{selection.label}</h2>
+                  <h2 className="text-lg font-semibold truncate flex-1">
+                    {selection.label}
+                    {currentChannel?.archived_at && (
+                      <span className="ml-2 text-xs font-normal text-muted-foreground">(archived)</span>
+                    )}
+                  </h2>
+                  {selection.kind === 'channel' && currentChannel && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuItem onClick={() => setChannelMembersFor(currentChannel)}>
+                          <UserPlus className="h-4 w-4 mr-2" /> Members
+                        </DropdownMenuItem>
+                        {currentChannel.created_by === user.id && (
+                          <>
+                            <DropdownMenuItem onClick={() => setChannelSettingsFor(currentChannel)}>
+                              <Pencil className="h-4 w-4 mr-2" /> Edit channel
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={async () => {
+                                const newVal = currentChannel.archived_at ? null : new Date().toISOString();
+                                const { error } = await (supabase as any)
+                                  .from('chat_channels').update({ archived_at: newVal }).eq('id', currentChannel.id);
+                                if (error) toast({ title: 'Failed', description: error.message, variant: 'destructive' });
+                                else { toast({ title: newVal ? 'Channel archived' : 'Channel unarchived' }); loadAll(); }
+                              }}
+                            >
+                              {currentChannel.archived_at
+                                ? <><ArchiveRestore className="h-4 w-4 mr-2" /> Unarchive</>
+                                : <><Archive className="h-4 w-4 mr-2" /> Archive</>}
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={async () => {
+                            const { error } = await (supabase as any)
+                              .from('channel_members').delete().eq('channel_id', currentChannel.id).eq('user_id', user.id);
+                            if (error) toast({ title: 'Failed', description: error.message, variant: 'destructive' });
+                            else { toast({ title: 'Left channel' }); setSelection(null); loadAll(); }
+                          }}
+                        >
+                          <LogOut className="h-4 w-4 mr-2" /> Leave channel
+                        </DropdownMenuItem>
+                        {currentChannel.created_by === user.id && (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive focus:text-destructive">
+                                <Trash2 className="h-4 w-4 mr-2" /> Delete channel
+                              </DropdownMenuItem>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete #{currentChannel.name}?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This permanently removes the channel and all its messages. This cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  onClick={async () => {
+                                    await (supabase as any).from('chat_messages').delete().eq('context_type', 'channel').eq('context_id', currentChannel.id);
+                                    await (supabase as any).from('channel_members').delete().eq('channel_id', currentChannel.id);
+                                    const { error } = await (supabase as any).from('chat_channels').delete().eq('id', currentChannel.id);
+                                    if (error) toast({ title: 'Failed', description: error.message, variant: 'destructive' });
+                                    else { toast({ title: 'Channel deleted' }); setSelection(null); loadAll(); }
+                                  }}
+                                >Delete</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
                 </div>
                 <ChatView
                   key={`${selection.kind}-${selection.id}`}
@@ -494,6 +574,22 @@ const MessagesContent = () => {
           loadAll();
         }}
       />
+      {channelSettingsFor && (
+        <ChannelSettingsDialog
+          channel={channelSettingsFor}
+          onClose={() => setChannelSettingsFor(null)}
+          onSaved={() => { setChannelSettingsFor(null); loadAll(); }}
+        />
+      )}
+      {channelMembersFor && (
+        <ChannelMembersDialog
+          channel={channelMembersFor}
+          allProfiles={profiles}
+          currentUserId={user.id}
+          onClose={() => setChannelMembersFor(null)}
+          onChanged={() => loadAll()}
+        />
+      )}
     </div>
   );
 };
