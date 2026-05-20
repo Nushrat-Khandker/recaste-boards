@@ -16,9 +16,19 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Hash, Plus, MessageSquarePlus, Loader2, Users, Lock, LogIn } from 'lucide-react';
+import {
+  Hash, Plus, MessageSquarePlus, Loader2, Users, Lock, LogIn,
+  MoreVertical, Settings, UserPlus, Archive, ArchiveRestore, Trash2, Pencil, X as XIcon, LogOut,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 const LAST_READ_KEY = 'messages_last_read_v1';
 const loadLastRead = (): Record<string, number> => {
@@ -34,6 +44,7 @@ type Channel = {
   description: string | null;
   is_private: boolean;
   created_by: string;
+  archived_at: string | null;
   is_member?: boolean;
 };
 
