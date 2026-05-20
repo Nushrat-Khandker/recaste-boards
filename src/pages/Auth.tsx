@@ -104,7 +104,7 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Welcome</CardTitle>
@@ -219,9 +219,7 @@ const Auth = () => {
           </Tabs>
         </CardContent>
       </Card>
-      <div className="mt-4 flex justify-center">
-        <InstallAppButton variant="ghost" size="sm" />
-      </div>
+      <InstallAppButton variant="ghost" size="sm" />
     </div>
   );
 };
