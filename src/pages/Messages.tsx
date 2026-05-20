@@ -314,10 +314,10 @@ const MessagesContent = () => {
                     <Loader2 className="h-4 w-4 animate-spin text-muted-foreground mx-auto my-2" />
                   ) : (
                     <div className="space-y-0.5">
-                      {myChannels.length === 0 && (
+                      {activeMyChannels.length === 0 && (
                         <p className="text-xs text-muted-foreground px-2 py-1">No channels yet</p>
                       )}
-                      {myChannels.map(c => (
+                      {activeMyChannels.map(c => (
                         <button
                           key={c.id}
                           onClick={() => setSelection({ kind: 'channel', id: c.id, label: c.name })}
@@ -336,6 +336,30 @@ const MessagesContent = () => {
                           )}
                         </button>
                       ))}
+                    </div>
+                  )}
+                  {archivedMyChannels.length > 0 && (
+                    <div className="mt-3">
+                      <button
+                        onClick={() => setShowArchived(s => !s)}
+                        className="text-[10px] uppercase tracking-wide text-muted-foreground px-1 mb-1 hover:text-foreground"
+                      >
+                        {showArchived ? '▼' : '▶'} Archived ({archivedMyChannels.length})
+                      </button>
+                      {showArchived && (
+                        <div className="space-y-0.5">
+                          {archivedMyChannels.map(c => (
+                            <button
+                              key={c.id}
+                              onClick={() => setSelection({ kind: 'channel', id: c.id, label: c.name })}
+                              className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-muted-foreground hover:bg-accent transition-colors italic"
+                            >
+                              <Archive className="h-3.5 w-3.5" />
+                              <span className="truncate flex-1 text-left">{c.name}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
                   {browseChannels.length > 0 && (
@@ -372,23 +396,50 @@ const MessagesContent = () => {
                       <p className="text-xs text-muted-foreground px-2 py-1">No direct messages</p>
                     )}
                     {dms.map(dm => (
-                      <button
-                        key={dm.id}
-                        onClick={() => setSelection({ kind: 'dm', id: dm.id, label: dmLabel(dm) })}
-                        className={cn(
-                          "w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm hover:bg-accent transition-colors text-left",
-                          selection?.kind === 'dm' && selection.id === dm.id && "bg-accent font-medium",
-                          unread[dm.id] > 0 && !(selection?.kind === 'dm' && selection.id === dm.id) && "font-bold text-foreground"
-                        )}
-                      >
-                        {dm.is_group ? <Users className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" /> : <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 flex-shrink-0" />}
-                        <span className="truncate flex-1">{dmLabel(dm)}</span>
-                        {unread[dm.id] > 0 && (
-                          <Badge variant="destructive" className="h-4 min-w-[1rem] px-1 text-[10px] rounded-full flex items-center justify-center">
-                            {unread[dm.id] > 9 ? '9+' : unread[dm.id]}
-                          </Badge>
-                        )}
-                      </button>
+                      <div key={dm.id} className="group relative">
+                        <button
+                          onClick={() => setSelection({ kind: 'dm', id: dm.id, label: dmLabel(dm) })}
+                          className={cn(
+                            "w-full flex items-center gap-2 px-2 py-1.5 pr-8 rounded-md text-sm hover:bg-accent transition-colors text-left",
+                            selection?.kind === 'dm' && selection.id === dm.id && "bg-accent font-medium",
+                            unread[dm.id] > 0 && !(selection?.kind === 'dm' && selection.id === dm.id) && "font-bold text-foreground"
+                          )}
+                        >
+                          {dm.is_group ? <Users className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" /> : <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 flex-shrink-0" />}
+                          <span className="truncate flex-1">{dmLabel(dm)}</span>
+                          {unread[dm.id] > 0 && (
+                            <Badge variant="destructive" className="h-4 min-w-[1rem] px-1 text-[10px] rounded-full flex items-center justify-center">
+                              {unread[dm.id] > 9 ? '9+' : unread[dm.id]}
+                            </Badge>
+                          )}
+                        </button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <button
+                              className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 rounded-md opacity-0 group-hover:opacity-100 hover:bg-destructive/10 text-muted-foreground hover:text-destructive flex items-center justify-center transition-opacity"
+                              title={dm.is_group ? 'Leave conversation' : 'Remove conversation'}
+                            >
+                              <XIcon className="h-3.5 w-3.5" />
+                            </button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>{dm.is_group ? 'Leave group?' : 'Remove conversation?'}</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                {dm.is_group
+                                  ? 'You will stop seeing messages from this group. Other members keep their copy.'
+                                  : 'This will hide the conversation from your sidebar. Messages remain stored.'}
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => leaveOrDeleteDm(dm)}>
+                                {dm.is_group ? 'Leave' : 'Remove'}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
                     ))}
                   </div>
                 </div>
