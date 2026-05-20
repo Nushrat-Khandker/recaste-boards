@@ -367,12 +367,11 @@ const MessagesContent = () => {
                       <p className="text-[10px] uppercase tracking-wide text-muted-foreground px-1 mb-1">Browse</p>
                       <div className="space-y-0.5">
                         {browseChannels.map(c => (
-                          <div key={c.id} className="flex items-center gap-1 px-2 py-1 rounded-md text-sm text-muted-foreground group">
                             <Hash className="h-3.5 w-3.5" />
                             <span className="truncate flex-1">{c.name}</span>
                             <button
                               onClick={() => joinChannel(c.id)}
-                              className="opacity-0 group-hover:opacity-100 transition-opacity text-xs text-primary hover:underline flex items-center gap-1"
+                              className="text-xs text-primary hover:underline flex items-center gap-1"
                             >
                               <LogIn className="h-3 w-3" /> Join
                             </button>
