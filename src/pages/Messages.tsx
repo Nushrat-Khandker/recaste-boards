@@ -367,12 +367,12 @@ const MessagesContent = () => {
                       <p className="text-[10px] uppercase tracking-wide text-muted-foreground px-1 mb-1">Browse</p>
                       <div className="space-y-0.5">
                         {browseChannels.map(c => (
-                          <div key={c.id} className="flex items-center gap-1 px-2 py-1 rounded-md text-sm text-muted-foreground group">
+                          <div key={c.id} className="flex items-center gap-1 px-2 py-1 rounded-md text-sm text-muted-foreground">
                             <Hash className="h-3.5 w-3.5" />
                             <span className="truncate flex-1">{c.name}</span>
                             <button
                               onClick={() => joinChannel(c.id)}
-                              className="opacity-0 group-hover:opacity-100 transition-opacity text-xs text-primary hover:underline flex items-center gap-1"
+                              className="text-xs text-primary hover:underline flex items-center gap-1"
                             >
                               <LogIn className="h-3 w-3" /> Join
                             </button>
@@ -416,7 +416,7 @@ const MessagesContent = () => {
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <button
-                              className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 rounded-md opacity-0 group-hover:opacity-100 hover:bg-destructive/10 text-muted-foreground hover:text-destructive flex items-center justify-center transition-opacity"
+                              className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 rounded-md opacity-60 hover:opacity-100 hover:bg-destructive/10 text-muted-foreground hover:text-destructive flex items-center justify-center transition-opacity"
                               title={dm.is_group ? 'Leave conversation' : 'Remove conversation'}
                             >
                               <XIcon className="h-3.5 w-3.5" />
