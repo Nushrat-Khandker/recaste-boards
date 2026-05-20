@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
+import { InstallAppButton } from "@/components/InstallAppButton";
 
 const ALLOWED_SIGNUP_DOMAINS = ['duthchas.ltd', 'recaste.com'];
 const isAllowedSignupEmail = (email: string) => {
@@ -218,6 +219,9 @@ const Auth = () => {
           </Tabs>
         </CardContent>
       </Card>
+      <div className="mt-4 flex justify-center">
+        <InstallAppButton variant="ghost" size="sm" />
+      </div>
     </div>
   );
 };
