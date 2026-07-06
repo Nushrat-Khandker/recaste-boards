@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { 
   Paperclip, Trash2, Edit2, RefreshCw, Loader2, Download, 
-  Reply, Check, CheckCheck, Copy
+  Reply, Check, CheckCheck, Copy, Pin, PinOff
 } from 'lucide-react';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { ChatMessage } from './types';
 import { isImageFile, isVideoFile, isAudioFile, isPdfFile, getFileTypeInfo, getFileExtension } from './fileUtils';
 import { EmojiReactions, EmojiPickerButton } from './EmojiReactions';
@@ -27,8 +28,10 @@ interface ChatMessageItemProps {
   replyToMessage?: ChatMessage | null;
   replyToUserName?: string;
   profilesMap: Record<string, string | null>;
+  avatarMap?: Record<string, string | null>;
   reactions?: Reaction[];
   onToggleReaction?: (messageId: string, emoji: string) => void;
+  onTogglePin?: (message: ChatMessage) => void;
 }
 
 const FileAttachmentCard = ({ fileName, fileUrl }: { fileName: string | null; fileUrl: string }) => {
@@ -165,12 +168,16 @@ export const ChatMessageItem = ({
   replyToMessage,
   replyToUserName,
   profilesMap,
+  avatarMap = {},
   reactions = [],
   onToggleReaction,
+  onTogglePin,
 }: ChatMessageItemProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isOwnMessage = message.user_id === currentUserId;
+  const avatarUrl = avatarMap[message.user_id] || null;
+  const initials = (userName || '?').split(' ').map(s => s[0]).join('').slice(0, 2).toUpperCase();
 
   const handleCopy = useCallback(() => {
     const text = message.message_type === 'file'
@@ -203,6 +210,11 @@ export const ChatMessageItem = ({
       <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full" onClick={handleCopy} title="Copy">
         <Copy className="h-3 w-3" />
       </Button>
+      {onTogglePin && !message.pending && !message.failed && (
+        <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full" onClick={() => onTogglePin(message)} title={message.is_pinned ? 'Unpin' : 'Pin'}>
+          {message.is_pinned ? <PinOff className="h-3 w-3" /> : <Pin className="h-3 w-3" />}
+        </Button>
+      )}
       {onToggleReaction && (
         <EmojiPickerButton onSelect={(emoji) => onToggleReaction(message.id, emoji)} />
       )}
@@ -231,6 +243,13 @@ export const ChatMessageItem = ({
       {/* For own messages: toolbar on the left */}
       {isOwnMessage && actionButtons}
 
+      {!isOwnMessage && (
+        <Avatar className="h-7 w-7 mt-0.5 shrink-0">
+          {avatarUrl && <AvatarImage src={avatarUrl} alt={userName} />}
+          <AvatarFallback className="text-[10px]">{initials}</AvatarFallback>
+        </Avatar>
+      )}
+
       <div 
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
@@ -243,6 +262,11 @@ export const ChatMessageItem = ({
           ${message.failed ? 'ring-2 ring-destructive' : ''}
         `}
       >
+        {message.is_pinned && (
+          <div className={`flex items-center gap-1 text-[10px] font-semibold mb-1 ${isOwnMessage ? 'text-white/80' : 'text-primary'}`}>
+            <Pin className="h-2.5 w-2.5" /> Pinned
+          </div>
+        )}
         {replyToMessage && (
           <div 
             className={`mb-1.5 px-2.5 py-1.5 rounded-lg border-l-3 text-xs
