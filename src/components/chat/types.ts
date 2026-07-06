@@ -7,6 +7,7 @@ export interface ChatMessage {
   created_at: string;
   user_id: string;
   reply_to: string | null;
+  is_pinned?: boolean;
   profiles?: {
     full_name: string | null;
   };
