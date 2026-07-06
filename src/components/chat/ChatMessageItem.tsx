@@ -11,6 +11,7 @@ import { ChatMessage } from './types';
 import { isImageFile, isVideoFile, isAudioFile, isPdfFile, getFileTypeInfo, getFileExtension } from './fileUtils';
 import { EmojiReactions, EmojiPickerButton } from './EmojiReactions';
 import { Reaction } from './useReactions';
+import { useOnlineUsers, OnlineDot } from '@/hooks/usePresence';
 
 interface ChatMessageItemProps {
   message: ChatMessage;
@@ -178,6 +179,8 @@ export const ChatMessageItem = ({
   const isOwnMessage = message.user_id === currentUserId;
   const avatarUrl = avatarMap[message.user_id] || null;
   const initials = (userName || '?').split(' ').map(s => s[0]).join('').slice(0, 2).toUpperCase();
+  const onlineIds = useOnlineUsers();
+  const isSenderOnline = onlineIds.has(message.user_id);
 
   const handleCopy = useCallback(() => {
     const text = message.message_type === 'file'
@@ -244,10 +247,13 @@ export const ChatMessageItem = ({
       {isOwnMessage && actionButtons}
 
       {!isOwnMessage && (
-        <Avatar className="h-7 w-7 mt-0.5 shrink-0">
-          {avatarUrl && <AvatarImage src={avatarUrl} alt={userName} />}
-          <AvatarFallback className="text-[10px]">{initials}</AvatarFallback>
-        </Avatar>
+        <div className="relative mt-0.5 shrink-0">
+          <Avatar className="h-7 w-7">
+            {avatarUrl && <AvatarImage src={avatarUrl} alt={userName} />}
+            <AvatarFallback className="text-[10px]">{initials}</AvatarFallback>
+          </Avatar>
+          <OnlineDot online={isSenderOnline} className="h-2 w-2 ring-1" />
+        </div>
       )}
 
       <div 
