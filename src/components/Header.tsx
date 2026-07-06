@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useKanban } from '../context/KanbanContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,7 +22,9 @@ const Header: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [displayName, setDisplayName] = useState<string>('');
   const { 
     selectedNumber, 
     setSelectedNumber, 
@@ -34,6 +37,31 @@ const Header: React.FC = () => {
   const [searchExpanded, setSearchExpanded] = useState(false);
 
   const headerRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (!user) { setAvatarUrl(null); setDisplayName(''); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('full_name, nickname, avatar_url')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (cancelled) return;
+      setAvatarUrl((data as any)?.avatar_url || null);
+      setDisplayName(((data as any)?.nickname || (data as any)?.full_name || user.email || '') as string);
+    })();
+    // Refresh when profile changes elsewhere
+    const ch = supabase
+      .channel(`hdr-profile-${user.id}`)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${user.id}` }, (payload: any) => {
+        setAvatarUrl(payload.new?.avatar_url || null);
+        setDisplayName(payload.new?.nickname || payload.new?.full_name || user.email || '');
+      })
+      .subscribe();
+    return () => { cancelled = true; supabase.removeChannel(ch); };
+  }, [user?.id]);
+
   useEffect(() => {
     const updateVar = () => {
       const h = headerRef.current?.offsetHeight ?? 0;
@@ -67,8 +95,17 @@ const Header: React.FC = () => {
             <NotificationCenter />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" className="h-8 w-8 sm:h-10 sm:w-10">
-                  <MoreVertical className="h-3 w-3 sm:h-4 sm:w-4" />
+                <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-10 sm:w-10 rounded-full p-0 overflow-hidden">
+                  {avatarUrl ? (
+                    <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
+                      <AvatarImage src={avatarUrl} alt={displayName} />
+                      <AvatarFallback className="text-xs">
+                        {(displayName || '?').split(' ').map(s => s[0]).join('').slice(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                  ) : (
+                    <MoreVertical className="h-3 w-3 sm:h-4 sm:w-4" />
+                  )}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">

@@ -7,6 +7,7 @@ export const useChatMessages = (config: ChatContextConfig) => {
   const { contextType, contextId } = config;
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [profilesMap, setProfilesMap] = useState<Record<string, string | null>>({});
+  const [avatarMap, setAvatarMap] = useState<Record<string, string | null>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -25,13 +26,16 @@ export const useChatMessages = (config: ChatContextConfig) => {
     if (newIds.length) {
       const { data: profs } = await (supabase as any)
         .from('profiles')
-        .select('id, full_name')
+        .select('id, full_name, avatar_url')
         .in('id', newIds);
 
       if (profs) {
         const newMap: Record<string, string | null> = {};
+        const newAvatars: Record<string, string | null> = {};
         profs.forEach((p: any) => { newMap[p.id] = p.full_name; });
+        profs.forEach((p: any) => { newAvatars[p.id] = p.avatar_url; });
         setProfilesMap(prev => ({ ...prev, ...newMap }));
+        setAvatarMap(prev => ({ ...prev, ...newAvatars }));
       }
     }
   }, []);
@@ -242,6 +246,7 @@ export const useChatMessages = (config: ChatContextConfig) => {
     messages,
     setMessages,
     profilesMap,
+    avatarMap,
     isLoading,
     hasMore,
     loadingMore,

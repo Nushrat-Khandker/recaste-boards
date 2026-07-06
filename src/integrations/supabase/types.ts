@@ -274,6 +274,7 @@ export type Database = {
           file_name: string | null
           file_url: string | null
           id: string
+          is_pinned: boolean
           mentioned_users: string[] | null
           message_type: string
           reply_to: string | null
@@ -288,6 +289,7 @@ export type Database = {
           file_name?: string | null
           file_url?: string | null
           id?: string
+          is_pinned?: boolean
           mentioned_users?: string[] | null
           message_type?: string
           reply_to?: string | null
@@ -302,6 +304,7 @@ export type Database = {
           file_name?: string | null
           file_url?: string | null
           id?: string
+          is_pinned?: boolean
           mentioned_users?: string[] | null
           message_type?: string
           reply_to?: string | null
