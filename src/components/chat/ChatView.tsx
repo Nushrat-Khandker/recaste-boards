@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Paperclip, Loader2, Search, X, FolderOpen } from 'lucide-react';
+import { Paperclip, Loader2, Search, X, FolderOpen, Pin } from 'lucide-react';
 import { useChatMessages } from './useChatMessages';
 import { useMediaRecording } from './useMediaRecording';
 import { useReactions } from './useReactions';
@@ -34,7 +34,7 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
   const actualContextType = contextType;
 
   const {
-    messages, profilesMap, isLoading, hasMore, loadingMore,
+    messages, profilesMap, avatarMap, isLoading, hasMore, loadingMore,
     loadMore, addOptimisticMessage, updateMessage, removeMessage,
   } = useChatMessages({ contextType: actualContextType, contextId: actualContextId });
 
@@ -274,6 +274,19 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
 
   const handleReply = (message: ChatMessage) => { setReplyingTo(message); };
 
+  const togglePin = async (message: ChatMessage) => {
+    const next = !message.is_pinned;
+    const { error } = await (supabase as any)
+      .from('chat_messages')
+      .update({ is_pinned: next })
+      .eq('id', message.id);
+    if (error) {
+      toast({ title: 'Error', description: 'Failed to pin message', variant: 'destructive' });
+    } else {
+      updateMessage(message.id, { is_pinned: next });
+    }
+  };
+
   const getContextLabel = () => {
     if (actualContextType === 'general') return 'General Chat';
     if (actualContextType === 'project') return actualContextId || 'Project';
@@ -288,6 +301,9 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
   const messagesById = new Map(messages.map(m => [m.id, m]));
   const messageIds = messages.filter(m => !m.pending && !m.failed).map(m => m.id);
   const { reactionsMap, toggleReaction } = useReactions(messageIds);
+
+  const pinnedMessages = messages.filter(m => m.is_pinned);
+  const [showPinned, setShowPinned] = useState(false);
 
   // Filter messages by search
   const filteredMessages = searchQuery.trim()
@@ -351,6 +367,37 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
         contextId={actualContextId}
       />
 
+      {pinnedMessages.length > 0 && (
+        <div className="border-b bg-[hsl(48,90%,90%)] dark:bg-[hsl(48,30%,18%)]">
+          <button
+            onClick={() => setShowPinned(s => !s)}
+            className="w-full flex items-center gap-2 px-3 py-1.5 text-xs font-medium hover:bg-black/5 transition-colors"
+          >
+            <Pin className="h-3 w-3 text-primary" />
+            <span>{pinnedMessages.length} pinned message{pinnedMessages.length > 1 ? 's' : ''}</span>
+            <span className="ml-auto text-muted-foreground">{showPinned ? '▲' : '▼'}</span>
+          </button>
+          {showPinned && (
+            <div className="max-h-40 overflow-y-auto px-3 pb-2 space-y-1">
+              {pinnedMessages.map(pm => (
+                <div key={pm.id} className="flex items-start gap-2 text-xs p-1.5 rounded bg-background/60 border border-border/50">
+                  <Pin className="h-3 w-3 text-primary mt-0.5 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-primary text-[11px]">{profilesMap[pm.user_id] || 'Unknown'}</div>
+                    <div className="truncate text-foreground/80">
+                      {pm.message_type === 'file' ? `📎 ${pm.file_name || 'File'}` : (pm.content?.replace(/@\[([^\]]+)\]\([^)]+\)/g, '@$1').slice(0, 120) || '')}
+                    </div>
+                  </div>
+                  <button onClick={() => togglePin(pm)} className="text-muted-foreground hover:text-foreground shrink-0" title="Unpin">
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {isDragging && (
         <div className="absolute inset-0 bg-primary/10 border-2 border-dashed border-primary z-50 flex items-center justify-center rounded-xl">
           <div className="text-center">
@@ -408,8 +455,10 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
                       replyToMessage={replyMsg}
                       replyToUserName={replyUserName}
                       profilesMap={profilesMap}
+                      avatarMap={avatarMap}
                       reactions={reactionsMap[message.id] || []}
                       onToggleReaction={toggleReaction}
+                      onTogglePin={togglePin}
                     />
                   );
                 })}
