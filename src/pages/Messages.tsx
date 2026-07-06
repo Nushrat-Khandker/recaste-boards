@@ -29,6 +29,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { useOnlineUsers } from '@/hooks/usePresence';
 
 const LAST_READ_KEY = 'messages_last_read_v1';
 const loadLastRead = (): Record<string, number> => {
@@ -673,6 +674,7 @@ const NewDmDialog = ({
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState('');
   const [busy, setBusy] = useState(false);
+  const onlineIds = useOnlineUsers();
 
   useEffect(() => { if (!open) { setSelected(new Set()); setSearch(''); } }, [open]);
 
@@ -748,7 +750,12 @@ const NewDmDialog = ({
               {filtered.map(p => (
                 <label key={p.id} className="flex items-center gap-3 px-2 py-2 rounded-md hover:bg-accent cursor-pointer">
                   <Checkbox checked={selected.has(p.id)} onCheckedChange={() => toggle(p.id)} />
-                  <span className="text-sm flex-1">{p.full_name || 'Unknown'}</span>
+                  <span className="text-sm flex-1 flex items-center gap-2">
+                    {p.full_name || 'Unknown'}
+                    {onlineIds.has(p.id) && (
+                      <span className="h-2 w-2 rounded-full bg-green-500" aria-label="Online" />
+                    )}
+                  </span>
                 </label>
               ))}
             </div>
@@ -856,6 +863,7 @@ const ChannelMembersDialog = ({
   const [memberIds, setMemberIds] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const onlineIds = useOnlineUsers();
 
   useEffect(() => {
     (async () => {
@@ -915,6 +923,9 @@ const ChannelMembersDialog = ({
                     <span className="text-sm flex-1 truncate">
                       {p.full_name || 'Unknown'}
                       {isSelf && <span className="text-xs text-muted-foreground"> (you)</span>}
+                      {onlineIds.has(p.id) && (
+                        <span className="ml-2 inline-block h-2 w-2 rounded-full bg-green-500 align-middle" aria-label="Online" />
+                      )}
                     </span>
                     {inChannel ? (
                       <Button
