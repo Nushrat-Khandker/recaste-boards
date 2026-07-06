@@ -863,6 +863,7 @@ const ChannelMembersDialog = ({
   const [memberIds, setMemberIds] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const onlineIds = useOnlineUsers();
 
   useEffect(() => {
     (async () => {
@@ -922,6 +923,9 @@ const ChannelMembersDialog = ({
                     <span className="text-sm flex-1 truncate">
                       {p.full_name || 'Unknown'}
                       {isSelf && <span className="text-xs text-muted-foreground"> (you)</span>}
+                      {onlineIds.has(p.id) && (
+                        <span className="ml-2 inline-block h-2 w-2 rounded-full bg-green-500 align-middle" aria-label="Online" />
+                      )}
                     </span>
                     {inChannel ? (
                       <Button
