@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { 
   Paperclip, Trash2, Edit2, RefreshCw, Loader2, Download, 
-  Reply, Check, CheckCheck 
+  Reply, Check, CheckCheck, Copy
 } from 'lucide-react';
 import { ChatMessage } from './types';
 import { isImageFile, isVideoFile, isAudioFile, isPdfFile, getFileTypeInfo, getFileExtension } from './fileUtils';
@@ -172,6 +172,16 @@ export const ChatMessageItem = ({
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isOwnMessage = message.user_id === currentUserId;
 
+  const handleCopy = useCallback(() => {
+    const text = message.message_type === 'file'
+      ? (message.file_url || message.file_name || '')
+      : (message.content || '');
+    const clean = text.replace(/@\[([^\]]+)\]\([^)]+\)/g, '@$1');
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(clean).catch(() => {});
+    }
+  }, [message]);
+
   const handleMouseEnter = useCallback(() => {
     if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
     setIsHovered(true);
@@ -189,6 +199,9 @@ export const ChatMessageItem = ({
     >
       <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full" onClick={() => onReply(message)} title="Reply">
         <Reply className="h-3 w-3" />
+      </Button>
+      <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full" onClick={handleCopy} title="Copy">
+        <Copy className="h-3 w-3" />
       </Button>
       {onToggleReaction && (
         <EmojiPickerButton onSelect={(emoji) => onToggleReaction(message.id, emoji)} />

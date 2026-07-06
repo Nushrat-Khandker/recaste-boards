@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -24,6 +24,7 @@ interface ChatInputProps {
   replyingTo: ChatMessage | null;
   replyingToUserName: string | null;
   onCancelReply: () => void;
+  draftKey?: string;
 }
 
 export const ChatInput = ({
@@ -40,6 +41,7 @@ export const ChatInput = ({
   replyingTo,
   replyingToUserName,
   onCancelReply,
+  draftKey,
 }: ChatInputProps) => {
   const isMobile = useIsMobile();
   const [newMessage, setNewMessage] = useState('');
@@ -47,6 +49,28 @@ export const ChatInput = ({
   const [mentionQuery, setMentionQuery] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [mentionedUserIds, setMentionedUserIds] = useState<string[]>([]);
+
+  // Slack-style draft persistence per channel/DM/board context
+  const draftStorageKey = draftKey ? `chat-draft:${draftKey}` : null;
+  const draftLoadedRef = useRef(false);
+
+  useEffect(() => {
+    draftLoadedRef.current = false;
+    if (!draftStorageKey) { setNewMessage(''); return; }
+    try {
+      const saved = localStorage.getItem(draftStorageKey);
+      setNewMessage(saved || '');
+    } catch { setNewMessage(''); }
+    draftLoadedRef.current = true;
+  }, [draftStorageKey]);
+
+  useEffect(() => {
+    if (!draftStorageKey || !draftLoadedRef.current) return;
+    try {
+      if (newMessage) localStorage.setItem(draftStorageKey, newMessage);
+      else localStorage.removeItem(draftStorageKey);
+    } catch {}
+  }, [newMessage, draftStorageKey]);
 
   const commonEmojis = [
     '😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '😊', '😇', '🥰', '😍', '🤩', '😘', '😗',
@@ -72,6 +96,9 @@ export const ChatInput = ({
     onSendMessage(newMessage, mentionedUserIds, replyingTo?.id);
     setNewMessage('');
     setMentionedUserIds([]);
+    if (draftStorageKey) {
+      try { localStorage.removeItem(draftStorageKey); } catch {}
+    }
   };
 
   const handleMessageChange = (text: string) => {

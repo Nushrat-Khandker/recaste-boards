@@ -24,12 +24,20 @@ interface EmojiReactionsProps {
 export const EmojiReactions = ({ reactions, currentUserId, onToggle, profilesMap, isOwnMessage }: EmojiReactionsProps) => {
   if (!reactions.length) return null;
 
+  const firstName = (id: string) => {
+    if (currentUserId === id) return 'You';
+    const n = profilesMap[id];
+    if (!n) return 'Unknown';
+    return n.split(' ')[0];
+  };
+
   return (
     <div className={`flex flex-wrap gap-1 mt-1 ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
       <TooltipProvider delayDuration={300}>
         {reactions.map(({ emoji, users }) => {
           const isMine = currentUserId ? users.includes(currentUserId) : false;
           const names = users.map(id => profilesMap[id] || 'Unknown').join(', ');
+          const label = users.length === 1 ? firstName(users[0]) : `${users.length}`;
           return (
             <Tooltip key={emoji}>
               <TooltipTrigger asChild>
@@ -42,7 +50,7 @@ export const EmojiReactions = ({ reactions, currentUserId, onToggle, profilesMap
                     }`}
                 >
                   <span className="text-sm leading-none">{emoji}</span>
-                  {users.length > 1 && <span className="text-[10px] font-medium">{users.length}</span>}
+                  <span className="text-[10px] font-medium">{label}</span>
                 </button>
               </TooltipTrigger>
               <TooltipContent side="top" className="text-xs max-w-[200px]">

@@ -13,7 +13,9 @@ self.addEventListener('push', (event) => {
   // WhatsApp-style: group notifications per chat context using `tag`,
   // replace previous unread for that chat with `renotify`, and vibrate.
   const url = data.url || data.link || '/';
-  const tag = data.tag || `chat:${url}`;
+  // Unique tag per notification so every message sounds/vibrates
+  // instead of silently replacing the previous one under the same tag.
+  const tag = data.tag || `chat:${url}:${Date.now()}`;
 
   const options = {
     body: data.body || data.message || '',
@@ -22,6 +24,7 @@ self.addEventListener('push', (event) => {
     vibrate: [200, 100, 200],
     tag,
     renotify: true,
+    silent: false,
     timestamp: Date.now(),
     data: { url },
     actions: [
