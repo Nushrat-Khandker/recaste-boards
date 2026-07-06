@@ -674,6 +674,7 @@ const NewDmDialog = ({
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState('');
   const [busy, setBusy] = useState(false);
+  const onlineIds = useOnlineUsers();
 
   useEffect(() => { if (!open) { setSelected(new Set()); setSearch(''); } }, [open]);
 
