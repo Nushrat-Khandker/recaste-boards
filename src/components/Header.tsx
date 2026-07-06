@@ -12,6 +12,7 @@ import { useKanban } from '../context/KanbanContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
+import { usePresence, OnlineDot } from '@/hooks/usePresence';
 
 import { YearWheel } from './YearWheel';
 import TagFilter from './TagFilter';
@@ -25,6 +26,8 @@ const Header: React.FC = () => {
   const { signOut, user } = useAuth();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState<string>('');
+  const onlineIds = usePresence(user?.id);
+  const isSelfOnline = !!user?.id && onlineIds.has(user.id);
   const { 
     selectedNumber, 
     setSelectedNumber, 
@@ -95,7 +98,7 @@ const Header: React.FC = () => {
             <NotificationCenter />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-10 sm:w-10 rounded-full p-0 overflow-hidden">
+                <Button variant="ghost" size="icon" className="relative h-8 w-8 sm:h-10 sm:w-10 rounded-full p-0 overflow-visible">
                   {avatarUrl ? (
                     <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
                       <AvatarImage src={avatarUrl} alt={displayName} />
@@ -106,6 +109,7 @@ const Header: React.FC = () => {
                   ) : (
                     <MoreVertical className="h-3 w-3 sm:h-4 sm:w-4" />
                   )}
+                  <OnlineDot online={isSelfOnline} />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
