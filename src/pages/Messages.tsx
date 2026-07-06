@@ -57,19 +57,10 @@ type DmConv = {
 
 type Profile = { id: string; full_name: string | null; email: string | null };
 
-// Core team — only these accounts appear in the DM picker.
-// Filters out stray/duplicate/test profiles.
-const TEAM_EMAILS = new Set([
-  'sabih@recaste.com',
-  'nushrat@duthchas.ltd',
-  'mahedi@duthchas.ltd',
-  'nasir@duthchas.ltd',
-  'oishorjo@duthchas.ltd',
-  'naomi@recaste.com',
-  'inaya@recaste.com',
-]);
-const isTeamProfile = (p: Profile) =>
-  !!p.email && TEAM_EMAILS.has(p.email.toLowerCase());
+// Admin account is excluded from the DM picker (see memory: admin-role-access).
+const ADMIN_EMAIL = 'mayordomo@recaste.com';
+const isSelectableProfile = (p: Profile) =>
+  !!p.full_name && (!p.email || p.email.toLowerCase() !== ADMIN_EMAIL);
 
 type Selection =
   | { kind: 'channel'; id: string; label: string }
@@ -110,7 +101,7 @@ const MessagesContent = () => {
     const memberSet = new Set<string>((myMembership || []).map((m: any) => m.channel_id));
     const enriched: Channel[] = (allChannels || []).map((c: any) => ({ ...c, is_member: memberSet.has(c.id) }));
     setChannels(enriched);
-    setProfiles(((profs || []) as Profile[]).filter(isTeamProfile));
+    setProfiles(((profs || []) as Profile[]).filter(isSelectableProfile));
 
     // DMs: fetch conversations where I'm a member
     const { data: myDmMem } = await (supabase as any)
