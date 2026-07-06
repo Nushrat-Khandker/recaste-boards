@@ -438,6 +438,7 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
         replyingTo={replyingTo}
         replyingToUserName={replyingTo ? (profilesMap[replyingTo.user_id] || 'Unknown') : null}
         onCancelReply={() => setReplyingTo(null)}
+        draftKey={`${actualContextType}:${actualContextId || 'general'}`}
       />
     </div>
   );

@@ -444,7 +444,9 @@ serve(async (req) => {
           notifUrl = `/projects?project=${contextId}`;
         }
 
-        const tag = `${contextType || 'chat'}:${contextId || 'general'}`;
+        // Unique tag per message so each push plays sound / vibrates
+        // instead of silently coalescing under the same tag.
+        const tag = `${contextType || 'chat'}:${contextId || 'general'}:${Date.now()}`;
         const payload = JSON.stringify({ title, body: notifBody, url: notifUrl, tag });
 
         console.log(`Broadcasting to ${allSubscriptions.length} subscriptions`);
