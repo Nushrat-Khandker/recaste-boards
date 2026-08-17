@@ -11,6 +11,7 @@ import { ChatMessageItem } from './ChatMessageItem';
 import { ChatInput } from './ChatInput';
 import { RecordingPreview } from './RecordingPreview';
 import { SharedFilesPanel } from './SharedFilesPanel';
+import { ForwardMessageDialog } from './ForwardMessageDialog';
 import { ChatMessage, ChatUser, ChatContextType, MAX_FILE_SIZE } from './types';
 import * as tus from 'tus-js-client';
 import { format, isToday, isYesterday } from 'date-fns';
@@ -54,6 +55,7 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isFilesPanelOpen, setIsFilesPanelOpen] = useState(false);
+  const [forwardingMessage, setForwardingMessage] = useState<ChatMessage | null>(null);
   
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -367,6 +369,12 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
         contextId={actualContextId}
       />
 
+      <ForwardMessageDialog
+        open={!!forwardingMessage}
+        onOpenChange={(open) => { if (!open) setForwardingMessage(null); }}
+        message={forwardingMessage}
+      />
+
       {pinnedMessages.length > 0 && (
         <div className="border-b bg-[hsl(48,90%,90%)] dark:bg-[hsl(48,30%,18%)]">
           <button
@@ -459,6 +467,7 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
                       reactions={reactionsMap[message.id] || []}
                       onToggleReaction={toggleReaction}
                       onTogglePin={togglePin}
+                      onForward={setForwardingMessage}
                     />
                   );
                 })}
