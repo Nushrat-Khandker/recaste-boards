@@ -151,18 +151,25 @@ async function encryptPayload(
     )
   );
 
-  // HKDF to derive auth_info → PRK
+  // RFC 8291: PRK = HKDF-Extract(salt = auth_secret, IKM = ecdh_secret)
+  // then IKM = HKDF-Expand(PRK, "WebPush: info\0" || ua_public || as_public, 32)
   const authInfo = new Uint8Array([
     ...new TextEncoder().encode("WebPush: info\0"),
     ...clientPubRaw,
     ...localPubRaw,
   ]);
 
-  const prkKey = await crypto.subtle.importKey("raw", clientAuth as unknown as ArrayBuffer, "HKDF", false, ["deriveBits"]);
+  const sharedSecretKey = await crypto.subtle.importKey(
+    "raw",
+    sharedSecret as unknown as ArrayBuffer,
+    "HKDF",
+    false,
+    ["deriveBits"]
+  );
   const ikm = new Uint8Array(
     await crypto.subtle.deriveBits(
-      { name: "HKDF", hash: "SHA-256", salt: sharedSecret, info: authInfo },
-      prkKey,
+      { name: "HKDF", hash: "SHA-256", salt: clientAuth, info: authInfo },
+      sharedSecretKey,
       256
     )
   );
@@ -203,11 +210,7 @@ async function encryptPayload(
     )
   );
 
-  // Pad payload: add 2-byte padding length prefix + delimiter
-  const paddedPayload = new Uint8Array(payload.length + 2);
-  paddedPayload.set(new Uint8Array([0, 0])); // padding length = 0
-  paddedPayload[2 - 1] = 2; // delimiter (actually: record padding)
-  // Correct RFC 8188 padding: payload + \x02 delimiter
+  // RFC 8188 single-record padding: payload + 0x02 delimiter
   const record = new Uint8Array(payload.length + 1);
   record.set(payload);
   record[payload.length] = 2; // delimiter byte
@@ -223,7 +226,6 @@ async function encryptPayload(
   );
 
   // Build aes128gcm header: salt(16) + rs(4) + idlen(1) + keyid(65)
-  const rs = payload.length + 1 + 16 + 1; // record size (at least)
   const header = new Uint8Array(16 + 4 + 1 + 65);
   header.set(salt, 0);
   const rsView = new DataView(header.buffer, 16, 4);
@@ -414,10 +416,32 @@ serve(async (req) => {
           );
         }
 
-        const { data: allSubscriptions, error: subError } = await supabase
-          .from("push_subscriptions")
-          .select("*")
-          .neq("user_id", senderId);
+        // Scope recipients to the conversation members when possible.
+        let recipientIds: string[] | null = null;
+        if (contextType === "channel" && contextId) {
+          const { data: members } = await supabase
+            .from("channel_members")
+            .select("user_id")
+            .eq("channel_id", contextId);
+          recipientIds = (members || []).map((m: any) => m.user_id).filter((id: string) => id !== senderId);
+        } else if (contextType === "dm" && contextId) {
+          const { data: members } = await supabase
+            .from("dm_members")
+            .select("user_id")
+            .eq("conversation_id", contextId);
+          recipientIds = (members || []).map((m: any) => m.user_id).filter((id: string) => id !== senderId);
+        }
+
+        if (recipientIds && recipientIds.length === 0) {
+          return new Response(
+            JSON.stringify({ sent: 0 }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        let subQuery = supabase.from("push_subscriptions").select("*").neq("user_id", senderId);
+        if (recipientIds) subQuery = subQuery.in("user_id", recipientIds);
+        const { data: allSubscriptions, error: subError } = await subQuery;
 
         if (subError) {
           console.error("Error fetching subscriptions:", subError);
@@ -442,6 +466,10 @@ serve(async (req) => {
           notifUrl = `/projects?board=${contextId}`;
         } else if (contextType === "project") {
           notifUrl = `/projects?project=${contextId}`;
+        } else if (contextType === "channel") {
+          notifUrl = `/messages?channel=${contextId}`;
+        } else if (contextType === "dm") {
+          notifUrl = `/messages?dm=${contextId}`;
         }
 
         // Unique tag per message so each push plays sound / vibrates
