@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { 
   Paperclip, Trash2, Edit2, RefreshCw, Loader2, Download, 
-  Reply, Check, CheckCheck, Copy, Pin, PinOff
+  Reply, Check, CheckCheck, Copy, Pin, PinOff, Forward
 } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { ChatMessage } from './types';
@@ -173,6 +173,7 @@ export const ChatMessageItem = ({
   reactions = [],
   onToggleReaction,
   onTogglePin,
+  onForward,
 }: ChatMessageItemProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -213,6 +214,11 @@ export const ChatMessageItem = ({
       <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full" onClick={handleCopy} title="Copy">
         <Copy className="h-3 w-3" />
       </Button>
+      {onForward && !message.pending && !message.failed && (
+        <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full" onClick={() => onForward(message)} title="Forward">
+          <Forward className="h-3 w-3" />
+        </Button>
+      )}
       {onTogglePin && !message.pending && !message.failed && (
         <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full" onClick={() => onTogglePin(message)} title={message.is_pinned ? 'Unpin' : 'Pin'}>
           {message.is_pinned ? <PinOff className="h-3 w-3" /> : <Pin className="h-3 w-3" />}
