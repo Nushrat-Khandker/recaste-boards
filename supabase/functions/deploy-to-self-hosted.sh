@@ -5,7 +5,7 @@
 FUNCTIONS_DIR="/Users/duthchasbd/services/kanban-chat-db-supabase/docker/volumes/functions"
 REPO_RAW="https://raw.githubusercontent.com/Nushrat-Khandker/recaste-boards/main/supabase/functions"
 
-for fn in push-notifications slack-integration generate-invite-link setup-team-profiles simple-auth; do
+for fn in push-notifications push-probe slack-integration generate-invite-link setup-team-profiles; do
   echo "Deploying $fn..."
   curl -sf -o "$FUNCTIONS_DIR/$fn/index.ts" "$REPO_RAW/$fn/index.ts" && echo "  OK" || echo "  FAILED"
 done
