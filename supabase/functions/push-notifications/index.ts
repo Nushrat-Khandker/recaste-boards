@@ -416,10 +416,32 @@ serve(async (req) => {
           );
         }
 
-        const { data: allSubscriptions, error: subError } = await supabase
-          .from("push_subscriptions")
-          .select("*")
-          .neq("user_id", senderId);
+        // Scope recipients to the conversation members when possible.
+        let recipientIds: string[] | null = null;
+        if (contextType === "channel" && contextId) {
+          const { data: members } = await supabase
+            .from("channel_members")
+            .select("user_id")
+            .eq("channel_id", contextId);
+          recipientIds = (members || []).map((m: any) => m.user_id).filter((id: string) => id !== senderId);
+        } else if (contextType === "dm" && contextId) {
+          const { data: members } = await supabase
+            .from("dm_members")
+            .select("user_id")
+            .eq("conversation_id", contextId);
+          recipientIds = (members || []).map((m: any) => m.user_id).filter((id: string) => id !== senderId);
+        }
+
+        if (recipientIds && recipientIds.length === 0) {
+          return new Response(
+            JSON.stringify({ sent: 0 }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        let subQuery = supabase.from("push_subscriptions").select("*").neq("user_id", senderId);
+        if (recipientIds) subQuery = subQuery.in("user_id", recipientIds);
+        const { data: allSubscriptions, error: subError } = await subQuery;
 
         if (subError) {
           console.error("Error fetching subscriptions:", subError);
@@ -444,6 +466,10 @@ serve(async (req) => {
           notifUrl = `/projects?board=${contextId}`;
         } else if (contextType === "project") {
           notifUrl = `/projects?project=${contextId}`;
+        } else if (contextType === "channel") {
+          notifUrl = `/messages?channel=${contextId}`;
+        } else if (contextType === "dm") {
+          notifUrl = `/messages?dm=${contextId}`;
         }
 
         // Unique tag per message so each push plays sound / vibrates
