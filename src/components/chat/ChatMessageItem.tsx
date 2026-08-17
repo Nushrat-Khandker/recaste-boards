@@ -33,6 +33,7 @@ interface ChatMessageItemProps {
   reactions?: Reaction[];
   onToggleReaction?: (messageId: string, emoji: string) => void;
   onTogglePin?: (message: ChatMessage) => void;
+  onForward?: (message: ChatMessage) => void;
 }
 
 const FileAttachmentCard = ({ fileName, fileUrl }: { fileName: string | null; fileUrl: string }) => {

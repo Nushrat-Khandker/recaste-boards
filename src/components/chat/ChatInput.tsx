@@ -183,6 +183,23 @@ export const ChatInput = ({
               onChange={(e) => handleMessageChange(e.target.value)}
               placeholder={`Type a message...`}
               className="min-h-[42px] max-h-[120px] resize-none rounded-2xl bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary/30 focus-visible:ring-offset-0 py-2.5 px-4 text-sm text-foreground placeholder:text-muted-foreground"
+              onPaste={(e) => {
+                const items = Array.from(e.clipboardData?.items || []);
+                const files = items
+                  .filter((it) => it.kind === 'file')
+                  .map((it) => it.getAsFile())
+                  .filter((f): f is File => !!f);
+                if (files.length === 0) return;
+                e.preventDefault();
+                const dt = new DataTransfer();
+                files.forEach((f) => {
+                  const named = f.name && f.name !== 'image.png'
+                    ? f
+                    : new File([f], `pasted-${Date.now()}.${(f.type.split('/')[1] || 'png')}`, { type: f.type });
+                  dt.items.add(named);
+                });
+                onFileUpload(dt.files);
+              }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey && !isMobile) {
                   e.preventDefault();
