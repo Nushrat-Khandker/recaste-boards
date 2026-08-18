@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import {
-  Hash, Plus, MessageSquarePlus, Loader2, Users, Lock, LogIn,
+  ArrowLeft, Hash, Plus, MessageSquarePlus, Loader2, Users, Lock, LogIn,
   MoreVertical, Settings, UserPlus, Archive, ArchiveRestore, Trash2, Pencil, X as XIcon, LogOut,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -30,6 +30,7 @@ import {
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useOnlineUsers } from '@/hooks/usePresence';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const LAST_READ_KEY = 'messages_last_read_v1';
 const loadLastRead = (): Record<string, number> => {
@@ -271,6 +272,11 @@ const MessagesContent = () => {
     ? channels.find(c => c.id === selection.id) || null
     : null;
 
+  // Slack-style mobile: show either the list or the conversation, never both.
+  const isMobile = useIsMobile();
+  const showList = !isMobile || !selection;
+  const showConversation = !isMobile || !!selection;
+
   const leaveOrDeleteDm = async (dm: DmConv) => {
     if (!user) return;
     // Delete own membership; if conversation becomes empty, hard-delete the conversation
@@ -291,6 +297,7 @@ const MessagesContent = () => {
       <main className="container mx-auto px-2 sm:px-4 py-4 max-w-7xl">
         <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-4">
           {/* Sidebar */}
+          {showList && (
           <aside className="bg-background border rounded-xl flex flex-col overflow-hidden h-[calc(100vh-140px)]">
             <ScrollArea className="flex-1">
               <div className="p-3 space-y-5">
@@ -438,12 +445,25 @@ const MessagesContent = () => {
               </div>
             </ScrollArea>
           </aside>
+          )}
 
           {/* Main pane */}
+          {showConversation && (
           <section>
             {selection ? (
               <div>
                 <div className="mb-2 flex items-center gap-2">
+                  {isMobile && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 -ml-1"
+                      onClick={() => setSelection(null)}
+                      aria-label="Back to conversations"
+                    >
+                      <ArrowLeft className="h-5 w-5" />
+                    </Button>
+                  )}
                   {selection.kind === 'channel'
                     ? (currentChannel?.is_private ? <Lock className="h-4 w-4 text-muted-foreground" /> : <Hash className="h-4 w-4 text-muted-foreground" />)
                     : <Users className="h-4 w-4 text-muted-foreground" />}
@@ -545,6 +565,7 @@ const MessagesContent = () => {
               </div>
             )}
           </section>
+          )}
         </div>
       </main>
 
