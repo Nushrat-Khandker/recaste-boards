@@ -30,6 +30,7 @@ import {
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useOnlineUsers } from '@/hooks/usePresence';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const LAST_READ_KEY = 'messages_last_read_v1';
 const loadLastRead = (): Record<string, number> => {
