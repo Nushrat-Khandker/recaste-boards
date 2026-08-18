@@ -445,12 +445,25 @@ const MessagesContent = () => {
               </div>
             </ScrollArea>
           </aside>
+          )}
 
           {/* Main pane */}
+          {showConversation && (
           <section>
             {selection ? (
               <div>
                 <div className="mb-2 flex items-center gap-2">
+                  {isMobile && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 -ml-1"
+                      onClick={() => setSelection(null)}
+                      aria-label="Back to conversations"
+                    >
+                      <ArrowLeft className="h-5 w-5" />
+                    </Button>
+                  )}
                   {selection.kind === 'channel'
                     ? (currentChannel?.is_private ? <Lock className="h-4 w-4 text-muted-foreground" /> : <Hash className="h-4 w-4 text-muted-foreground" />)
                     : <Users className="h-4 w-4 text-muted-foreground" />}
