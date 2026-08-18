@@ -272,6 +272,11 @@ const MessagesContent = () => {
     ? channels.find(c => c.id === selection.id) || null
     : null;
 
+  // Slack-style mobile: show either the list or the conversation, never both.
+  const isMobile = useIsMobile();
+  const showList = !isMobile || !selection;
+  const showConversation = !isMobile || !!selection;
+
   const leaveOrDeleteDm = async (dm: DmConv) => {
     if (!user) return;
     // Delete own membership; if conversation becomes empty, hard-delete the conversation
