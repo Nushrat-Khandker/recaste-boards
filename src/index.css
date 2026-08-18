@@ -35,13 +35,13 @@
  
     --radius: 0.5rem;
 
-    /* Sky-blue zone shades (Projects/Tasks · Calendar · Chat) */
-    --zone-work: 200 100% 97%;
-    --zone-work-accent: 200 90% 92%;
-    --zone-time: 199 92% 92%;
-    --zone-time-accent: 199 85% 86%;
-    --zone-talk: 198 85% 86%;
-    --zone-talk-accent: 198 78% 79%;
+    /* Sky-blue zone shades (Projects/Tasks · Calendar · Chat) — lighter, softer tints */
+    --zone-work: 200 90% 98%;
+    --zone-work-accent: 200 80% 95%;
+    --zone-time: 199 80% 96%;
+    --zone-time-accent: 199 75% 92%;
+    --zone-talk: 198 75% 93%;
+    --zone-talk-accent: 198 70% 89%;
 
     /* Custom tag colors */
     --kanban-tag-1: 218 100% 95%; /* Light blue for research */
