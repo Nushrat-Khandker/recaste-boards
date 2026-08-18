@@ -352,7 +352,7 @@ export function HijriCalendar({ targetYear, targetMonth }: HijriCalendarProps = 
   };
 
   const days = getDaysInMonth();
-  const weekdays = getHijriWeekdays();
+
 
   // Find the first day of the month to determine offset
   const firstDayWeekday = days[0]?.weekday || 0;
