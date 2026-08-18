@@ -94,7 +94,7 @@ const ProjectsContent = () => {
   // If viewing a specific project, show clean board page without Header
   if (viewingProject) {
     return (
-      <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+      <div className="min-h-screen flex flex-col bg-zone-work">
         {/* Custom minimal navigation bar */}
         <header className="sticky top-0 z-50 bg-background border-b">
           <div className="container mx-auto px-4 py-3">
@@ -173,7 +173,7 @@ const ProjectsContent = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+    <div className="min-h-screen bg-zone-work">
       <Header />
       
       <div className="container mx-auto px-4 py-8">
