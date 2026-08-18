@@ -68,6 +68,14 @@ export default {
 					'tag-2': 'hsl(var(--kanban-tag-2))',
 					'tag-3': 'hsl(var(--kanban-tag-3))',
 					'tag-4': 'hsl(var(--kanban-tag-4))',
+				},
+				zone: {
+					work: 'hsl(var(--zone-work))',
+					'work-accent': 'hsl(var(--zone-work-accent))',
+					time: 'hsl(var(--zone-time))',
+					'time-accent': 'hsl(var(--zone-time-accent))',
+					talk: 'hsl(var(--zone-talk))',
+					'talk-accent': 'hsl(var(--zone-talk-accent))',
 				}
 			},
 			borderRadius: {
