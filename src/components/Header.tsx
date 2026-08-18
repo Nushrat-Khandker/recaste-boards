@@ -77,7 +77,6 @@ const Header: React.FC = () => {
 
   // Determine current view from route
   const currentView = location.pathname === '/projects' ? 'projects' 
-                    : location.pathname === '/chat' ? 'chat'
                     : location.pathname === '/messages' ? 'messages'
                     : location.pathname === '/' && location.search === '?view=calendar' ? 'calendar'
                     : 'tasks';
@@ -152,11 +151,6 @@ const Header: React.FC = () => {
               <TabsTrigger value="calendar" asChild className="text-xs sm:text-sm px-2 sm:px-3">
                 <Link to="/?view=calendar" className="gap-1 sm:gap-2">
                   <span className="hidden sm:inline">📅</span> Calendar
-                </Link>
-              </TabsTrigger>
-              <TabsTrigger value="chat" asChild className="text-xs sm:text-sm px-2 sm:px-3">
-                <Link to="/chat" className="gap-1 sm:gap-2">
-                  <span className="hidden sm:inline">💬</span> Chat
                 </Link>
               </TabsTrigger>
               <TabsTrigger value="messages" asChild className="text-xs sm:text-sm px-2 sm:px-3">
