@@ -356,6 +356,8 @@ export function HijriCalendar({ targetYear, targetMonth }: HijriCalendarProps = 
 
   // Find the first day of the month to determine offset
   const firstDayWeekday = days[0]?.weekday || 0;
+  // Rotate the weekday columns so the month always starts in the first cell
+  const columnWeekdays = Array.from({ length: 7 }, (_, i) => (firstDayWeekday + i) % 7);
 
   return (
     <div className="w-full max-w-6xl mx-auto p-2 sm:p-6">
@@ -389,9 +391,9 @@ export function HijriCalendar({ targetYear, targetMonth }: HijriCalendarProps = 
 
       {/* Weekday headers */}
       <div className="grid grid-cols-7 gap-1 sm:gap-2 mb-2">
-        {weekdays.map((day, index) => (
+        {columnWeekdays.map((index) => (
           <div
-            key={day}
+            key={index}
             className={cn(
               "text-center font-semibold py-1 sm:py-2 rounded-lg text-[10px] sm:text-sm",
               index === 5 && "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300",
@@ -406,11 +408,6 @@ export function HijriCalendar({ targetYear, targetMonth }: HijriCalendarProps = 
 
       {/* Calendar grid */}
       <div className="grid grid-cols-7 gap-1 sm:gap-2">
-        {/* Empty cells for offset */}
-        {Array.from({ length: firstDayWeekday }).map((_, i) => (
-          <div key={`empty-${i}`} className="aspect-square" />
-        ))}
-        
         {/* Day cells */}
         {days.map(({ hijriDay, gregorianDate, weekday }) => {
           const dateKey = format(gregorianDate, 'yyyy-MM-dd');
