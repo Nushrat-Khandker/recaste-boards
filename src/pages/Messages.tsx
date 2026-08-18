@@ -297,6 +297,7 @@ const MessagesContent = () => {
       <main className="container mx-auto px-2 sm:px-4 py-4 max-w-7xl">
         <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-4">
           {/* Sidebar */}
+          {showList && (
           <aside className="bg-background border rounded-xl flex flex-col overflow-hidden h-[calc(100vh-140px)]">
             <ScrollArea className="flex-1">
               <div className="p-3 space-y-5">
