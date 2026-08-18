@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Bell } from 'lucide-react';
+import { Bell, AtSign, Reply, MessageSquare, Hash, UserCheck, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -55,6 +55,17 @@ interface Notification {
   created_at: string;
 }
 
+const typeIcon = (type: string) => {
+  switch (type) {
+    case 'mention': return <AtSign className="h-3.5 w-3.5 text-primary" />;
+    case 'reply': return <Reply className="h-3.5 w-3.5 text-primary" />;
+    case 'assignment': return <UserCheck className="h-3.5 w-3.5 text-primary" />;
+    case 'channel_message': return <Hash className="h-3.5 w-3.5 text-primary" />;
+    case 'dm_message': return <Send className="h-3.5 w-3.5 text-primary" />;
+    default: return <MessageSquare className="h-3.5 w-3.5 text-primary" />;
+  }
+};
+
 export const NotificationCenter = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -97,6 +108,17 @@ export const NotificationCenter = () => {
     };
   }, []);
 
+  // Re-sync when the tab regains focus so the bell never shows a stale count
+  useEffect(() => {
+    const onFocus = () => { if (document.visibilityState === 'visible') loadNotifications(); };
+    document.addEventListener('visibilitychange', onFocus);
+    window.addEventListener('focus', onFocus);
+    return () => {
+      document.removeEventListener('visibilitychange', onFocus);
+      window.removeEventListener('focus', onFocus);
+    };
+  }, []);
+
   const loadNotifications = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
@@ -106,7 +128,7 @@ export const NotificationCenter = () => {
       .select('*')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
-      .limit(10);
+      .limit(30);
 
     if (data) {
       setNotifications(data);
@@ -192,7 +214,10 @@ export const NotificationCenter = () => {
             >
               <div className="flex flex-col gap-1 w-full">
                 <div className="flex items-start justify-between gap-2">
-                  <span className="font-medium text-sm">{notification.title}</span>
+                  <span className="flex items-start gap-1.5 font-medium text-sm">
+                    <span className="mt-0.5 flex-shrink-0">{typeIcon(notification.type)}</span>
+                    {notification.title}
+                  </span>
                   {!notification.read && (
                     <div className="h-2 w-2 rounded-full bg-primary flex-shrink-0 mt-1" />
                   )}
