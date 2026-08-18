@@ -154,11 +154,6 @@ const Header: React.FC = () => {
                   <span className="hidden sm:inline">📅</span> Calendar
                 </Link>
               </TabsTrigger>
-              <TabsTrigger value="chat" asChild className="text-xs sm:text-sm px-2 sm:px-3">
-                <Link to="/chat" className="gap-1 sm:gap-2">
-                  <span className="hidden sm:inline">💬</span> Chat
-                </Link>
-              </TabsTrigger>
               <TabsTrigger value="messages" asChild className="text-xs sm:text-sm px-2 sm:px-3">
                 <Link to="/messages" className="gap-1 sm:gap-2">
                   <span className="hidden sm:inline">#</span> Messages
