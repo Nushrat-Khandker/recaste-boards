@@ -19,7 +19,7 @@ const IndexContent = () => {
   }, [setSelectedProject]);
 
   return (
-    <>
+    <div className={viewMode === 'calendar' ? 'min-h-screen bg-zone-time' : 'min-h-screen bg-zone-work'}>
       <Header />
       <main className="container mx-auto px-2 sm:px-4 pt-4 max-w-7xl">
         {selectedProject && viewMode === 'board' && (
@@ -40,13 +40,13 @@ const IndexContent = () => {
         )}
         {viewMode === 'calendar' ? <CalendarViews /> : <KanbanBoard />}
       </main>
-    </>
+    </div>
   );
 };
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+    <div className="min-h-screen">
       <KanbanProvider>
         <IndexContent />
       </KanbanProvider>

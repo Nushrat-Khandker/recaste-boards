@@ -83,7 +83,7 @@ const Header: React.FC = () => {
 
 
   return (
-    <header ref={headerRef} className="sticky top-0 z-50 bg-background border-b">
+    <header ref={headerRef} className="sticky top-0 z-50 bg-background border-b border-primary/20">
       <div className="container mx-auto px-2 sm:px-4 py-2 sm:py-3">
         {/* Top row: Logo + Title + Menu */}
         <div className="flex justify-between items-center mb-2 sm:mb-3">
@@ -136,28 +136,39 @@ const Header: React.FC = () => {
 
         {/* Navigation Tabs + Filters */}
         <Tabs value={currentView} className="w-full">
-          <TabsList className="w-full h-8 sm:h-10 justify-between px-1">
-            <div className="flex items-center">
-              <TabsTrigger value="projects" asChild className="text-xs sm:text-sm px-2 sm:px-3">
-                <Link to="/projects" className="gap-1 sm:gap-2">
-                  <span className="hidden sm:inline">📂</span> Projects
-                </Link>
-              </TabsTrigger>
-              <TabsTrigger value="tasks" asChild className="text-xs sm:text-sm px-2 sm:px-3">
-                <Link to="/" className="gap-1 sm:gap-2">
-                  <span className="hidden sm:inline">✅</span> Tasks
-                </Link>
-              </TabsTrigger>
-              <TabsTrigger value="calendar" asChild className="text-xs sm:text-sm px-2 sm:px-3">
-                <Link to="/?view=calendar" className="gap-1 sm:gap-2">
-                  <span className="hidden sm:inline">📅</span> Calendar
-                </Link>
-              </TabsTrigger>
-              <TabsTrigger value="messages" asChild className="text-xs sm:text-sm px-2 sm:px-3">
-                <Link to="/messages" className="gap-1 sm:gap-2">
-                  <span className="hidden sm:inline">#</span> Messages
-                </Link>
-              </TabsTrigger>
+          <TabsList className="w-full h-8 sm:h-10 justify-between px-1 bg-zone-work">
+            <div className="flex items-center gap-1 sm:gap-2">
+              {/* Zone 1 — Work: Projects + Tasks */}
+              <div className="flex items-center rounded-md bg-zone-work-accent p-0.5">
+                <TabsTrigger value="projects" asChild className="text-xs sm:text-sm px-2 sm:px-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                  <Link to="/projects" className="gap-1 sm:gap-2">
+                    <span className="hidden sm:inline">📂</span> Projects
+                  </Link>
+                </TabsTrigger>
+                <TabsTrigger value="tasks" asChild className="text-xs sm:text-sm px-2 sm:px-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                  <Link to="/" className="gap-1 sm:gap-2">
+                    <span className="hidden sm:inline">✅</span> Tasks
+                  </Link>
+                </TabsTrigger>
+              </div>
+
+              {/* Zone 2 — Time: Calendar */}
+              <div className="flex items-center rounded-md bg-zone-time-accent p-0.5">
+                <TabsTrigger value="calendar" asChild className="text-xs sm:text-sm px-2 sm:px-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                  <Link to="/?view=calendar" className="gap-1 sm:gap-2">
+                    <span className="hidden sm:inline">📅</span> Calendar
+                  </Link>
+                </TabsTrigger>
+              </div>
+
+              {/* Zone 3 — Talk: Messages */}
+              <div className="flex items-center rounded-md bg-zone-talk-accent p-0.5">
+                <TabsTrigger value="messages" asChild className="text-xs sm:text-sm px-2 sm:px-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                  <Link to="/messages" className="gap-1 sm:gap-2">
+                    <span className="hidden sm:inline">#</span> Messages
+                  </Link>
+                </TabsTrigger>
+              </div>
             </div>
 
             <div className="flex items-center gap-1">
