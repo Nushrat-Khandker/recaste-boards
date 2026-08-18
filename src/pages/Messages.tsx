@@ -565,6 +565,7 @@ const MessagesContent = () => {
               </div>
             )}
           </section>
+          )}
         </div>
       </main>
 
