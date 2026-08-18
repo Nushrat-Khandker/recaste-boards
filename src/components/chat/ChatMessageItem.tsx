@@ -357,6 +357,11 @@ export const ChatMessageItem = ({
                 ) : (
                   <FileAttachmentCard fileName={message.file_name} fileUrl={message.file_url} />
                 )}
+                {message.content && (
+                  <p className="text-[14px] leading-relaxed whitespace-pre-wrap break-words mt-1">
+                    {renderMessageContent(message.content, isOwnMessage)}
+                  </p>
+                )}
               </div>
             )}
           </>

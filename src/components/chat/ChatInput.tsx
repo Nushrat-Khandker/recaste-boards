@@ -9,10 +9,11 @@ import {
 } from 'lucide-react';
 import { ChatUser, ChatMessage } from './types';
 import { AttachmentMenu } from './AttachmentMenu';
+import { MediaCaptionDialog } from './MediaCaptionDialog';
 
 interface ChatInputProps {
   onSendMessage: (content: string, mentionedUserIds: string[], replyToId?: string) => void;
-  onFileUpload: (files: FileList) => void;
+  onFileUpload: (files: FileList, caption?: string) => void;
   onStartRecording: (type: 'audio' | 'video') => void;
   onStopRecording: () => void;
   isRecording: boolean;
@@ -49,6 +50,27 @@ export const ChatInput = ({
   const [mentionQuery, setMentionQuery] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [mentionedUserIds, setMentionedUserIds] = useState<string[]>([]);
+  // WhatsApp-style caption flow for images/videos
+  const [pendingMedia, setPendingMedia] = useState<File[] | null>(null);
+
+  const isCaptionable = (f: File) => f.type.startsWith('image/') || f.type.startsWith('video/');
+
+  const routeFiles = (files: FileList) => {
+    const arr = Array.from(files);
+    if (arr.length > 0 && arr.every(isCaptionable)) {
+      setPendingMedia(arr);
+      return;
+    }
+    onFileUpload(files);
+  };
+
+  const sendPendingMedia = (caption: string) => {
+    if (!pendingMedia) return;
+    const dt = new DataTransfer();
+    pendingMedia.forEach((f) => dt.items.add(f));
+    onFileUpload(dt.files, caption || undefined);
+    setPendingMedia(null);
+  };
 
   // Slack-style draft persistence per channel/DM/board context
   const draftStorageKey = draftKey ? `chat-draft:${draftKey}` : null;
@@ -140,6 +162,11 @@ export const ChatInput = ({
 
   return (
     <div className="border-t bg-background/95 backdrop-blur-sm">
+      <MediaCaptionDialog
+        files={pendingMedia}
+        onCancel={() => setPendingMedia(null)}
+        onSend={sendPendingMedia}
+      />
       {uploadProgress !== null && (
         <div className="px-4 py-2 border-b">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -174,7 +201,7 @@ export const ChatInput = ({
       <div className="px-3 py-2">
         <div className="flex items-end gap-2">
           <div className="flex items-center gap-0.5">
-            <AttachmentMenu onFileUpload={onFileUpload} disabled={isLoading} />
+            <AttachmentMenu onFileUpload={routeFiles} disabled={isLoading} />
           </div>
 
           <div className="flex-1 relative">
@@ -199,7 +226,7 @@ export const ChatInput = ({
                     : new File([f], `pasted-${Date.now()}.${(f.type.split('/')[1] || 'png')}`, { type: f.type });
                   dt.items.add(named);
                 });
-                onFileUpload(dt.files);
+                routeFiles(dt.files);
               }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey && !isMobile) {
