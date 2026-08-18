@@ -77,7 +77,6 @@ const Header: React.FC = () => {
 
   // Determine current view from route
   const currentView = location.pathname === '/projects' ? 'projects' 
-                    : location.pathname === '/chat' ? 'chat'
                     : location.pathname === '/messages' ? 'messages'
                     : location.pathname === '/' && location.search === '?view=calendar' ? 'calendar'
                     : 'tasks';
