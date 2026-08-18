@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import {
-  Hash, Plus, MessageSquarePlus, Loader2, Users, Lock, LogIn,
+  ArrowLeft, Hash, Plus, MessageSquarePlus, Loader2, Users, Lock, LogIn,
   MoreVertical, Settings, UserPlus, Archive, ArchiveRestore, Trash2, Pencil, X as XIcon, LogOut,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
