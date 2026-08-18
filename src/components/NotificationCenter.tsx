@@ -12,6 +12,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
+import { isNative, showLocalNotification } from '@/lib/native-notifications';
 
 const playNotificationSound = () => {
   try {
@@ -95,7 +96,12 @@ export const NotificationCenter = () => {
             setUnreadCount((prev) => prev + 1);
             playNotificationSound();
             const n = payload.new as Notification;
-            showDesktopNotification({ title: n.title, message: n.message, link: n.link });
+            if (isNative()) {
+              // iOS/Android (Capacitor): pop a native tray notification
+              void showLocalNotification(n.title, n.message || '');
+            } else {
+              showDesktopNotification({ title: n.title, message: n.message, link: n.link });
+            }
           }
         )
         .subscribe();
