@@ -1,7 +1,7 @@
 import { KanbanProvider, useKanban } from "@/context/KanbanContext";
 import KanbanBoard from "@/components/KanbanBoard";
 import Header from "@/components/Header";
-import { HijriCalendar } from "@/components/HijriCalendar";
+import CalendarViews from "@/components/CalendarViews";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
@@ -38,7 +38,7 @@ const IndexContent = () => {
             </Button>
           </div>
         )}
-        {viewMode === 'calendar' ? <HijriCalendar /> : <KanbanBoard />}
+        {viewMode === 'calendar' ? <CalendarViews /> : <KanbanBoard />}
       </main>
     </>
   );
