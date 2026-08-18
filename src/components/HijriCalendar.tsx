@@ -319,6 +319,24 @@ export function HijriCalendar({ targetYear, targetMonth }: HijriCalendarProps = 
     return days;
   };
 
+  // Jump to a specific Hijri month when opened from the Year / Quarter views
+  useEffect(() => {
+    if (!targetYear || !targetMonth || newMoons.length === 0) return;
+    if (hijriTitle.year === targetYear && hijriTitle.month === targetMonth) return;
+    const idx = newMoons.findIndex((_, i) => {
+      const h = computeHijriFromIndex(i, newMoons);
+      return h.year === targetYear && h.month === targetMonth;
+    });
+    if (idx < 0) return;
+    const start = new Date(newMoons[idx]);
+    const end = idx + 1 < newMoons.length ? new Date(newMoons[idx + 1]) : addDays(start, 30);
+    setCurrentIndex(idx);
+    setMonthRange({ start, end });
+    setHijriTitle({ year: targetYear, month: targetMonth, monthName: getHijriMonthName(targetMonth) });
+    fetchAstronomicalData(start, end);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [targetYear, targetMonth, newMoons]);
+
   const navigateMonth = (direction: 'prev' | 'next') => {
     setCurrentIndex((prev) => {
       const newIndex = prev + (direction === 'next' ? 1 : -1);
