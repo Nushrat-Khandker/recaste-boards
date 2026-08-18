@@ -208,7 +208,7 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
     });
   }, []);
 
-  const handleFileUpload = async (files: FileList) => {
+  const handleFileUpload = async (files: FileList, caption?: string) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { toast({ title: 'Error', description: 'You must be logged in', variant: 'destructive' }); return; }
     for (const file of Array.from(files)) {
@@ -223,6 +223,7 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
         const { error: dbError } = await (supabase as any).from('chat_messages').insert({
           board_name: actualContextId, context_type: actualContextType, context_id: actualContextId,
           user_id: user.id, message_type: 'file', file_url: publicUrl, file_name: file.name,
+          content: caption?.trim() ? caption.trim() : null,
         });
         if (dbError) throw dbError;
         setUploadProgress(100);
@@ -236,7 +237,7 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
             action: 'broadcast',
             senderId: user.id,
             senderName: senderProfile?.name || 'Someone',
-            messageContent: `📎 ${file.name}`,
+            messageContent: caption?.trim() ? caption.trim() : `📎 ${file.name}`,
             contextType: actualContextType,
             contextId: actualContextId,
           },
