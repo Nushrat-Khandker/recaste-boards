@@ -39,7 +39,13 @@ const SOLAR_EVENT_EMOJIS: Record<string, string> = {
   'solstice_winter': '❄️',
 };
 
-export function HijriCalendar() {
+interface HijriCalendarProps {
+  /** Optional Hijri month to open on (used when drilling down from Year/Quarter views) */
+  targetYear?: number;
+  targetMonth?: number;
+}
+
+export function HijriCalendar({ targetYear, targetMonth }: HijriCalendarProps = {}) {
   const { user } = useAuth();
   const { selectedTags, selectedProject, updateCard, addCard, columns } = useKanban();
   const [calendarFilter, setCalendarFilter] = useState<'all' | 'mine' | 'team'>('all');
