@@ -92,16 +92,49 @@ export const NotificationCenter = () => {
             filter: `user_id=eq.${user.id}`,
           },
           (payload) => {
-            setNotifications((prev) => [payload.new as Notification, ...prev]);
-            setUnreadCount((prev) => prev + 1);
-            playNotificationSound();
             const n = payload.new as Notification;
+            let isNew = false;
+            setNotifications((prev) => {
+              if (prev.some((p) => p.id === n.id)) return prev;
+              isNew = true;
+              return [n, ...prev].slice(0, 30);
+            });
+            if (!isNew) return;
+            setUnreadCount((prev) => prev + (n.read ? 0 : 1));
+            playNotificationSound();
             if (isNative()) {
               // iOS/Android (Capacitor): pop a native tray notification
               void showLocalNotification(n.title, n.message || '');
             } else {
               showDesktopNotification({ title: n.title, message: n.message, link: n.link });
             }
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'notifications',
+            filter: `user_id=eq.${user.id}`,
+          },
+          (payload) => {
+            const n = payload.new as Notification;
+            setNotifications((prev) => prev.map((p) => (p.id === n.id ? n : p)));
+            void refreshUnreadCount();
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'DELETE',
+            schema: 'public',
+            table: 'notifications',
+          },
+          (payload) => {
+            const id = (payload.old as any)?.id;
+            if (id) setNotifications((prev) => prev.filter((p) => p.id !== id));
+            void refreshUnreadCount();
           }
         )
         .subscribe();
@@ -136,10 +169,20 @@ export const NotificationCenter = () => {
       .order('created_at', { ascending: false })
       .limit(30);
 
-    if (data) {
-      setNotifications(data);
-      setUnreadCount(data.filter((n: Notification) => !n.read).length);
-    }
+    if (data) setNotifications(data);
+    await refreshUnreadCount();
+  };
+
+  // Count unread straight from the DB so the badge isn't capped by the 30-row list
+  const refreshUnreadCount = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { count } = await (supabase as any)
+      .from('notifications')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('read', false);
+    setUnreadCount(count ?? 0);
   };
 
   const markAsRead = async (notificationId: string) => {
@@ -151,7 +194,7 @@ export const NotificationCenter = () => {
     setNotifications((prev) =>
       prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n))
     );
-    setUnreadCount((prev) => Math.max(0, prev - 1));
+    void refreshUnreadCount();
   };
 
   const handleNotificationClick = async (notification: Notification) => {
