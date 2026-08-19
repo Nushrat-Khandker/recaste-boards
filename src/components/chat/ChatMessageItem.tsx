@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { 
   Paperclip, Trash2, Edit2, RefreshCw, Loader2, Download, 
-  Reply, Check, Copy, Pin, PinOff, Forward
+  Reply, Check, CheckCheck, Copy, Pin, PinOff, Forward
 } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { ChatMessage } from './types';
@@ -34,6 +34,8 @@ interface ChatMessageItemProps {
   onToggleReaction?: (messageId: string, emoji: string) => void;
   onTogglePin?: (message: ChatMessage) => void;
   onForward?: (message: ChatMessage) => void;
+  /** Newest time another participant read this conversation (ISO string). */
+  seenAt?: string | null;
 }
 
 const FileAttachmentCard = ({ fileName, fileUrl }: { fileName: string | null; fileUrl: string }) => {
@@ -175,10 +177,12 @@ export const ChatMessageItem = ({
   onToggleReaction,
   onTogglePin,
   onForward,
+  seenAt,
 }: ChatMessageItemProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isOwnMessage = message.user_id === currentUserId;
+  const isSeen = !!seenAt && !!message.created_at && new Date(seenAt) >= new Date(message.created_at);
   const avatarUrl = avatarMap[message.user_id] || null;
   const initials = (userName || '?').split(' ').map(s => s[0]).join('').slice(0, 2).toUpperCase();
   const onlineIds = useOnlineUsers();
@@ -372,9 +376,15 @@ export const ChatMessageItem = ({
             {format(new Date(message.created_at), 'HH:mm')}
           </span>
           {isOwnMessage && !message.pending && !message.failed && (
-            <span title="Sent" aria-label="Sent" className="inline-flex">
-              <Check className="h-4 w-4 text-white" strokeWidth={3} />
-            </span>
+            isSeen ? (
+              <span title="Seen" aria-label="Seen" className="inline-flex">
+                <CheckCheck className="h-4 w-4 text-[hsl(210,100%,80%)]" strokeWidth={3} />
+              </span>
+            ) : (
+              <span title="Sent" aria-label="Sent" className="inline-flex">
+                <Check className="h-4 w-4 text-white/90" strokeWidth={3} />
+              </span>
+            )
           )}
           {message.pending && (
             <span title="Sending…" aria-label="Sending" className="inline-flex">
