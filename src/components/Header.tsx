@@ -12,7 +12,7 @@ import { useKanban } from '../context/KanbanContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
-import { usePresence, OnlineDot } from '@/hooks/usePresence';
+import { usePresence, OnlineDot, leavePresence } from '@/hooks/usePresence';
 
 import { YearWheel } from './YearWheel';
 import TagFilter from './TagFilter';
@@ -125,7 +125,7 @@ const Header: React.FC = () => {
                   Profile Settings
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={async () => { await signOut(); navigate('/auth'); }} className="text-destructive focus:text-destructive">
+                <DropdownMenuItem onClick={async () => { await leavePresence(); await signOut(); navigate('/auth'); }} className="text-destructive focus:text-destructive">
                   <LogOut className="mr-2 h-4 w-4" />
                   Sign Out
                 </DropdownMenuItem>
