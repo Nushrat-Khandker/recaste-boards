@@ -368,14 +368,18 @@ export const ChatMessageItem = ({
         )}
 
         <div className={`flex items-center gap-1 mt-0.5 ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
-          <span className={`text-[10px] ${isOwnMessage ? 'text-white/60' : 'text-muted-foreground'}`}>
+          <span className={`text-[10px] ${isOwnMessage ? 'text-white/80' : 'text-muted-foreground'}`}>
             {format(new Date(message.created_at), 'HH:mm')}
           </span>
           {isOwnMessage && !message.pending && !message.failed && (
-            <CheckCheck className={`h-3.5 w-3.5 ${isOwnMessage ? 'text-white/60' : 'text-muted-foreground'}`} />
+            <span title="Sent" aria-label="Sent" className="inline-flex">
+              <Check className="h-4 w-4 text-white" strokeWidth={3} />
+            </span>
           )}
           {message.pending && (
-            <Loader2 className="h-3 w-3 animate-spin text-white/60" />
+            <span title="Sending…" aria-label="Sending" className="inline-flex">
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-white/80" />
+            </span>
           )}
           {message.failed && (
             <span className="text-[10px] text-destructive font-medium">Failed</span>
