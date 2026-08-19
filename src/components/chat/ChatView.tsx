@@ -7,6 +7,7 @@ import { Paperclip, Loader2, Search, X, FolderOpen, Pin } from 'lucide-react';
 import { useChatMessages } from './useChatMessages';
 import { useMediaRecording } from './useMediaRecording';
 import { useReactions } from './useReactions';
+import { useReadReceipts } from '@/hooks/useReadReceipts';
 import { ChatMessageItem } from './ChatMessageItem';
 import { ChatInput } from './ChatInput';
 import { RecordingPreview } from './RecordingPreview';
@@ -56,6 +57,9 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isFilesPanelOpen, setIsFilesPanelOpen] = useState(false);
   const [forwardingMessage, setForwardingMessage] = useState<ChatMessage | null>(null);
+
+  const lastMessageAt = messages.length ? messages[messages.length - 1].created_at : null;
+  const { othersLastReadAt } = useReadReceipts(actualContextType, actualContextId, currentUserId, lastMessageAt);
   
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -469,6 +473,7 @@ export const ChatView = ({ contextType, contextId, boardName }: ChatViewProps) =
                       onToggleReaction={toggleReaction}
                       onTogglePin={togglePin}
                       onForward={setForwardingMessage}
+                      seenAt={othersLastReadAt}
                     />
                   );
                 })}
