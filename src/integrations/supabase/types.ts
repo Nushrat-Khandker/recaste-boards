@@ -352,6 +352,36 @@ export type Database = {
           },
         ]
       }
+      chat_read_state: {
+        Row: {
+          context_id: string | null
+          context_type: string
+          created_at: string
+          id: string
+          last_read_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          context_id?: string | null
+          context_type: string
+          created_at?: string
+          id?: string
+          last_read_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          context_id?: string | null
+          context_type?: string
+          created_at?: string
+          id?: string
+          last_read_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       content_items: {
         Row: {
           campaign: string | null
