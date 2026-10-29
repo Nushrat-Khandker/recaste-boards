@@ -18,6 +18,7 @@ import Auth from "./pages/Auth";
 import AdminProtected from "./pages/AdminProtected";
 import ResetPassword from "./pages/ResetPassword";
 import Messages from "./pages/Messages";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 
 const queryClient = new QueryClient();
 
@@ -65,6 +66,8 @@ const App = () => (
             <Route path="/slack" element={<RequireAuth><SlackIntegrationPage /></RequireAuth>} />
             <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
             <Route path="/admin" element={<RequireAuth><AdminProtected /></RequireAuth>} />
+            <Route path="/t0/privacy" element={<PrivacyPolicy />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
