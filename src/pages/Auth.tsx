@@ -44,7 +44,12 @@ const Auth = () => {
       password,
     });
     if (error) {
-      setErrorMsg(error.message || "Login failed. Please check your email and password.");
+      const m = /not confirmed/i.test(error.message)
+        ? "Your email isn't confirmed yet. Open the confirmation link we emailed you (check spam), then try again."
+        : /invalid login/i.test(error.message)
+        ? "Wrong email or password. If you forgot it, tap 'Forgot password?'."
+        : error.message || "Login failed. Please check your email and password.";
+      setErrorMsg(m);
       toast({ title: "Login failed", description: error.message, variant: "destructive" });
     } else {
       navigate("/", { replace: true });
@@ -62,7 +67,7 @@ const Auth = () => {
       return;
     }
     setIsSubmitting(true);
-    const { error } = await supabase.auth.signUp({
+    const { data: signUpData, error } = await supabase.auth.signUp({
       email: email.toLowerCase().trim(),
       password,
       options: {
@@ -74,7 +79,14 @@ const Auth = () => {
       setErrorMsg(error.message || "Sign up failed.");
       toast({ title: "Sign up failed", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Account created", description: "You can now sign in." });
+      if (signUpData?.session) {
+        toast({ title: "Account created", description: "You're signed in." });
+      } else if (signUpData?.user && (signUpData.user.identities?.length ?? 0) === 0) {
+        setErrorMsg("An account with this email already exists. Please sign in or reset your password.");
+      } else {
+        toast({ title: "Check your email", description: "We sent a confirmation link. Open it, then sign in." });
+        setErrorMsg("Almost done: open the confirmation link we emailed you, then sign in.");
+      }
       setMode("signin");
     }
     setIsSubmitting(false);
