@@ -33,7 +33,7 @@ export default function SunsetDayChart({ days, now, zoom = 1, events, onDay, onE
     return () => observer.disconnect();
   }, []);
   if (!days.length) return <p role="alert">Sunset times unavailable.</p>;
-  const left = 48, right = 12, top = 68;
+  const left = 12, right = 12, top = 68;
   const col = Math.max(78, (availableWidth - left - right) / days.length) * zoom;
   const width = left + days.length * col + right;
   const minimum = Math.floor(Math.min(...days.map(day => chartHour(day, day.start))));
@@ -49,10 +49,10 @@ export default function SunsetDayChart({ days, now, zoom = 1, events, onDay, onE
       <svg width={width} height={totalHeight} viewBox={`0 0 ${width} ${totalHeight}`} role="img" aria-label="Sunset-to-sunset calendar chart" className="block font-sans">
         {gridHours.map(hour => <g key={hour} className="pointer-events-none" data-grid-hour={hour}>
           <line x1={left} x2={width - right} y1={y(hour)} y2={y(hour)} className="stroke-border" strokeWidth={1} />
-          <text x={left - 8} y={y(hour) + 4} textAnchor="end" fontSize={11} className="fill-muted-foreground">{formatChartTime(new Date(days[0].origin.getTime() + hour * 3600000), days[0].timeZone)}</text>
         </g>)}
         {days.map((day, index) => {
           const x = left + index * col;
+          const showSolarTimes = index === 0 || index === days.length - 1;
           const startY = position(day, day.start), endY = position(day, day.end);
           const wd = day.date.getDay();
           const active = now >= day.start && now < day.end;
@@ -84,7 +84,7 @@ export default function SunsetDayChart({ days, now, zoom = 1, events, onDay, onE
               return <g key={key} className={`${styles[key]} pointer-events-none`} data-event={key} data-instant={instant.toISOString()} data-hour={chartHour(day, instant)}>
                 <title>{labels[key]} · {time} · {instant.toLocaleDateString('en-GB', { timeZone: day.timeZone })}</title>
                 <line x1={x} x2={x + col} y1={eventY} y2={eventY} strokeWidth={solar ? 2.5 : 1} strokeDasharray={key === 'moonset' ? '3 3' : undefined} />
-                {solar && <text x={x + col / 2} y={eventY + (key === 'start' ? 13 : -6)} textAnchor="middle" stroke="none" fontSize={10}>{time}</text>}
+                {solar && showSolarTimes && <text x={x + col / 2} y={eventY + (key === 'start' ? 13 : -6)} textAnchor="middle" stroke="none" fontSize={10}>{time}</text>}
                 {!solar && <circle cx={x + col / 2} cy={eventY} r={2.5} />}
               </g>;
             })}
