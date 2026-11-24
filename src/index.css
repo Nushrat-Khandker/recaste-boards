@@ -262,13 +262,27 @@
   }
 
   [data-print-sunset-chart] {
-    overflow: visible;
+    overflow: hidden !important;
     break-inside: avoid;
+    border: none !important;
+    border-radius: 0 !important;
+    height: 176mm;
   }
 
   [data-print-sunset-chart] > svg {
-    width: 100%;
-    height: auto;
-    max-height: 178mm;
+    width: 100% !important;
+    height: 176mm !important;
+    max-height: none;
+  }
+
+  html:has([data-calendar-print]),
+  body:has([data-calendar-print]) {
+    height: auto !important;
+    overflow: hidden !important;
+  }
+
+  [data-calendar-print] {
+    max-height: 189mm;
+    overflow: hidden !important;
   }
 }
