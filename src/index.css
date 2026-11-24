@@ -155,16 +155,13 @@
   }
 }
 
-@page calendar {
+@page {
   size: A4 landscape;
-  margin: 10mm;
+  margin: 5mm;
 }
 
 @media print {
   /* Only the selected calendar is printed; other app pages are unaffected. */
-  body:has([data-calendar-print]) {
-    page: calendar;
-  }
 
   body:has([data-calendar-print]) *:not([data-calendar-print]):not([data-calendar-print] *):not(:has([data-calendar-print])) {
     display: none !important;
@@ -199,9 +196,10 @@
     --chart-sunset: 0 72% 48%;
     --chart-sunrise: 47 94% 48%;
     --chart-meridian: 26 92% 49%;
-    width: 100%;
-    max-width: none;
-    padding: 0;
+    width: 100% !important;
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
     color: hsl(var(--foreground));
     background: hsl(var(--background));
     print-color-adjust: exact;
@@ -235,7 +233,7 @@
 
   [data-print-month-grid] > div {
     aspect-ratio: auto;
-    min-height: 32mm;
+    min-height: 35mm;
     overflow: visible;
     break-inside: avoid;
     background: hsl(var(--background));
@@ -266,12 +264,12 @@
     break-inside: avoid;
     border: none !important;
     border-radius: 0 !important;
-    height: 176mm;
+    height: 188mm;
   }
 
   [data-print-sunset-chart] > svg {
     width: 100% !important;
-    height: 176mm !important;
+    height: 188mm !important;
     max-height: none;
   }
 
@@ -282,7 +280,7 @@
   }
 
   [data-calendar-print] {
-    max-height: 189mm;
+    max-height: 199mm;
     overflow: hidden !important;
   }
 }
