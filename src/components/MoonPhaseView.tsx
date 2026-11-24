@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useCalendarNav as useNavigate } from '@/hooks/useCalendarNav';
-import { ChevronLeft, ChevronRight, Loader2, ZoomIn, ZoomOut } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2, ZoomIn, ZoomOut, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
@@ -187,7 +187,7 @@ const MoonPhaseView: React.FC = () => {
   const hijriYear = hijriInfo ? hijriInfo.year : '';
 
   return (
-    <div className="w-full max-w-6xl mx-auto p-2 sm:p-6">
+    <div data-calendar-print="phase" className="w-full max-w-6xl mx-auto p-2 sm:p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-1 sm:mb-3">
         <Button
@@ -248,7 +248,10 @@ const MoonPhaseView: React.FC = () => {
             Meridian
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div data-print-hide className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" className="h-6 w-6" title="Print phase" aria-label="Print phase" disabled={loading || calculationError || !days.length} onClick={() => window.print()}>
+            <Printer className="h-4 w-4" />
+          </Button>
           <div className="flex items-center gap-1">
             <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setZoom(z => Math.max(0.5, z - 0.25))}>
               <ZoomOut className="h-3.5 w-3.5" />

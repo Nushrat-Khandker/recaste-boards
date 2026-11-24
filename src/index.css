@@ -154,3 +154,107 @@
     animation: scale-in 0.2s ease-out;
   }
 }
+
+@page calendar {
+  size: A4 landscape;
+  margin: 10mm;
+}
+
+@media print {
+  /* Only the selected calendar is printed; other app pages are unaffected. */
+  body:has([data-calendar-print]) {
+    page: calendar;
+  }
+
+  body:has([data-calendar-print]) *:not([data-calendar-print]):not([data-calendar-print] *):not(:has([data-calendar-print])) {
+    display: none !important;
+  }
+
+  body:has([data-calendar-print]),
+  body:has([data-calendar-print]) *:has([data-calendar-print]) {
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    width: 100% !important;
+    max-width: none !important;
+    overflow: visible !important;
+    position: static !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: block !important;
+    background: none !important;
+  }
+
+  [data-calendar-print] {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --primary: 199 89% 35%;
+    --muted-foreground: 215 20% 35%;
+    --border: 214 20% 65%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
+    --chart-friday: 145 45% 90%;
+    --chart-saturday: 0 55% 92%;
+    --chart-night: 210 35% 93%;
+    --chart-sunset: 0 72% 48%;
+    --chart-sunrise: 47 94% 48%;
+    --chart-meridian: 26 92% 49%;
+    width: 100%;
+    max-width: none;
+    padding: 0;
+    color: hsl(var(--foreground));
+    background: hsl(var(--background));
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  [data-calendar-print] [data-print-hide],
+  [data-calendar-print] button:has(svg):not([data-print-sunset-chart] button),
+  [data-calendar-print] [role="tablist"] {
+    display: none !important;
+  }
+
+  [data-calendar-print] > div:first-child {
+    justify-content: center;
+    margin-bottom: 4mm;
+  }
+
+  [data-print-month-grid] > div {
+    aspect-ratio: auto;
+    min-height: 28mm;
+    overflow: visible;
+    break-inside: avoid;
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    box-shadow: none;
+  }
+
+  [data-print-month-grid] [data-print-weekday="5"] {
+    background: hsl(var(--chart-friday));
+  }
+
+  [data-print-month-grid] [data-print-weekday="6"] {
+    background: hsl(var(--chart-saturday));
+  }
+
+  [data-print-month-grid] .overflow-y-auto {
+    overflow: visible;
+  }
+
+  [data-print-month-grid] .truncate {
+    overflow: visible;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  [data-print-sunset-chart] {
+    overflow: visible;
+    break-inside: avoid;
+  }
+
+  [data-print-sunset-chart] > svg {
+    width: 100%;
+    height: auto;
+    max-height: 140mm;
+  }
+}

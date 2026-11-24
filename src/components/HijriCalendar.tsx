@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { gregorianToHijri, getHijriMonthName, getHijriWeekdays, hijriToGregorian } from '@/lib/hijri-utils';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
-import { ChevronLeft, ChevronRight, Plus, CalendarPlus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, CalendarPlus, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useKanban, KanbanCard } from '@/context/KanbanContext';
@@ -351,7 +351,7 @@ export function HijriCalendar({ targetYear, targetMonth }: HijriCalendarProps = 
   const columnWeekdays = Array.from({ length: 7 }, (_, i) => (firstDayWeekday + i) % 7);
 
   return (
-    <div className="w-full max-w-6xl mx-auto p-2 sm:p-6">
+    <div data-calendar-print="month" className="w-full max-w-6xl mx-auto p-2 sm:p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-3 sm:mb-6">
         <Button variant="outline" size="sm" onClick={() => navigateMonth('prev')} className="text-xs sm:text-sm px-2 sm:px-3">
@@ -372,7 +372,7 @@ export function HijriCalendar({ targetYear, targetMonth }: HijriCalendarProps = 
       <CalendarLocationControl location={location} />
 
       {/* Filter tabs */}
-      <div className="flex justify-center mb-3 sm:mb-4">
+      <div data-print-hide className="flex justify-center items-center gap-2 mb-3 sm:mb-4">
         <Tabs value={calendarFilter} onValueChange={(v) => setCalendarFilter(v as 'all' | 'mine' | 'team')}>
           <TabsList>
             <TabsTrigger value="all">All</TabsTrigger>
@@ -380,6 +380,9 @@ export function HijriCalendar({ targetYear, targetMonth }: HijriCalendarProps = 
             <TabsTrigger value="team">Team</TabsTrigger>
           </TabsList>
         </Tabs>
+        <Button variant="ghost" size="icon" title="Print month" aria-label="Print month" disabled={!monthRange} onClick={() => window.print()}>
+          <Printer className="h-4 w-4" />
+        </Button>
       </div>
 
       {/* Weekday headers */}
@@ -400,7 +403,7 @@ export function HijriCalendar({ targetYear, targetMonth }: HijriCalendarProps = 
       </div>
 
       {/* Calendar grid */}
-      <div className="grid grid-cols-7 gap-1 sm:gap-2">
+      <div data-print-month-grid className="grid grid-cols-7 gap-1 sm:gap-2">
         {/* Day cells */}
         {days.map(({ hijriDay, gregorianDate, weekday }) => {
           const dateKey = format(gregorianDate, 'yyyy-MM-dd');
@@ -420,6 +423,7 @@ export function HijriCalendar({ targetYear, targetMonth }: HijriCalendarProps = 
           return (
             <div
               key={hijriDay}
+              data-print-weekday={weekday}
               className={cn(
                 "aspect-square border border-border/70 sm:border-2 rounded-sm sm:rounded-lg p-0.5 sm:p-2 relative flex flex-col overflow-hidden bg-white dark:bg-slate-800 group",
                 weekday === 5 && "bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700",

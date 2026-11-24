@@ -24,6 +24,13 @@ const labels = { start: 'Sunset', end: 'Next sunset', sunrise: 'Sunrise', meridi
 export default function SunsetDayChart({ days, now, zoom = 1, events, onDay, onEvent, phaseChange, jumuahDatePair = false }: Props) {
   const host = useRef<HTMLDivElement>(null);
   const [availableWidth, setAvailableWidth] = useState(700);
+  const [printing, setPrinting] = useState(() => window.matchMedia('print').matches);
+  useEffect(() => {
+    const media = window.matchMedia('print');
+    const update = () => setPrinting(media.matches);
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
   useEffect(() => {
     const element = host.current;
     if (!element) return;
@@ -33,18 +40,20 @@ export default function SunsetDayChart({ days, now, zoom = 1, events, onDay, onE
   }, []);
   if (!days.length) return <p role="alert">Sunset times unavailable.</p>;
   const left = 12, right = 12, top = 68;
-  const col = Math.max(jumuahDatePair ? 132 : 0, Math.max(78, (availableWidth - left - right) / days.length) * zoom);
+  const chartWidth = printing ? 1000 : availableWidth;
+  const chartZoom = printing ? 1 : zoom;
+  const col = Math.max(jumuahDatePair ? 132 : 0, Math.max(78, (chartWidth - left - right) / days.length) * chartZoom);
   const width = left + days.length * col + right;
   const minimum = Math.floor(Math.min(...days.map(day => chartHour(day, day.start))));
   const maximum = Math.ceil(Math.max(...days.map(day => chartHour(day, day.end))));
-  const hourRowHeight = 32 * zoom;
+  const hourRowHeight = (printing ? 20 : 32) * chartZoom;
   const height = (maximum - minimum) * hourRowHeight;
   const y = (hour: number) => top + (hour - minimum) * hourRowHeight;
   const position = (day: SunsetDay, instant: Date) => y(chartHour(day, instant));
   const gridHours = Array.from({ length: maximum - minimum + 1 }, (_, i) => minimum + i);
   const totalHeight = top + height + 24;
   return (
-    <div ref={host} className="w-full overflow-x-auto border border-border rounded-md bg-background">
+    <div ref={host} data-print-sunset-chart className="w-full overflow-x-auto border border-border rounded-md bg-background">
       <svg width={width} height={totalHeight} viewBox={`0 0 ${width} ${totalHeight}`} role="img" aria-label="Sunset-to-sunset calendar chart" className="block font-sans">
         {gridHours.map(hour => <g key={hour} className="pointer-events-none" data-grid-hour={hour}>
           <line x1={left} x2={width - right} y1={y(hour)} y2={y(hour)} className="stroke-border" strokeWidth={1} />

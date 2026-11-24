@@ -4,3 +4,4 @@
 - Preserve exact reference phase instants separately from localized display dates, because a moon phase is one worldwide instant but can fall on different local dates.
 - Derive phase-label boundaries through the shared astronomy module using the first real sunset after each reference instant, and refresh live labels with the shared calendar clock; this keeps all calendar views consistent without changing stored dates.
 - Render Day and Phase through the shared sunset-day chart and interval calculations, using exact event instants on an elapsed-hour axis and a shared next-day display-date helper for weekday labels; this preserves stored civil event dates while aligning labels with the daytime following sunset.
+- Scope calendar printing to the selected Month or Phase region using print media styles, and normalize chart zoom only for print; this preserves the live calendar and outputs the full sunset grid without app navigation.
