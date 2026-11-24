@@ -111,7 +111,7 @@ export default function SunsetDayChart({ days, now, zoom = 1, events, onDay, onE
               if (!interval) return [];
               const eventY = interval.allDay ? startY + 24 + eventIndex * 27 : position(day, interval.start);
               const eventHeight = interval.allDay ? 24 : Math.max(24, position(day, interval.end) - eventY);
-              return [<foreignObject key={event.id} x={x + 3} y={eventY} width={col - 6} height={Math.min(eventHeight, Math.max(0, endY - eventY))}>
+              return [<foreignObject data-sunset-event key={event.id} x={x + 3} y={eventY} width={col - 6} height={Math.min(eventHeight, Math.max(0, endY - eventY))}>
                 <Button variant="secondary" size="sm" className="w-full h-full text-[10px] justify-start px-1 rounded-sm border-l-4 overflow-hidden" style={{ borderLeftColor: event.color }} onClick={() => onEvent(event)} title={`${event.title} · ${event.date} ${event.start_time ?? ''}`}>
                   <span className="truncate">{event.title}</span>
                 </Button>

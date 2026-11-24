@@ -214,6 +214,20 @@
     display: none !important;
   }
 
+  [data-calendar-print] {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  [data-calendar-print] h2 {
+    font-size: 16pt;
+  }
+
+  [data-calendar-print] [data-sunset-event],
+  [data-calendar-print] [data-print-month-grid] [data-calendar-item] {
+    display: none !important;
+  }
+
   [data-calendar-print] > div:first-child {
     justify-content: center;
     margin-bottom: 4mm;
@@ -221,7 +235,7 @@
 
   [data-print-month-grid] > div {
     aspect-ratio: auto;
-    min-height: 28mm;
+    min-height: 34mm;
     overflow: visible;
     break-inside: avoid;
     background: hsl(var(--background));
@@ -255,6 +269,6 @@
   [data-print-sunset-chart] > svg {
     width: 100%;
     height: auto;
-    max-height: 140mm;
+    max-height: 178mm;
   }
 }

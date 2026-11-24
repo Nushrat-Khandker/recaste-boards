@@ -202,7 +202,7 @@ const MoonPhaseView: React.FC = () => {
         </Button>
 
         <div className="text-center">
-          <h2 className="text-base sm:text-2xl font-bold">
+          <h2 data-print-hide className="text-base sm:text-2xl font-bold">
             {currentBlock && (
               <>{currentBlock.icon} {currentBlock.name}</>
             )}
@@ -226,14 +226,14 @@ const MoonPhaseView: React.FC = () => {
         </Button>
       </div>
 
-      <CalendarLocationControl location={geo} />
-      {currentBlock && <p className="text-center text-xs text-muted-foreground mb-3">
+      <div data-print-hide><CalendarLocationControl location={geo} /></div>
+      {currentBlock && <p data-print-hide className="text-center text-xs text-muted-foreground mb-3">
         Phase event: {new Intl.DateTimeFormat('en-GB', { timeZone: geo.timeZone, day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(currentBlock.startInstant)}
         {' · '}Sunset boundary: {new Intl.DateTimeFormat('en-GB', { timeZone: geo.timeZone, day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(currentBlock.labelBoundary)}
       </p>}
 
       {/* Legend */}
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-2 text-xs text-muted-foreground">
+      <div data-print-hide className="flex flex-wrap items-center justify-between gap-2 mb-2 text-xs text-muted-foreground">
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-1">
             <div className="w-5 h-[3px] rounded-sm bg-[hsl(var(--chart-sunset))]" />

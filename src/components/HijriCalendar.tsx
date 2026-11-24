@@ -360,7 +360,7 @@ export function HijriCalendar({ targetYear, targetMonth }: HijriCalendarProps = 
         </Button>
         
         <h2 className="text-base sm:text-2xl font-bold text-center">
-          {hijriTitle.month}. {hijriTitle.monthName} {hijriTitle.year}
+          <span data-print-hide>{hijriTitle.month}. </span>{hijriTitle.monthName} {hijriTitle.year}
         </h2>
         
         <Button variant="outline" size="sm" onClick={() => navigateMonth('next')} className="text-xs sm:text-sm px-2 sm:px-3">
@@ -369,7 +369,7 @@ export function HijriCalendar({ targetYear, targetMonth }: HijriCalendarProps = 
         </Button>
       </div>
 
-      <CalendarLocationControl location={location} />
+      <div data-print-hide><CalendarLocationControl location={location} /></div>
 
       {/* Filter tabs */}
       <div data-print-hide className="flex justify-center items-center gap-2 mb-3 sm:mb-4">
