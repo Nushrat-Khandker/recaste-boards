@@ -235,7 +235,7 @@
 
   [data-print-month-grid] > div {
     aspect-ratio: auto;
-    min-height: 34mm;
+    min-height: 32mm;
     overflow: visible;
     break-inside: avoid;
     background: hsl(var(--background));
