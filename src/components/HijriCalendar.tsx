@@ -412,6 +412,10 @@ export function HijriCalendar({ targetYear, targetMonth }: HijriCalendarProps = 
           const isHovered = hoveredDate === dateKey;
           const dateEmojis = getEmojisForDate(gregorianDate);
           const isHoliday = dateEmojis.includes('🏖️');
+          const eveningDate = addDays(gregorianDate, -1);
+          const eveningDateFormat = eveningDate.getFullYear() !== gregorianDate.getFullYear()
+            ? 'd MMM yy'
+            : eveningDate.getMonth() !== gregorianDate.getMonth() ? 'd MMM' : 'd';
 
           return (
             <div
@@ -499,8 +503,8 @@ export function HijriCalendar({ targetYear, targetMonth }: HijriCalendarProps = 
 
               {/* Gregorian date - only on Jumuah */}
               {weekday === 5 && (
-                <div className="text-[8px] sm:text-xs text-muted-foreground mt-auto pt-0.5 sm:pt-1 border-t">
-                  {format(gregorianDate, 'MMM d, yyyy')}
+                <div className="text-[8px] sm:text-xs text-muted-foreground mt-auto pt-0.5 sm:pt-1 border-t leading-tight">
+                  {format(eveningDate, eveningDateFormat)}-{format(gregorianDate, 'd MMM yy')}
                 </div>
               )}
             </div>

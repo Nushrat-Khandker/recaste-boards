@@ -271,7 +271,7 @@ const MoonPhaseView: React.FC = () => {
         ) : calculationError ? (
           <p role="alert" className="p-6 text-sm text-muted-foreground">Sunset times unavailable. Allow location access or try again.</p>
         ) : (
-          <SunsetDayChart days={days} now={now} zoom={zoom} events={calendarEvents}
+          <SunsetDayChart days={days} now={now} zoom={zoom} events={calendarEvents} jumuahDatePair
             onDay={date => navigate(`/day?date=${date}`)}
             onEvent={event => {
               if (user && event.user_id === user.id) setEventDialogState({ open: true, date: event.date, event });

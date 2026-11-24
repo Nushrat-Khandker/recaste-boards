@@ -10,6 +10,7 @@ interface Props {
   onDay: (dateKey: string) => void;
   onEvent: (event: ChartCalendarEvent) => void;
   phaseChange?: { instant: Date; icon: string; name: string };
+  jumuahDatePair?: boolean;
 }
 
 const styles = {
@@ -20,7 +21,7 @@ const styles = {
 };
 const labels = { start: 'Sunset', end: 'Next sunset', sunrise: 'Sunrise', meridian: 'Meridian' };
 
-export default function SunsetDayChart({ days, now, zoom = 1, events, onDay, onEvent, phaseChange }: Props) {
+export default function SunsetDayChart({ days, now, zoom = 1, events, onDay, onEvent, phaseChange, jumuahDatePair = false }: Props) {
   const host = useRef<HTMLDivElement>(null);
   const [availableWidth, setAvailableWidth] = useState(700);
   useEffect(() => {
@@ -32,7 +33,7 @@ export default function SunsetDayChart({ days, now, zoom = 1, events, onDay, onE
   }, []);
   if (!days.length) return <p role="alert">Sunset times unavailable.</p>;
   const left = 12, right = 12, top = 68;
-  const col = Math.max(78, (availableWidth - left - right) / days.length) * zoom;
+  const col = Math.max(jumuahDatePair ? 132 : 0, Math.max(78, (availableWidth - left - right) / days.length) * zoom);
   const width = left + days.length * col + right;
   const minimum = Math.floor(Math.min(...days.map(day => chartHour(day, day.start))));
   const maximum = Math.ceil(Math.max(...days.map(day => chartHour(day, day.end))));
@@ -57,12 +58,23 @@ export default function SunsetDayChart({ days, now, zoom = 1, events, onDay, onE
           const active = now >= day.start && now < day.end;
           const dayLabel = wd === 5 ? 'Jumuah' : wd === 6 ? 'As-sabt' : `Day ${wd + 1}`;
           const dateLabel = displayDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+          const eveningDateLabel = day.date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
           const summary = `${day.dateKey} ${formatChartTime(day.start, day.timeZone)} → ${day.nextDateKey} ${formatChartTime(day.end, day.timeZone)}`;
           return <g key={day.dateKey} data-sunset-day={day.dateKey} data-start={day.start.toISOString()} data-end={day.end.toISOString()}>
             <foreignObject x={x} y={4} width={col} height={55}>
               <Button variant="ghost" onClick={() => onDay(day.dateKey)} title={summary} className="w-full h-full flex flex-col gap-0 px-1 text-xs rounded-none">
-                <span className={active ? 'text-primary font-semibold' : ''}>{dayLabel}</span>
-                <span className="text-[10px] text-muted-foreground">{dateLabel}</span>
+                {jumuahDatePair && wd === 5 ? (
+                  <span className="flex items-baseline justify-center gap-1 whitespace-nowrap">
+                    <span className="text-[9px] text-muted-foreground">{eveningDateLabel}</span>
+                    <span className={active ? 'text-primary font-semibold' : ''}>{dayLabel}</span>
+                    <span className="text-[9px] text-muted-foreground">{dateLabel}</span>
+                  </span>
+                ) : (
+                  <>
+                    <span className={active ? 'text-primary font-semibold' : ''}>{dayLabel}</span>
+                    <span className="text-[10px] text-muted-foreground">{dateLabel}</span>
+                  </>
+                )}
                 {active && <span className="text-[10px] text-primary">Today</span>}
               </Button>
             </foreignObject>

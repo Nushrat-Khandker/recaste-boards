@@ -1,4 +1,5 @@
 # Calendar location correction
+- [x] Show small evening/daytime dates around Jumuah in Moon Phase and paired Gregorian dates in Month; 25 regressions passed and isolated phone/desktop displays verified; saved dates unchanged.
 - [x] Hide routine location and moonrise/moonset details; label Tuesday sunset as Day 4, retain it in First Quarter until Wednesday sunset, and plot the exact phase event; 24 tests and isolated phone/desktop view checks passed.
 - [x] Make Day and Phase charts span actual sunset-to-sunset intervals; verified solar line times/colors, next-morning events, sunset rollover, phone/desktop layouts, and unchanged saved event dates.
 - [x] Remove manual city selection; sixteen tests passed, with isolated browser checks for shared GPS permission, retry, and denied permission.
