@@ -9,7 +9,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { useCalendarNow } from '@/hooks/useCalendarNow';
 import { getLocalPhaseForDate } from '@/lib/moon-calculations';
-import { calculateSunsetDay, sunsetDayDate, formatChartTime, type SunsetDay } from '@/lib/sunset-day';
+import { calculateSunsetDay, sunsetDayDate, sunsetDayDisplayDate, formatChartTime, type SunsetDay } from '@/lib/sunset-day';
 import SunsetDayChart from '@/components/SunsetDayChart';
 import CalendarLocationControl from '@/components/CalendarLocationControl';
 import { format } from 'date-fns';
@@ -43,7 +43,7 @@ export const DayView: React.FC<DayViewProps> = ({ date }) => {
   });
 
   const hijri = getHijriForDate(date);
-  const weekday = date.getDay();
+  const weekday = sunsetDayDisplayDate(date).getDay();
   const dateKey = toDateKey(date);
   const isToday = dateKey === toDateKey(sunsetDayDate(now, geo.latitude, geo.longitude));
   const phase = getLocalPhaseForDate(date, geo.latitude, geo.longitude);
@@ -109,11 +109,6 @@ export const DayView: React.FC<DayViewProps> = ({ date }) => {
       {!loading && solar && <p className="text-center text-xs text-muted-foreground mb-3">
         {format(date, 'd MMM')} {formatChartTime(solar.start, solar.timeZone)} → {format(new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1), 'd MMM')} {formatChartTime(solar.end, solar.timeZone)}
       </p>}
-      {!loading && solar && <dl className="flex flex-wrap justify-center gap-x-6 gap-y-2 mb-4 text-sm">
-        <div><dt className="text-xs text-muted-foreground">Moonrise</dt><dd className="font-medium">{solar.moonrise === null ? 'No moonrise' : formatChartTime(solar.moonrise, solar.timeZone)}</dd></div>
-        <div><dt className="text-xs text-muted-foreground">Moonset</dt><dd className="font-medium">{solar.moonset === null ? 'No moonset' : formatChartTime(solar.moonset, solar.timeZone)}</dd></div>
-        <div><dt className="text-xs text-muted-foreground">Illumination</dt><dd className="font-medium">{solar.illumination.toFixed(1)}%</dd></div>
-      </dl>}
 
       <div className="flex flex-wrap items-center gap-1 text-xs text-muted-foreground mb-3">
         <button onClick={() => navigate(`/year?year=${hijri.year}`)} className="hover:text-primary transition-colors">{hijri.year} AH</button>

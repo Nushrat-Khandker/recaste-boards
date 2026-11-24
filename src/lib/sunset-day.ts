@@ -16,6 +16,13 @@ export interface SunsetDay {
   illumination: number;
 }
 
+/** Weekday identity belongs to the daytime after the opening sunset. */
+export function sunsetDayDisplayDate(openingDate: Date): Date {
+  const date = new Date(openingDate);
+  date.setDate(date.getDate() + 1);
+  return date;
+}
+
 export function sunsetDayDate(instant: Date, latitude: number, longitude: number): Date {
   const date = displayDateInZone(instant, getTimeZone(latitude, longitude));
   const sunset = getSunsetForDate(date, latitude, longitude);

@@ -1,9 +1,30 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { calculateSunsetDay, chartHour, sunsetDayDate, calendarEventInterval } from './sunset-day';
-import { calculateSolarData, dateKeyInZone } from './moon-calculations';
+import { calculateSunsetDay, chartHour, sunsetDayDate, sunsetDayDisplayDate, calendarEventInterval } from './sunset-day';
+import { calculateSolarData, dateKeyInZone, getLocalPhaseForInstant } from './moon-calculations';
 
 describe('Sunset-to-sunset calendar days', () => {
+  it('counts Tuesday after sunset as Day 4 through Wednesday sunset without changing stored dates', () => {
+    const openingDate = new Date(2026, 10, 24);
+    const day = calculateSunsetDay(openingDate, 23.8103, 90.4125);
+    assert.ok(day);
+    const weekday = (instant: Date) => sunsetDayDisplayDate(sunsetDayDate(instant, 23.8103, 90.4125)).getDay() + 1;
+    assert.equal(weekday(new Date(day.start.getTime() - 1)), 3);
+    assert.equal(weekday(day.start), 4);
+    assert.equal(weekday(new Date('2026-11-25T00:00:00Z')), 4);
+    assert.equal(weekday(new Date(day.end.getTime() - 1)), 4);
+    assert.equal(weekday(day.end), 5);
+    assert.equal(openingDate.getDate(), 24);
+    assert.equal(day.dateKey, '2026-11-24');
+  });
+  it('keeps all of Day 4 in First Quarter despite the Tuesday evening full moon', () => {
+    const day = calculateSunsetDay(new Date(2026, 10, 24), 23.8103, 90.4125);
+    assert.ok(day);
+    for (const instant of [day.start, new Date('2026-11-24T14:53:00Z'), new Date('2026-11-25T00:00:00Z'), new Date(day.end.getTime() - 1)]) {
+      assert.equal(getLocalPhaseForInstant(instant, 23.8103, 90.4125)?.phase, 'First Quarter');
+    }
+    assert.equal(getLocalPhaseForInstant(day.end, 23.8103, 90.4125)?.phase, 'Full Moon');
+  });
   it('starts at November 24 sunset and ends at November 25 sunset in Dhaka', () => {
     const day = calculateSunsetDay(new Date(2026, 10, 24), 23.8103, 90.4125);
     assert.ok(day);

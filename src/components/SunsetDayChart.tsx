@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { chartHour, formatChartTime, calendarEventInterval, type ChartCalendarEvent, type SunsetDay } from '@/lib/sunset-day';
+import { chartHour, formatChartTime, calendarEventInterval, sunsetDayDisplayDate, type ChartCalendarEvent, type SunsetDay } from '@/lib/sunset-day';
 
 interface Props {
   days: SunsetDay[];
@@ -9,7 +9,7 @@ interface Props {
   events: ChartCalendarEvent[];
   onDay: (dateKey: string) => void;
   onEvent: (event: ChartCalendarEvent) => void;
-  nextPhaseIcon?: string;
+  phaseChange?: { instant: Date; icon: string; name: string };
 }
 
 const styles = {
@@ -17,12 +17,10 @@ const styles = {
   end: 'stroke-[hsl(var(--chart-sunset))] fill-[hsl(var(--chart-sunset))]',
   sunrise: 'stroke-[hsl(var(--chart-sunrise))] fill-[hsl(var(--chart-sunrise))]',
   meridian: 'stroke-[hsl(var(--chart-meridian))] fill-[hsl(var(--chart-meridian))]',
-  moonrise: 'stroke-primary fill-primary',
-  moonset: 'stroke-muted-foreground fill-muted-foreground',
 };
-const labels = { start: 'Sunset', end: 'Next sunset', sunrise: 'Sunrise', meridian: 'Meridian', moonrise: 'Moonrise', moonset: 'Moonset' };
+const labels = { start: 'Sunset', end: 'Next sunset', sunrise: 'Sunrise', meridian: 'Meridian' };
 
-export default function SunsetDayChart({ days, now, zoom = 1, events, onDay, onEvent, nextPhaseIcon }: Props) {
+export default function SunsetDayChart({ days, now, zoom = 1, events, onDay, onEvent, phaseChange }: Props) {
   const host = useRef<HTMLDivElement>(null);
   const [availableWidth, setAvailableWidth] = useState(700);
   useEffect(() => {
@@ -54,10 +52,11 @@ export default function SunsetDayChart({ days, now, zoom = 1, events, onDay, onE
           const x = left + index * col;
           const showSolarTimes = index === 0 || index === days.length - 1;
           const startY = position(day, day.start), endY = position(day, day.end);
-          const wd = day.date.getDay();
+          const displayDate = sunsetDayDisplayDate(day.date);
+          const wd = displayDate.getDay();
           const active = now >= day.start && now < day.end;
           const dayLabel = wd === 5 ? 'Jumuah' : wd === 6 ? 'As-sabt' : `Day ${wd + 1}`;
-          const dateLabel = day.date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+          const dateLabel = displayDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
           const summary = `${day.dateKey} ${formatChartTime(day.start, day.timeZone)} → ${day.nextDateKey} ${formatChartTime(day.end, day.timeZone)}`;
           return <g key={day.dateKey} data-sunset-day={day.dateKey} data-start={day.start.toISOString()} data-end={day.end.toISOString()}>
             <foreignObject x={x} y={4} width={col} height={55}>
@@ -79,13 +78,11 @@ export default function SunsetDayChart({ days, now, zoom = 1, events, onDay, onE
               const instant = day[key];
               if (!instant) return null;
               const eventY = position(day, instant);
-              const solar = key !== 'moonrise' && key !== 'moonset';
               const time = formatChartTime(instant, day.timeZone);
               return <g key={key} className={`${styles[key]} pointer-events-none`} data-event={key} data-instant={instant.toISOString()} data-hour={chartHour(day, instant)}>
                 <title>{labels[key]} · {time} · {instant.toLocaleDateString('en-GB', { timeZone: day.timeZone })}</title>
-                <line x1={x} x2={x + col} y1={eventY} y2={eventY} strokeWidth={solar ? 2.5 : 1} strokeDasharray={key === 'moonset' ? '3 3' : undefined} />
-                {solar && showSolarTimes && <text x={x + col / 2} y={eventY + (key === 'start' ? 13 : -6)} textAnchor="middle" stroke="none" fontSize={10}>{time}</text>}
-                {!solar && <circle cx={x + col / 2} cy={eventY} r={2.5} />}
+                <line x1={x} x2={x + col} y1={eventY} y2={eventY} strokeWidth={2.5} />
+                {showSolarTimes && <text x={x + col / 2} y={eventY + (key === 'start' ? 13 : -6)} textAnchor="middle" stroke="none" fontSize={10}>{time}</text>}
               </g>;
             })}
             {events.flatMap((event, eventIndex) => {
@@ -99,7 +96,11 @@ export default function SunsetDayChart({ days, now, zoom = 1, events, onDay, onE
                 </Button>
               </foreignObject>];
             })}
-            {nextPhaseIcon && index === days.length - 1 && <text x={x + col - 18} y={endY - 20} fontSize={18} className="pointer-events-none">{nextPhaseIcon}</text>}
+            {phaseChange && phaseChange.instant >= day.start && phaseChange.instant < day.end &&
+              <text x={x + col / 2} y={position(day, phaseChange.instant)} dominantBaseline="central" textAnchor="middle" fontSize={18} className="pointer-events-none" data-phase-change={phaseChange.instant.toISOString()}>
+                <title>{phaseChange.name} · {formatChartTime(phaseChange.instant, day.timeZone)}</title>
+                {phaseChange.icon}
+              </text>}
           </g>;
         })}
       </svg>

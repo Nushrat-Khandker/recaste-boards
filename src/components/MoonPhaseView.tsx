@@ -16,7 +16,7 @@ import SunsetDayChart from '@/components/SunsetDayChart';
 import { getHijriMonthName } from '@/lib/hijri-utils';
 
 import {
-  PHASE_EMOJIS as PHASE_ICONS, findLunationForDate,
+  findLunationForDate,
 } from '@/lib/hijri-calendar-engine';
 
 interface PhaseBlock {
@@ -247,8 +247,6 @@ const MoonPhaseView: React.FC = () => {
             <div className="w-5 h-[3px] bg-[hsl(var(--chart-meridian))]" />
             Meridian
           </div>
-          <span className="flex items-center gap-1"><span className="w-5 border-t-2 border-primary" />Moonrise</span>
-          <span className="flex items-center gap-1"><span className="w-5 border-t-2 border-dashed border-muted-foreground" />Moonset</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1">
@@ -278,7 +276,11 @@ const MoonPhaseView: React.FC = () => {
             onEvent={event => {
               if (user && event.user_id === user.id) setEventDialogState({ open: true, date: event.date, event });
             }}
-            nextPhaseIcon={currentBlock ? PHASE_ICONS[(currentBlock.phaseIndex + 1) % 4] : undefined}
+            phaseChange={phaseBlocks[phaseIdx + 1] ? {
+              instant: phaseBlocks[phaseIdx + 1].startInstant,
+              icon: phaseBlocks[phaseIdx + 1].icon,
+              name: phaseBlocks[phaseIdx + 1].name,
+            } : undefined}
           />
         )}
       </div>
