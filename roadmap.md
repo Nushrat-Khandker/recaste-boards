@@ -1,4 +1,5 @@
 # Calendar location correction
+- [x] Remove manual city selection; sixteen tests passed, with isolated browser checks for shared GPS permission, retry, and denied permission.
 - [x] Apply first-sunset phase boundaries across calendar views and date pickers; fifteen tests passed, and isolated phone/desktop checks verified the live sunset switch and unchanged task selection.
 - [x] Apply the same location rule to Month, Quarter, Year highlights, and task date-picker moon markers; preserve saved dates and permissions.
 - [x] Replace estimated moon/sun times with location-aware astronomical calculations and timezone handling.

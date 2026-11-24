@@ -1,5 +1,5 @@
 # Architecture rules
 - Calculate local sun/moon events client-side with Astronomy Engine and coordinate-derived IANA timezones; never fabricate fallback times, because astronomy must remain reliable offline and on self-hosted deployments.
-- Share selected city/GPS state and localized phase markers across all calendar views and task date pickers while keeping task dates and existing Hijri month mapping unchanged, because changing location must not reschedule work.
+- Share a single device-location request and localized phase markers across all calendar views and task date pickers while keeping task dates and existing Hijri month mapping unchanged, because changing location must not reschedule work.
 - Preserve exact reference phase instants separately from localized display dates, because a moon phase is one worldwide instant but can fall on different local dates.
 - Derive phase-label boundaries through the shared astronomy module using the first real sunset after each reference instant, and refresh live labels with the shared calendar clock; this keeps all calendar views consistent without changing stored dates.
