@@ -77,7 +77,7 @@ export const QuarterView: React.FC<QuarterViewProps> = ({ quarter, hijriYear }) 
             days.push({ day: d + 1, date, weekday: date.getDay() });
           }
 
-          const phases = getLocalMonthPhaseMarkers(hijriYear, m, monthStart, location.timeZone);
+          const phases = getLocalMonthPhaseMarkers(hijriYear, m, monthStart, location.latitude, location.longitude);
 
           return (
             <button

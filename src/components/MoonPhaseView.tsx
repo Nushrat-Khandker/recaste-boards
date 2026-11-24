@@ -5,10 +5,11 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { useGeolocation } from '@/hooks/useGeolocation';
+import { useCalendarNow } from '@/hooks/useCalendarNow';
 import CalendarEventDialog from '@/components/CalendarEventDialog';
 import CalendarLocationControl from '@/components/CalendarLocationControl';
 import {
-  fetchSolarData, fmtH, displayDateInZone, dateKeyInZone,
+  fetchSolarData, fmtH, displayDateInZone, dateKeyInZone, getLocalPhaseBoundaries,
   type DayData
 } from '@/lib/moon-calculations';
 import { format } from 'date-fns';
@@ -29,20 +30,25 @@ interface PhaseBlock {
   hijriYear: number;
   hijriMonth: number;
   startInstant: Date;
+  labelBoundary: Date;
+  endBoundary: Date;
 }
 
 const MS_PER_DAY = 86400000;
 
 /** Build all phase blocks from lookup-table lunations */
-function buildAllPhaseBlocks(timeZone: string): PhaseBlock[] {
-  const events = getReferencePhaseInstants();
+function buildAllPhaseBlocks(latitude: number, longitude: number, timeZone: string): PhaseBlock[] {
+  const events = getLocalPhaseBoundaries(latitude, longitude);
   const blocks: PhaseBlock[] = [];
   for (let i = 0; i < events.length - 1; i++) {
     const event = events[i];
+    const boundary = event.labelBoundary, endBoundary = events[i + 1].labelBoundary;
+    if (!boundary || !endBoundary || boundary >= endBoundary) continue;
     blocks.push({
       name: event.name, icon: event.icon, phaseIndex: event.phase,
-      startDate: displayDateInZone(event.utc, timeZone),
-      endDate: displayDateInZone(events[i + 1].utc, timeZone),
+      startDate: displayDateInZone(boundary, timeZone),
+      endDate: displayDateInZone(endBoundary, timeZone),
+      labelBoundary: boundary, endBoundary,
       startInstant: event.utc, newMoonDate: event.newMoonUtc,
       hijriYear: event.hijriYear, hijriMonth: event.hijriMonth,
     });
@@ -84,6 +90,8 @@ const MoonPhaseView: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const geo = useGeolocation();
+  const now = useCalendarNow();
+  const followCurrentPhase = useRef(true);
 
   const [phaseBlocks, setPhaseBlocks] = useState<PhaseBlock[]>([]);
   const [phaseIdx, setPhaseIdx] = useState(0);
@@ -98,20 +106,27 @@ const MoonPhaseView: React.FC = () => {
 
   // Localize exact reference instants without shifting existing task dates.
   useEffect(() => {
-    const blocks = buildAllPhaseBlocks(geo.timeZone);
+    const blocks = buildAllPhaseBlocks(geo.latitude, geo.longitude, geo.timeZone);
     setPhaseBlocks(blocks);
+    followCurrentPhase.current = true;
 
     // Find current phase block
-    const now = displayDateInZone(new Date(), geo.timeZone);
+    const now = new Date();
     let idx = 0;
     for (let i = 0; i < blocks.length; i++) {
-      if (blocks[i].startDate <= now && blocks[i].endDate > now) {
+      if (blocks[i].labelBoundary <= now && blocks[i].endBoundary > now) {
         idx = i;
         break;
       }
     }
     setPhaseIdx(idx);
-  }, [geo.timeZone]);
+  }, [geo.latitude, geo.longitude, geo.timeZone]);
+
+  useEffect(() => {
+    if (!followCurrentPhase.current) return;
+    const idx = phaseBlocks.findIndex(block => block.labelBoundary <= now && now < block.endBoundary);
+    if (idx >= 0) setPhaseIdx(idx);
+  }, [now, phaseBlocks]);
 
   useEffect(() => {
     fetchCalendarEvents();
@@ -465,7 +480,7 @@ const MoonPhaseView: React.FC = () => {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => setPhaseIdx(i => Math.max(0, i - 1))}
+          onClick={() => { followCurrentPhase.current = false; setPhaseIdx(i => Math.max(0, i - 1)); }}
           disabled={phaseIdx <= 0}
           className="text-xs sm:text-sm px-2 sm:px-3"
         >
@@ -489,7 +504,7 @@ const MoonPhaseView: React.FC = () => {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => setPhaseIdx(i => Math.min(phaseBlocks.length - 1, i + 1))}
+          onClick={() => { followCurrentPhase.current = false; setPhaseIdx(i => Math.min(phaseBlocks.length - 1, i + 1)); }}
           disabled={phaseIdx >= phaseBlocks.length - 1}
           className="text-xs sm:text-sm px-2 sm:px-3"
         >
@@ -500,7 +515,8 @@ const MoonPhaseView: React.FC = () => {
 
       <CalendarLocationControl location={geo} />
       {currentBlock && <p className="text-center text-xs text-muted-foreground mb-3">
-        {new Intl.DateTimeFormat('en-GB', { timeZone: geo.timeZone, day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(currentBlock.startInstant)}
+        Phase event: {new Intl.DateTimeFormat('en-GB', { timeZone: geo.timeZone, day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(currentBlock.startInstant)}
+        {' · '}Sunset boundary: {new Intl.DateTimeFormat('en-GB', { timeZone: geo.timeZone, day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(currentBlock.labelBoundary)}
       </p>}
 
       {/* Legend */}

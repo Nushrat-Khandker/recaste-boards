@@ -29,7 +29,7 @@ function Calendar({
   ...props
 }: CalendarProps) {
   const location = useGeolocation();
-  const moonPhases = React.useMemo(() => getLocalPhaseMarkers(location.timeZone), [location.timeZone]);
+  const moonPhases = React.useMemo(() => getLocalPhaseMarkers(location.latitude, location.longitude), [location.latitude, location.longitude]);
   const [solarEvents, setSolarEvents] = React.useState<Record<string, string>>({});
 
   // Track current displayed month for dynamic fetching

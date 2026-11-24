@@ -7,14 +7,15 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { useGeolocation } from '@/hooks/useGeolocation';
-import { fetchSolarData, fmtH, getLocalPhaseForDate, dateKeyInZone, type SolarData } from '@/lib/moon-calculations';
+import { useCalendarNow } from '@/hooks/useCalendarNow';
+import { fetchSolarData, fmtH, getLocalPhaseForDate, getLocalPhaseForInstant, dateKeyInZone, type SolarData } from '@/lib/moon-calculations';
 import CalendarLocationControl from '@/components/CalendarLocationControl';
 import { format } from 'date-fns';
 import CalendarEventDialog from '@/components/CalendarEventDialog';
 
 import {
   PHASE_NAMES as PHASE_NAMES_4, PHASE_EMOJIS as PHASE_EMOJIS_4,
-  getHijriForDate, getPhaseForDate,
+  getHijriForDate,
 } from '@/lib/hijri-calendar-engine';
 
 const H_START = 14, H_RANGE = 26;
@@ -64,6 +65,7 @@ export const DayView: React.FC<DayViewProps> = ({ date }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const geo = useGeolocation();
+  const now = useCalendarNow();
   const svgRef = useRef<SVGSVGElement>(null);
 
   const [solar, setSolar] = useState<SolarData | null>(null);
@@ -74,9 +76,12 @@ export const DayView: React.FC<DayViewProps> = ({ date }) => {
   });
 
   const hijri = getHijriForDate(date);
-  const phase = getLocalPhaseForDate(date, geo.timeZone) ?? getPhaseForDate(date);
   const weekday = date.getDay();
   const dateKey = toDateKey(date);
+  const isToday = dateKey === dateKeyInZone(now, geo.timeZone);
+  const phase = isToday
+    ? getLocalPhaseForInstant(now, geo.latitude, geo.longitude)
+    : getLocalPhaseForDate(date, geo.latitude, geo.longitude);
   const isJummah = weekday === 5;
   const isSabt = weekday === 6;
 
@@ -223,9 +228,6 @@ export const DayView: React.FC<DayViewProps> = ({ date }) => {
   const nextDate = new Date(date);
   nextDate.setDate(nextDate.getDate() + 1);
 
-  const todayKey = dateKeyInZone(new Date(), geo.timeZone);
-  const isToday = dateKey === todayKey;
-
   return (
     <div className="w-full max-w-2xl mx-auto p-2 sm:p-6">
       <div className="flex items-center justify-between mb-2 sm:mb-4">
@@ -240,10 +242,10 @@ export const DayView: React.FC<DayViewProps> = ({ date }) => {
             return (
               <>
                 <h2 className={cn("text-base sm:text-2xl font-bold", labelColor)}>
-                  {phase.phaseEmoji} {dayLabel}
+                  {phase?.phaseEmoji} {dayLabel}
                   {isToday && <span className="ml-2 text-xs sm:text-sm font-medium text-primary">(Today)</span>}
                 </h2>
-                <p className="text-sm font-semibold text-foreground">{phase.dayInPhase} / {phase.phaseDuration}</p>
+                <p className="text-sm font-semibold text-foreground">{phase ? `${phase.dayInPhase} / ${phase.phaseDuration}` : 'Phase unavailable'}</p>
                 <p className="text-xs text-muted-foreground">{getHijriMonthName(hijri.month)} {hijri.year}</p>
               </>
             );
@@ -269,7 +271,7 @@ export const DayView: React.FC<DayViewProps> = ({ date }) => {
         <span>›</span>
         <button onClick={() => navigate(`/?month=${hijri.month}&year=${hijri.year}`)} className="hover:text-primary transition-colors">{getHijriMonthName(hijri.month)}</button>
         <span>›</span>
-        <button onClick={() => navigate('/moon-phases')} className="hover:text-primary transition-colors">{phase.phase}</button>
+        <button onClick={() => navigate('/moon-phases')} className="hover:text-primary transition-colors">{phase?.phase ?? 'Phase unavailable'}</button>
         <span>›</span>
         <span className={cn(
           'font-medium',

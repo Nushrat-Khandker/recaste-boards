@@ -70,42 +70,99 @@ export function buildPhaseEvents(pivot: Date): PhaseEvent[] {
     .map(event => ({ ...event, label: labels[event.phase] }));
 }
 
-/** Shared civil-day markers for every calendar and task date picker. */
-export function getLocalPhaseMarkers(timeZone: string) {
-  return new Map(getReferencePhaseInstants().map(event => [
-    dateKeyInZone(event.utc, timeZone),
-    { icon: event.icon, name: event.name, utc: event.utc, phase: event.phase },
-  ]));
+/** The label boundary is the first real local sunset at/after the reference instant. */
+export function getPhaseLabelBoundary(instant: Date, latitude: number, longitude: number): Date | null {
+  const observer = new Observer(latitude, longitude, 0);
+  const timeZone = getTimeZone(latitude, longitude);
+  const candidate = SearchRiseSet(Body.Sun, observer, -1, instant, 370)?.date;
+  if (!candidate) return null;
+  // Resolve each sunset from civil midnight so different search starting points
+  // cannot disagree by milliseconds about which label owns the sunset itself.
+  const canonical = getSunsetForDate(displayDateInZone(candidate, timeZone), latitude, longitude);
+  if (!canonical) return null;
+  if (canonical >= instant) return canonical;
+  const following = SearchRiseSet(Body.Sun, observer, -1, new Date(candidate.getTime() + 1000), 370)?.date;
+  return following ? getSunsetForDate(displayDateInZone(following, timeZone), latitude, longitude) : null;
+}
+
+const boundaryCache = new Map<string, ReturnType<typeof calculatePhaseBoundaries>>();
+function calculatePhaseBoundaries(latitude: number, longitude: number) {
+  return getReferencePhaseInstants().map(event => ({
+    ...event, labelBoundary: getPhaseLabelBoundary(event.utc, latitude, longitude),
+  }));
+}
+
+export function getLocalPhaseBoundaries(latitude: number, longitude: number) {
+  const key = `${latitude},${longitude}`;
+  const cached = boundaryCache.get(key);
+  if (cached) return cached;
+  const boundaries = calculatePhaseBoundaries(latitude, longitude);
+  if (boundaryCache.size >= 12) boundaryCache.clear();
+  boundaryCache.set(key, boundaries);
+  return boundaries;
+}
+
+/** Shared sunset-date markers; reference instants remain available separately. */
+export function getLocalPhaseMarkers(latitude: number, longitude: number) {
+  const timeZone = getTimeZone(latitude, longitude);
+  return new Map(getLocalPhaseBoundaries(latitude, longitude).flatMap(event => event.labelBoundary ? [[
+    dateKeyInZone(event.labelBoundary, timeZone),
+    { icon: event.icon, name: event.name, utc: event.utc, phase: event.phase, labelBoundary: event.labelBoundary },
+  ] as const] : []));
 }
 
 /** Keep month/task boundaries intact; only move the astronomical marker within them. */
-export function getLocalMonthPhaseMarkers(year: number, month: number, monthStart: Date, timeZone: string) {
+export function getLocalMonthPhaseMarkers(year: number, month: number, monthStart: Date, latitude: number, longitude: number) {
+  const timeZone = getTimeZone(latitude, longitude);
   const start = Date.UTC(monthStart.getFullYear(), monthStart.getMonth(), monthStart.getDate());
-  return getReferencePhaseInstants()
+  return getLocalPhaseBoundaries(latitude, longitude)
     .filter(event => event.hijriYear === year && event.hijriMonth === month)
-    .map(event => {
-      const date = displayDateInZone(event.utc, timeZone);
-      return { ...event, dateKey: dateKeyInZone(event.utc, timeZone),
-        day: Math.round((Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) - start) / 86400000) + 1 };
+    .flatMap(event => {
+      if (!event.labelBoundary) return [];
+      const date = displayDateInZone(event.labelBoundary, timeZone);
+      return [{ ...event, dateKey: dateKeyInZone(event.labelBoundary, timeZone),
+        day: Math.round((Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) - start) / 86400000) + 1 }];
     });
 }
 
-export function getLocalPhaseForDate(date: Date, timeZone: string) {
-  const target = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
-  const events = getReferencePhaseInstants();
+export function getLocalPhaseForInstant(instant: Date, latitude: number, longitude: number) {
+  const timeZone = getTimeZone(latitude, longitude);
+  const events = getLocalPhaseBoundaries(latitude, longitude);
   for (let i = events.length - 2; i >= 0; i--) {
     const event = events[i], next = events[i + 1];
-    const start = displayDateInZone(event.utc, timeZone);
-    const end = displayDateInZone(next.utc, timeZone);
-    if (target >= start.getTime() && target < end.getTime()) {
+    if (!event.labelBoundary || !next.labelBoundary) continue;
+    if (instant >= event.labelBoundary && instant < next.labelBoundary) {
+      const start = displayDateInZone(event.labelBoundary, timeZone);
+      const end = displayDateInZone(next.labelBoundary, timeZone);
+      const date = displayDateInZone(instant, timeZone);
+      const sunset = getSunsetForDate(date, latitude, longitude);
+      if (sunset && instant < sunset) date.setDate(date.getDate() - 1);
       const civilMs = (d: Date) => Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
       return { phase: event.name, phaseEmoji: event.icon,
-        dayInPhase: Math.round((civilMs(date) - civilMs(start)) / 86400000) + 1,
+        dayInPhase: Math.max(1, Math.round((civilMs(date) - civilMs(start)) / 86400000) + 1),
         phaseDuration: Math.round((civilMs(end) - civilMs(start)) / 86400000),
-        phaseInstant: event.utc };
+        phaseInstant: event.utc, labelBoundary: event.labelBoundary, nextLabelBoundary: next.labelBoundary };
     }
   }
   return null;
+}
+
+/** A dated column represents the sunset beginning on that civil date, not midnight. */
+function getSunsetForDate(date: Date, latitude: number, longitude: number) {
+  const timeZone = getTimeZone(latitude, longitude);
+  const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  const start = localDayStart(dateKey, timeZone);
+  const next = new Date(date);
+  next.setDate(next.getDate() + 1);
+  const endKey = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}-${String(next.getDate()).padStart(2, '0')}`;
+  const end = localDayStart(endKey, timeZone);
+  const sunset = SearchRiseSet(Body.Sun, new Observer(latitude, longitude, 0), -1, start, (end.getTime() - start.getTime()) / 86400000)?.date;
+  return sunset && sunset < end ? sunset : null;
+}
+
+export function getLocalPhaseForDate(date: Date, latitude: number, longitude: number) {
+  const sunset = getSunsetForDate(date, latitude, longitude);
+  return sunset ? getLocalPhaseForInstant(sunset, latitude, longitude) : null;
 }
 
 /** Calculate events strictly within the chosen civil day; no event is a legitimate null. */

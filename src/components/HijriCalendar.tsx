@@ -58,7 +58,7 @@ export function HijriCalendar({ targetYear, targetMonth }: HijriCalendarProps = 
   const [monthRange, setMonthRange] = useState<{ start: Date; end: Date } | null>(null);
   const [hijriTitle, setHijriTitle] = useState<{ year: number; month: number; monthName: string }>({ year: 1447, month: 1, monthName: getHijriMonthName(1) });
 
-  const moonPhases = React.useMemo(() => getLocalPhaseMarkers(location.timeZone), [location.timeZone]);
+  const moonPhases = React.useMemo(() => getLocalPhaseMarkers(location.latitude, location.longitude), [location.latitude, location.longitude]);
   const [solarEvents, setSolarEvents] = useState<Map<string, string>>(new Map());
   const [cards, setCards] = useState<KanbanCard[]>([]);
   const [calendarEvents, setCalendarEvents] = useState<any[]>([]);
