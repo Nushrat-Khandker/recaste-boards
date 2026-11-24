@@ -10,6 +10,8 @@ import { findLunationForDate } from '@/lib/hijri-calendar-engine';
 import type { CalendarSubView } from '@/hooks/useCalendarNav';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { displayDateInZone } from '@/lib/moon-calculations';
+import { sunsetDayDate } from '@/lib/sunset-day';
+import { useCalendarNow } from '@/hooks/useCalendarNow';
 
 const SUB_VIEWS: { value: CalendarSubView; label: string }[] = [
   { value: 'year', label: 'Year' },
@@ -22,6 +24,7 @@ const SUB_VIEWS: { value: CalendarSubView; label: string }[] = [
 export default function CalendarViews() {
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useGeolocation();
+  const now = useCalendarNow();
   const lunation = findLunationForDate(displayDateInZone(new Date(), location.timeZone));
   const current = { year: lunation.hijriYear, month: lunation.hijriMonth };
 
@@ -34,7 +37,7 @@ export default function CalendarViews() {
   const quarter = Math.min(4, Math.max(1, Number(searchParams.get('q')) || Math.ceil(current.month / 3)));
   const month = Math.min(12, Math.max(1, Number(searchParams.get('month')) || current.month));
   const dateParam = searchParams.get('date');
-  const dayDate = dateParam ? new Date(`${dateParam}T00:00:00`) : displayDateInZone(new Date(), location.timeZone);
+  const dayDate = dateParam ? new Date(`${dateParam}T00:00:00`) : sunsetDayDate(now, location.latitude, location.longitude);
 
   const setSub = (value: string) => {
     const next = new URLSearchParams();

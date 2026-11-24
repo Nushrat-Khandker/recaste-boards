@@ -34,6 +34,12 @@
     --ring: 199 89% 45%;
  
     --radius: 0.5rem;
+    --chart-sunset: 0 72% 48%;
+    --chart-sunrise: 47 94% 48%;
+    --chart-meridian: 26 92% 49%;
+    --chart-friday: 145 45% 90%;
+    --chart-saturday: 0 55% 92%;
+    --chart-night: 210 35% 93%;
 
     /* Sky-blue zone shades (Projects/Tasks · Calendar · Chat) — lighter, softer tints */
     --zone-work: 200 90% 98%;
@@ -78,6 +84,12 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 199 89% 55%;
+    --chart-sunset: 0 80% 65%;
+    --chart-sunrise: 47 95% 60%;
+    --chart-meridian: 26 95% 65%;
+    --chart-friday: 145 30% 19%;
+    --chart-saturday: 0 30% 20%;
+    --chart-night: 210 30% 12%;
 
     --zone-work: 200 45% 10%;
     --zone-work-accent: 200 40% 16%;

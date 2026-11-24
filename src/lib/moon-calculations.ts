@@ -148,7 +148,7 @@ export function getLocalPhaseForInstant(instant: Date, latitude: number, longitu
 }
 
 /** A dated column represents the sunset beginning on that civil date, not midnight. */
-function getSunsetForDate(date: Date, latitude: number, longitude: number) {
+export function getSunsetForDate(date: Date, latitude: number, longitude: number) {
   const timeZone = getTimeZone(latitude, longitude);
   const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
   const start = localDayStart(dateKey, timeZone);
