@@ -259,7 +259,15 @@
     overflow-wrap: anywhere;
   }
 
+  [data-calendar-print] div:has([data-print-sunset-chart]) {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
   [data-print-sunset-chart] {
+    width: 100% !important;
     overflow: hidden !important;
     break-inside: avoid;
     border: none !important;
