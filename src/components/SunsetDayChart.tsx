@@ -57,6 +57,7 @@ export default function SunsetDayChart({ days, now, zoom = 1, events, onDay, onE
       <svg width={width} height={totalHeight} viewBox={`0 0 ${width} ${totalHeight}`} preserveAspectRatio={printing ? "none" : undefined} role="img" aria-label="Sunset-to-sunset calendar chart" className="block font-sans">
         {gridHours.map(hour => <g key={hour} className="pointer-events-none" data-grid-hour={hour}>
           <line x1={left} x2={width - right} y1={y(hour)} y2={y(hour)} className="stroke-border" strokeWidth={1} />
+          {printing && hour < maximum && <line x1={left} x2={width - right} y1={y(hour + 0.5)} y2={y(hour + 0.5)} className="stroke-border" strokeWidth={0.5} />}
         </g>)}
         {days.map((day, index) => {
           const x = left + index * col;
