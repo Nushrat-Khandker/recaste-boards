@@ -1,13 +1,14 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useCalendarNav as useNavigate } from '@/hooks/useCalendarNav';
-import { ChevronLeft, ChevronRight, Loader2, MapPin, ZoomIn, ZoomOut } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2, ZoomIn, ZoomOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import CalendarEventDialog from '@/components/CalendarEventDialog';
+import CalendarLocationControl from '@/components/CalendarLocationControl';
 import {
-  fetchSolarData, fallbackSolar, fmtH,
+  fetchSolarData, fmtH, displayDateInZone, dateKeyInZone,
   type DayData
 } from '@/lib/moon-calculations';
 import { format } from 'date-fns';
@@ -15,8 +16,7 @@ import { getHijriMonthName } from '@/lib/hijri-utils';
 
 import {
   PHASE_NAMES, PHASE_EMOJIS as PHASE_ICONS,
-  getAllNewMoons, getHijriFromNewMoon, findLunationForDate,
-  getPhaseBoundariesForLunation, type LunationData,
+  getReferencePhaseInstants, findLunationForDate,
 } from '@/lib/hijri-calendar-engine';
 
 interface PhaseBlock {
@@ -28,31 +28,24 @@ interface PhaseBlock {
   newMoonDate: Date;
   hijriYear: number;
   hijriMonth: number;
+  startInstant: Date;
 }
 
 const MS_PER_DAY = 86400000;
 
 /** Build all phase blocks from lookup-table lunations */
-function buildAllPhaseBlocks(): PhaseBlock[] {
-  const allMoons = getAllNewMoons();
+function buildAllPhaseBlocks(timeZone: string): PhaseBlock[] {
+  const events = getReferencePhaseInstants();
   const blocks: PhaseBlock[] = [];
-
-  for (const nmDate of allMoons) {
-    const lun = findLunationForDate(nmDate);
-    const boundaries = [lun.nm, lun.fq, lun.fm, lun.lq, lun.nextNm];
-
-    for (let p = 0; p < 4; p++) {
-      blocks.push({
-        name: PHASE_NAMES[p],
-        icon: PHASE_ICONS[p],
-        phaseIndex: p,
-        startDate: boundaries[p],
-        endDate: boundaries[p + 1],
-        newMoonDate: lun.nm,
-        hijriYear: lun.hijriYear,
-        hijriMonth: lun.hijriMonth,
-      });
-    }
+  for (let i = 0; i < events.length - 1; i++) {
+    const event = events[i];
+    blocks.push({
+      name: event.name, icon: event.icon, phaseIndex: event.phase,
+      startDate: displayDateInZone(event.utc, timeZone),
+      endDate: displayDateInZone(events[i + 1].utc, timeZone),
+      startInstant: event.utc, newMoonDate: event.newMoonUtc,
+      hijriYear: event.hijriYear, hijriMonth: event.hijriMonth,
+    });
   }
 
   return blocks.sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
@@ -68,19 +61,6 @@ const TOP_H = 28, BOTTOM_H = 4, ROW_H = 380;
 const LEFT_AXIS_W = 36; // width for Y-axis hour labels
 
 const WD_LABELS = ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Jumuah', 'As-sabt'];
-
-const CITIES = [
-  { label: 'Dhaka', value: '23.8103,90.4125' },
-  { label: 'Mecca', value: '21.3891,39.8579' },
-  { label: 'Riyadh', value: '24.6877,46.7219' },
-  { label: 'Dubai', value: '25.2048,55.2708' },
-  { label: 'Cairo', value: '30.0444,31.2357' },
-  { label: 'London', value: '51.5074,-0.1278' },
-  { label: 'Edinburgh', value: '55.9533,-3.1883' },
-  { label: 'New York', value: '40.7128,-74.0060' },
-  { label: 'Kuala Lumpur', value: '3.1390,101.6869' },
-  { label: 'Singapore', value: '1.3521,103.8198' },
-];
 
 function axH(h: number | null): number | null {
   if (h === null) return null;
@@ -105,51 +85,24 @@ const MoonPhaseView: React.FC = () => {
   const navigate = useNavigate();
   const geo = useGeolocation();
 
-  const [city, setCity] = useState('');
-  const [cityLabel, setCityLabel] = useState('Detecting...');
   const [phaseBlocks, setPhaseBlocks] = useState<PhaseBlock[]>([]);
   const [phaseIdx, setPhaseIdx] = useState(0);
   const [days, setDays] = useState<DayData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [utcOffset, setUtcOffset] = useState(6);
+  const [calculationError, setCalculationError] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [calendarEvents, setCalendarEvents] = useState<any[]>([]);
   const [eventDialogState, setEventDialogState] = useState<{ open: boolean; date: string; event?: any }>({
     open: false, date: '',
   });
 
-  // GPS location detection
+  // Localize exact reference instants without shifting existing task dates.
   useEffect(() => {
-    if (geo.latitude && geo.longitude) {
-      const coordStr = `${geo.latitude.toFixed(4)},${geo.longitude.toFixed(4)}`;
-      let nearest = CITIES[0];
-      let minDist = Infinity;
-      CITIES.forEach(c => {
-        const [lat, lng] = c.value.split(',').map(Number);
-        const dist = Math.abs(lat - geo.latitude!) + Math.abs(lng - geo.longitude!);
-        if (dist < minDist) { minDist = dist; nearest = c; }
-      });
-      if (minDist < 2) {
-        setCity(nearest.value);
-        setCityLabel(nearest.label);
-      } else {
-        setCity(coordStr);
-        setCityLabel('Your Location');
-      }
-    } else if (!geo.loading) {
-      setCity(CITIES[0].value);
-      setCityLabel(CITIES[0].label);
-    }
-  }, [geo.latitude, geo.longitude, geo.loading]);
-
-  // Build phase blocks from the same new-moon anchor as HijriCalendar
-  useEffect(() => {
-    const blocks = buildAllPhaseBlocks();
+    const blocks = buildAllPhaseBlocks(geo.timeZone);
     setPhaseBlocks(blocks);
 
     // Find current phase block
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
+    const now = displayDateInZone(new Date(), geo.timeZone);
     let idx = 0;
     for (let i = 0; i < blocks.length; i++) {
       if (blocks[i].startDate <= now && blocks[i].endDate > now) {
@@ -158,7 +111,7 @@ const MoonPhaseView: React.FC = () => {
       }
     }
     setPhaseIdx(idx);
-  }, []);
+  }, [geo.timeZone]);
 
   useEffect(() => {
     fetchCalendarEvents();
@@ -173,7 +126,7 @@ const MoonPhaseView: React.FC = () => {
 
   // Load solar data for the current phase block's days
   useEffect(() => {
-    if (phaseBlocks.length === 0 || !city) return;
+    if (phaseBlocks.length === 0 || geo.loading) return;
     const block = phaseBlocks[phaseIdx];
     if (!block) return;
 
@@ -186,25 +139,25 @@ const MoonPhaseView: React.FC = () => {
     }
     if (!dayDates.length) dayDates.push(new Date(block.startDate));
 
-    const [lat, lng] = city.split(',').map(Number);
+    let cancelled = false;
     setLoading(true);
+    setCalculationError(false);
 
     Promise.all(dayDates.map((d) => {
       const ds = format(d, 'yyyy-MM-dd');
-      return fetchSolarData(lat, lng, ds).then(r => {
-        if (r) setUtcOffset(r.utcOffset);
-        return r;
-      });
+      return fetchSolarData(geo.latitude, geo.longitude, ds);
     })).then(results => {
-      const nmTime = block.newMoonDate.getTime();
-      const daysData: DayData[] = dayDates.map((date, i) => {
-        const moonAge = (date.getTime() - nmTime) / msPerDay;
-        return { date, moonAge, s: results[i] || fallbackSolar(i, lat) };
+      if (cancelled) return;
+      const daysData: DayData[] = dayDates.flatMap((date, i) => {
+        const s = results[i];
+        return s ? [{ date, moonAge: s.moonAge, s }] : [];
       });
+      setCalculationError(daysData.length !== dayDates.length);
       setDays(daysData);
       setLoading(false);
     });
-  }, [phaseBlocks, phaseIdx, city]);
+    return () => { cancelled = true; };
+  }, [phaseBlocks, phaseIdx, geo.latitude, geo.longitude, geo.loading]);
 
   const getEventsForDate = (gregorianDate: Date) => {
     const dateKey = format(gregorianDate, 'yyyy-MM-dd');
@@ -258,7 +211,7 @@ const MoonPhaseView: React.FC = () => {
     }
 
     // Today highlight + Jumuah & As-sabt tinted columns
-    const todayStr = format(new Date(), 'yyyy-MM-dd');
+    const todayStr = dateKeyInZone(new Date(), geo.timeZone);
     days.forEach((d, i) => {
       const wd = d.date.getDay();
       const x = AX + i * COL_W;
@@ -296,15 +249,18 @@ const MoonPhaseView: React.FC = () => {
     days.forEach((d, i) => {
       if (!d.s) return;
       const cx = AX + i * COL_W + COL_W / 2, s = d.s;
-      if (s.sunset !== null) ssP.push([cx, toY(axH(s.sunset)!, scaledRowH)]);
-      if (s.sunrise !== null) srP.push([cx, toY(axH(s.sunrise)!, scaledRowH)]);
+      const sunset = axH(s.sunset), sunrise = axH(s.sunrise);
+      if (sunset !== null) ssP.push([cx, toY(sunset, scaledRowH)]);
+      if (sunrise !== null) srP.push([cx, toY(sunrise, scaledRowH)]);
       if (s.noon !== null) nP.push([cx, toY(s.noon < H_START ? s.noon + 24 : s.noon + 24, scaledRowH)]);
     });
 
     // Sunset day-start ticks
     days.forEach((d, i) => {
       if (!d.s || d.s.sunset === null) return;
-      const cx = AX + i * COL_W + COL_W / 2, sy = toY(axH(d.s.sunset)!, scaledRowH);
+      const sunset = axH(d.s.sunset);
+      if (sunset === null) return;
+      const cx = AX + i * COL_W + COL_W / 2, sy = toY(sunset, scaledRowH);
       o += `<line x1="${cx}" y1="${(sy - 7).toFixed(1)}" x2="${cx}" y2="${(sy + 7).toFixed(1)}" stroke="hsl(0,65%,49%)" stroke-width="2.5"/>`;
     });
 
@@ -312,6 +268,21 @@ const MoonPhaseView: React.FC = () => {
     if (ssP.length > 1) o += `<path d="${pathStr(ssP)}" fill="none" stroke="hsl(0,65%,49%)" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>`;
     if (srP.length > 1) o += `<path d="${pathStr(srP)}" fill="none" stroke="hsl(30,80%,50%)" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>`;
     if (nP.length > 1) o += `<path d="${pathStr(nP)}" fill="none" stroke="hsl(45,70%,49%)" stroke-width="2.5" stroke-dasharray="7 4" stroke-linejoin="round" stroke-linecap="round"/>`;
+
+    // Real moon events; break the line across days with no rise/set or a midnight wrap.
+    for (const key of ['moonrise', 'moonset'] as const) {
+      let previous: number[] | null = null;
+      days.forEach((d, i) => {
+        const hour = axH(d.s[key]);
+        if (hour === null) { previous = null; return; }
+        const point = [AX + i * COL_W + COL_W / 2, toY(hour, scaledRowH)];
+        const color = key === 'moonrise' ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))';
+        if (previous && Math.abs(point[1] - previous[1]) < scaledRowH / 2)
+          o += `<path d="${pathStr([previous, point])}" fill="none" stroke="${color}" stroke-width="2" stroke-dasharray="${key === 'moonset' ? '3 3' : 'none'}"/>`;
+        o += `<circle cx="${point[0]}" cy="${point[1]}" r="3" fill="${color}"/>`;
+        previous = point;
+      });
+    }
 
     // Next phase icon at end of chart
     if (currentBlock && N > 0) {
@@ -412,7 +383,7 @@ const MoonPhaseView: React.FC = () => {
       if (!tt) return;
       if (i < 0 || i >= N || !days[i].s) { tt.style.opacity = '0'; return; }
       const d = days[i], s = d.s;
-      tt.innerHTML = `<strong>${WD_LABELS[d.date.getDay()]}</strong><br>🌇 Sunset: ${fmtH(s.sunset)}<br>🌅 Sunrise: ${fmtH(s.sunrise)}<br>☀️ Noon: ${fmtH(s.noon)}<br>🌙 Age: ~${(d.moonAge || 0).toFixed(1)}d`;
+      tt.innerHTML = `<strong>${format(d.date, 'd MMM')} · ${WD_LABELS[d.date.getDay()]}</strong><br>🌇 Sunset: ${fmtH(s.sunset)}<br>🌅 Sunrise: ${fmtH(s.sunrise)}<br>☀️ Noon: ${fmtH(s.noon)}<br>☽ Moonrise: ${fmtH(s.moonrise)}<br>☾ Moonset: ${fmtH(s.moonset)}<br>Illumination: ${s.illumination.toFixed(1)}%`;
       tt.style.opacity = '1';
       tt.style.left = (e.clientX + 14) + 'px';
       tt.style.top = (e.clientY - 65) + 'px';
@@ -429,7 +400,7 @@ const MoonPhaseView: React.FC = () => {
       svg.removeEventListener('mousemove', handleMouseMove);
       svg.removeEventListener('mouseleave', handleMouseLeave);
     };
-  }, [days, currentBlock, utcOffset, calendarEvents, user, zoom]);
+  }, [days, currentBlock, geo.timeZone, calendarEvents, user, zoom]);
 
   useEffect(() => {
     const cleanup = render();
@@ -527,9 +498,14 @@ const MoonPhaseView: React.FC = () => {
         </Button>
       </div>
 
+      <CalendarLocationControl location={geo} />
+      {currentBlock && <p className="text-center text-xs text-muted-foreground mb-3">
+        {new Intl.DateTimeFormat('en-GB', { timeZone: geo.timeZone, day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(currentBlock.startInstant)}
+      </p>}
+
       {/* Legend */}
-      <div className="flex items-center justify-between mb-2 text-sm text-muted-foreground">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-2 text-xs text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-1">
             <div className="w-5 h-[3px] rounded-sm bg-[hsl(0,65%,49%)]" />
             Sunset
@@ -542,6 +518,8 @@ const MoonPhaseView: React.FC = () => {
             <div className="w-5 h-0 border-t-2 border-dashed border-[hsl(45,70%,49%)]" />
             Noon
           </div>
+          <span className="flex items-center gap-1"><span className="w-5 border-t-2 border-primary" />Moonrise</span>
+          <span className="flex items-center gap-1"><span className="w-5 border-t-2 border-dashed border-muted-foreground" />Moonset</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1">
@@ -553,10 +531,6 @@ const MoonPhaseView: React.FC = () => {
               <ZoomIn className="h-3.5 w-3.5" />
             </Button>
           </div>
-          <div className="flex items-center gap-1">
-            <MapPin className="h-3 w-3" />
-            <span className="text-xs">{cityLabel}</span>
-          </div>
         </div>
       </div>
 
@@ -567,6 +541,8 @@ const MoonPhaseView: React.FC = () => {
             <Loader2 className="h-5 w-5 animate-spin" />
             Loading…
           </div>
+        ) : calculationError ? (
+          <p role="alert" className="p-6 text-sm text-muted-foreground">Moon times unavailable. Choose another location or try again.</p>
         ) : (
           <svg ref={svgRef} xmlns="http://www.w3.org/2000/svg" />
         )}

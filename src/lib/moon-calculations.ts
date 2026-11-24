@@ -1,18 +1,15 @@
-/**
- * Moon Phase Calculator — Jean Meeus "Astronomical Algorithms"
- * Ported from qamar.html
- */
-
-const R = Math.PI / 180;
+/** Location-aware astronomy; exact phase instants retain the timeanddate reference table. */
+import { Body, Observer, SearchRiseSet, SearchHourAngle, Illumination, SearchMoonPhase } from 'astronomy-engine';
+import tzLookup from 'tz-lookup';
+import { getReferencePhaseInstants } from './hijri-calendar-engine';
 
 export interface PhaseEvent {
   utc: Date;
-  phase: number; // 0=New, 1=FQ, 2=Full, 3=LQ
+  phase: number;
   name: string;
   icon: string;
   label: string;
 }
-
 export interface SolarData {
   sunrise: number | null;
   sunset: number | null;
@@ -20,145 +17,122 @@ export interface SolarData {
   moonrise: number | null;
   moonset: number | null;
   utcOffset: number;
-}
-
-export interface DayData {
-  date: Date;
+  timeZone: string;
+  illumination: number;
   moonAge: number;
-  s: SolarData;
+}
+export interface DayData { date: Date; moonAge: number; s: SolarData; }
+
+export function getTimeZone(lat: number, lng: number): string {
+  return tzLookup(lat, lng);
 }
 
-function _jde(k: number, p: number): number {
-  const kk = k + p * 0.25;
-  const T = kk / 1236.85, T2 = T * T, T3 = T2 * T, T4 = T3 * T;
-  let J = 2451550.09766 + 29.530588861 * kk + 0.00015437 * T2
-    - 0.000000150 * T3 + 0.00000000073 * T4;
-  const E = 1 - 0.002516 * T - 0.0000074 * T2;
-  const M = (2.5534 + 29.10535670 * kk - 0.0000014 * T2) * R;
-  const Mp = (201.5643 + 385.81693528 * kk + 0.0107582 * T2 + 0.00001238 * T3) * R;
-  const F = (160.7108 + 390.67050284 * kk - 0.0016118 * T2 - 0.00000227 * T3) * R;
-  const Om = (124.7746 - 1.56375588 * kk + 0.0020672 * T2) * R;
-
-  if (p === 0 || p === 2) {
-    const nm = p === 0;
-    J += (nm ? -0.40720 : -0.40614) * Math.sin(Mp) + 0.17241 * E * Math.sin(M)
-      + (nm ? 0.01608 : 0.01614) * Math.sin(2 * Mp) + (nm ? 0.01039 : 0.01043) * Math.sin(2 * F)
-      + 0.00739 * E * Math.sin(Mp - M) - 0.00514 * E * Math.sin(Mp + M)
-      + 0.00208 * E * E * Math.sin(2 * M) - 0.00111 * Math.sin(Mp - 2 * F)
-      - 0.00057 * Math.sin(Mp + 2 * F) + 0.00056 * E * Math.sin(2 * Mp + M)
-      - 0.00042 * Math.sin(3 * Mp) + 0.00042 * E * Math.sin(M + 2 * F)
-      + 0.00038 * E * Math.sin(M - 2 * F) - 0.00024 * E * Math.sin(2 * Mp - M)
-      - 0.00017 * Math.sin(Om) - 0.00007 * Math.sin(Mp + 2 * M)
-      + 0.00004 * Math.sin(2 * Mp - 2 * F) + 0.00004 * Math.sin(3 * M)
-      + 0.00003 * Math.sin(Mp + M - 2 * F) + 0.00003 * Math.sin(2 * Mp + 2 * F)
-      - 0.00003 * Math.sin(Mp + M + 2 * F) + 0.00003 * Math.sin(Mp - M + 2 * F)
-      - 0.00002 * Math.sin(Mp - M - 2 * F) - 0.00002 * Math.sin(3 * Mp + M)
-      + 0.00002 * Math.sin(4 * Mp);
-  } else {
-    J += -0.62801 * Math.sin(Mp) + 0.17172 * E * Math.sin(M)
-      - 0.01183 * E * Math.sin(Mp + M) + 0.00862 * Math.sin(2 * Mp)
-      + 0.00804 * Math.sin(2 * F) + 0.00454 * E * Math.sin(Mp - M)
-      + 0.00204 * E * E * Math.sin(2 * M) - 0.00180 * Math.sin(Mp - 2 * F)
-      - 0.00070 * Math.sin(Mp + 2 * F) - 0.00040 * Math.sin(3 * Mp)
-      - 0.00034 * E * Math.sin(2 * Mp - M) + 0.00032 * E * Math.sin(M + 2 * F)
-      + 0.00032 * E * Math.sin(M - 2 * F) - 0.00028 * E * E * Math.sin(Mp + 2 * M)
-      + 0.00027 * E * Math.sin(2 * Mp + M) - 0.00017 * Math.sin(Om)
-      - 0.00005 * Math.sin(Mp - M - 2 * F) + 0.00004 * Math.sin(2 * Mp + 2 * F)
-      - 0.00004 * Math.sin(Mp + M + 2 * F) + 0.00003 * Math.sin(Mp - 2 * M)
-      + 0.00003 * Math.sin(4 * Mp) + 0.00002 * Math.sin(Mp - M + 2 * F)
-      + 0.00002 * Math.sin(2 * Mp - 2 * F) - 0.00002 * Math.sin(Mp + M - 2 * F);
-    const W = 0.00306 - 0.00038 * E * Math.cos(M) + 0.00026 * Math.cos(Mp)
-      - 0.00002 * Math.cos(Mp - M) + 0.00002 * Math.cos(Mp + M) + 0.00002 * Math.cos(2 * F);
-    J += p === 1 ? W : -W;
-  }
-  return J;
+function zonedParts(date: Date, timeZone: string) {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone, year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23',
+  }).formatToParts(date);
+  const value = (key: string) => Number(parts.find(p => p.type === key)?.value ?? 0);
+  return { year: value('year'), month: value('month'), day: value('day'),
+    hour: value('hour'), minute: value('minute'), second: value('second') };
 }
 
-function jdeToUTC(jde: number): Date {
-  const jd = jde + 0.5, Z = Math.floor(jd), Frac = jd - Z;
-  let A = Z;
-  if (Z >= 2299161) {
-    const a = Math.floor((Z - 1867216.25) / 36524.25);
-    A = Z + 1 + a - Math.floor(a / 4);
-  }
-  const B = A + 1524, C = Math.floor((B - 122.1) / 365.25), D = Math.floor(365.25 * C);
-  const E = Math.floor((B - D) / 30.6001);
-  const day = B - D - Math.floor(30.6001 * E);
-  const month = E < 14 ? E - 1 : E - 13;
-  const year = month > 2 ? C - 4716 : C - 4715;
-  const ts = Math.round(Frac * 86400);
-  return new Date(Date.UTC(year, month - 1, day, Math.floor(ts / 3600), Math.floor((ts % 3600) / 60), ts % 60));
+export function dateKeyInZone(date: Date, timeZone: string): string {
+  const p = zonedParts(date, timeZone);
+  return `${p.year}-${String(p.month).padStart(2, '0')}-${String(p.day).padStart(2, '0')}`;
+}
+
+/** Browser-local date used only as a civil date container for the existing calendar UI. */
+export function displayDateInZone(date: Date, timeZone: string): Date {
+  const p = zonedParts(date, timeZone);
+  return new Date(p.year, p.month - 1, p.day);
+}
+
+export function offsetAt(date: Date, timeZone: string): number {
+  const p = zonedParts(date, timeZone);
+  const localMs = Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second);
+  return (localMs - Math.floor(date.getTime() / 1000) * 1000) / 3600000;
+}
+
+/** Resolve civil midnight to UTC, including fractional offsets and DST. */
+export function localDayStart(dateKey: string, timeZone: string): Date {
+  const [year, month, day] = dateKey.split('-').map(Number);
+  const nominal = Date.UTC(year, month - 1, day);
+  let utc = nominal;
+  for (let i = 0; i < 4; i++) utc = nominal - offsetAt(new Date(utc), timeZone) * 3600000;
+  return new Date(utc);
 }
 
 export function buildPhaseEvents(pivot: Date): PhaseEvent[] {
-  const yr = pivot.getUTCFullYear();
-  const k0 = Math.round((yr - 2000 + pivot.getUTCMonth() / 12) * 12.3685);
-  const out: PhaseEvent[] = [];
-  const names = ['New Moon', 'First Quarter', 'Full Moon', 'Last Quarter'];
-  const icons = ['🌑', '🌓', '🌕', '🌗'];
   const labels = ['NM', 'FQ', 'FM', 'LQ'];
-  for (let k = k0 - 5; k <= k0 + 6; k++) {
-    for (let p = 0; p < 4; p++) {
-      out.push({
-        utc: jdeToUTC(_jde(k, p)),
-        phase: p,
-        name: names[p],
-        icon: icons[p],
-        label: labels[p]
-      });
+  return getReferencePhaseInstants()
+    .filter(event => Math.abs(event.utc.getTime() - pivot.getTime()) < 180 * 86400000)
+    .map(event => ({ ...event, label: labels[event.phase] }));
+}
+
+export function getLocalPhaseForDate(date: Date, timeZone: string) {
+  const target = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+  const events = getReferencePhaseInstants();
+  for (let i = events.length - 2; i >= 0; i--) {
+    const event = events[i], next = events[i + 1];
+    const start = displayDateInZone(event.utc, timeZone);
+    const end = displayDateInZone(next.utc, timeZone);
+    if (target >= start.getTime() && target < end.getTime()) {
+      const civilMs = (d: Date) => Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+      return { phase: event.name, phaseEmoji: event.icon,
+        dayInPhase: Math.round((civilMs(date) - civilMs(start)) / 86400000) + 1,
+        phaseDuration: Math.round((civilMs(end) - civilMs(start)) / 86400000),
+        phaseInstant: event.utc };
     }
   }
-  return out.sort((a, b) => a.utc.getTime() - b.utc.getTime());
+  return null;
 }
 
-function parseT(s: string): number | null {
-  if (!s || s === 'N/A' || s === '--') return null;
-  const up = s.toUpperCase(), has12 = /[AP]M/.test(up);
-  const clean = s.replace(/[apm\s]/gi, '').split(':');
-  let h = parseInt(clean[0] || '0'), m = parseInt(clean[1] || '0'), sec = parseFloat(clean[2] || '0');
-  if (has12) {
-    if (up.includes('PM') && h !== 12) h += 12;
-    if (up.includes('AM') && h === 12) h = 0;
-  }
-  return h + m / 60 + sec / 3600;
+/** Calculate events strictly within the chosen civil day; no event is a legitimate null. */
+export function calculateSolarData(lat: number, lng: number, dateKey: string): SolarData {
+  const timeZone = getTimeZone(lat, lng);
+  const start = localDayStart(dateKey, timeZone);
+  const next = new Date(`${dateKey}T12:00:00Z`);
+  next.setUTCDate(next.getUTCDate() + 1);
+  const end = localDayStart(next.toISOString().slice(0, 10), timeZone);
+  const limitDays = (end.getTime() - start.getTime()) / 86400000;
+  const observer = new Observer(lat, lng, 0);
+  const hours = (instant: Date | undefined): number | null => {
+    if (!instant || instant < start || instant >= end) return null;
+    const p = zonedParts(instant, timeZone);
+    return p.hour + p.minute / 60 + p.second / 3600;
+  };
+  const riseSet = (body: Body, direction: number) =>
+    hours(SearchRiseSet(body, observer, direction, start, limitDays)?.date);
+  const transit = SearchHourAngle(Body.Sun, observer, 0, start).time.date;
+  const lunarTransit = SearchHourAngle(Body.Moon, observer, 0, start).time.date;
+  // Like the reference site: illumination at lunar transit, or midday if no transit occurs that day.
+  const sample = lunarTransit < end ? lunarTransit : new Date(start.getTime() + (end.getTime() - start.getTime()) / 2);
+  const newMoon = SearchMoonPhase(0, sample, -35)?.date;
+  return {
+    sunrise: riseSet(Body.Sun, 1), sunset: riseSet(Body.Sun, -1), noon: hours(transit),
+    moonrise: riseSet(Body.Moon, 1), moonset: riseSet(Body.Moon, -1),
+    utcOffset: offsetAt(sample, timeZone), timeZone,
+    illumination: Illumination(Body.Moon, sample).phase_fraction * 100,
+    moonAge: newMoon ? (sample.getTime() - newMoon.getTime()) / 86400000 : 0,
+  };
 }
 
-export async function fetchSolarData(lat: number, lng: number, dateStr: string): Promise<SolarData | null> {
-  try {
-    const r = await fetch(`https://api.sunrisesunset.io/json?lat=${lat}&lng=${lng}&date=${dateStr}&time_format=24`);
-    const j = await r.json();
-    if (j.status !== 'OK') return null;
-    const res = j.results;
-    return {
-      sunrise: parseT(res.sunrise),
-      sunset: parseT(res.sunset),
-      noon: parseT(res.solar_noon),
-      moonrise: parseT(res.moonrise),
-      moonset: parseT(res.moonset),
-      utcOffset: parseFloat(res.utc_offset || '6')
-    };
-  } catch {
-    return null;
-  }
-}
-
-export function fallbackSolar(dayIndex: number, lat: number): SolarData {
-  const tropical = Math.abs(lat) < 30;
-  const ss = tropical ? 18.15 + dayIndex * 0.008 : 20.0 + dayIndex * 0.05;
-  const sr = tropical ? 5.9 - dayIndex * 0.006 : 4.0 + dayIndex * 0.06;
-  return { sunrise: sr, sunset: ss, noon: 12.0, moonrise: sr + dayIndex * 0.8, moonset: ss + dayIndex * 0.8, utcOffset: 6 };
+// Keep the existing asynchronous interface; calculation no longer needs an external API.
+export async function fetchSolarData(lat: number, lng: number, dateKey: string): Promise<SolarData | null> {
+  try { return calculateSolarData(lat, lng, dateKey); } catch { return null; }
 }
 
 export function localDate(utcDate: Date, offsetH: number): Date {
-  const ms = utcDate.getTime() + offsetH * 3600000;
-  const d = new Date(ms);
+  const d = new Date(utcDate.getTime() + offsetH * 3600000);
   return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
 }
 
 export function fmtH(h: number | null): string {
-  if (h === null || isNaN(h)) return '—';
-  const n = ((h % 24) + 24) % 24, hh = Math.floor(n), mm = Math.round((n - hh) * 60);
-  return `${hh % 12 || 12}:${mm.toString().padStart(2, '0')}${hh >= 12 ? 'pm' : 'am'}`;
+  if (h === null || !Number.isFinite(h)) return '—';
+  const minutes = ((Math.round(h * 60) % 1440) + 1440) % 1440;
+  const hour = Math.floor(minutes / 60);
+  return `${hour % 12 || 12}:${String(minutes % 60).padStart(2, '0')}${hour >= 12 ? 'pm' : 'am'}`;
 }
 
 export function moonPhaseIcon(age: number): { icon: string; label: string } {

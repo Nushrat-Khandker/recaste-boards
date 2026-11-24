@@ -8,6 +8,8 @@ import MoonPhaseView from '@/components/MoonPhaseView';
 import { DayView } from '@/components/DayView';
 import { getCurrentHijriMonth } from '@/lib/hijri-calendar-engine';
 import type { CalendarSubView } from '@/hooks/useCalendarNav';
+import { useGeolocation } from '@/hooks/useGeolocation';
+import { displayDateInZone } from '@/lib/moon-calculations';
 
 const SUB_VIEWS: { value: CalendarSubView; label: string }[] = [
   { value: 'year', label: 'Year' },
@@ -19,6 +21,7 @@ const SUB_VIEWS: { value: CalendarSubView; label: string }[] = [
 
 export default function CalendarViews() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useGeolocation();
   const current = getCurrentHijriMonth();
 
   const raw = searchParams.get('sub');
@@ -30,7 +33,7 @@ export default function CalendarViews() {
   const quarter = Math.min(4, Math.max(1, Number(searchParams.get('q')) || Math.ceil(current.month / 3)));
   const month = Math.min(12, Math.max(1, Number(searchParams.get('month')) || current.month));
   const dateParam = searchParams.get('date');
-  const dayDate = dateParam ? new Date(`${dateParam}T00:00:00`) : new Date();
+  const dayDate = dateParam ? new Date(`${dateParam}T00:00:00`) : displayDateInZone(new Date(), location.timeZone);
 
   const setSub = (value: string) => {
     const next = new URLSearchParams();

@@ -1,0 +1,4 @@
+# Architecture rules
+- Calculate local sun/moon events client-side with Astronomy Engine and coordinate-derived IANA timezones; never fabricate fallback times, because astronomy must remain reliable offline and on self-hosted deployments.
+- Share the calendar's selected city/GPS state between astronomy views while keeping task dates and existing Hijri month mapping unchanged, because changing location must not reschedule work.
+- Preserve exact reference phase instants separately from localized display dates, because a moon phase is one worldwide instant but can fall on different local dates.

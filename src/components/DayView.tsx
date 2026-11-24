@@ -7,7 +7,8 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { useGeolocation } from '@/hooks/useGeolocation';
-import { fetchSolarData, fallbackSolar, type SolarData } from '@/lib/moon-calculations';
+import { fetchSolarData, fmtH, getLocalPhaseForDate, dateKeyInZone, type SolarData } from '@/lib/moon-calculations';
+import CalendarLocationControl from '@/components/CalendarLocationControl';
 import { format } from 'date-fns';
 import CalendarEventDialog from '@/components/CalendarEventDialog';
 
@@ -73,7 +74,7 @@ export const DayView: React.FC<DayViewProps> = ({ date }) => {
   });
 
   const hijri = getHijriForDate(date);
-  const phase = getPhaseForDate(date);
+  const phase = getLocalPhaseForDate(date, geo.timeZone) ?? getPhaseForDate(date);
   const weekday = date.getDay();
   const dateKey = toDateKey(date);
   const isJummah = weekday === 5;
@@ -90,13 +91,14 @@ export const DayView: React.FC<DayViewProps> = ({ date }) => {
 
   useEffect(() => {
     if (geo.loading) return;
-    const lat = geo.latitude || 23.8103;
-    const lng = geo.longitude || 90.4125;
+    let cancelled = false;
     setLoading(true);
-    fetchSolarData(lat, lng, dateKey).then(data => {
-      setSolar(data || fallbackSolar(0, lat));
+    fetchSolarData(geo.latitude, geo.longitude, dateKey).then(data => {
+      if (cancelled) return;
+      setSolar(data);
       setLoading(false);
     });
+    return () => { cancelled = true; };
   }, [dateKey, geo.latitude, geo.longitude, geo.loading]);
 
   const render = useCallback(() => {
@@ -134,6 +136,15 @@ export const DayView: React.FC<DayViewProps> = ({ date }) => {
       const y = toY(nah);
       o += `<line x1="${sx}" y1="${y.toFixed(1)}" x2="${sx + sw}" y2="${y.toFixed(1)}" stroke="hsl(45,70%,49%)" stroke-width="2" stroke-dasharray="7 4"/>`;
       o += `<text x="${sx - 8}" y="${(y + 5).toFixed(1)}" text-anchor="end" font-family="system-ui,sans-serif" font-size="14" font-weight="700" fill="hsl(45,70%,49%)">${fmt24(solar.noon)}</text>`;
+    }
+
+    for (const [label, hour] of [['Moonrise', solar.moonrise], ['Moonset', solar.moonset]] as const) {
+      const ah = axH(hour);
+      if (ah === null) continue;
+      const y = toY(ah);
+      const color = label === 'Moonrise' ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))';
+      o += `<line x1="${sx}" y1="${y}" x2="${sx + sw}" y2="${y}" stroke="${color}" stroke-width="2" stroke-dasharray="${label === 'Moonset' ? '3 3' : 'none'}"/>`;
+      o += `<text x="${sx + 6}" y="${y - 6}" font-family="system-ui,sans-serif" font-size="11" fill="${color}">${label} ${fmtH(hour)}</text>`;
     }
 
     TIME_CIRCLES.forEach(clk => {
@@ -212,7 +223,7 @@ export const DayView: React.FC<DayViewProps> = ({ date }) => {
   const nextDate = new Date(date);
   nextDate.setDate(nextDate.getDate() + 1);
 
-  const todayKey = toDateKey(new Date());
+  const todayKey = dateKeyInZone(new Date(), geo.timeZone);
   const isToday = dateKey === todayKey;
 
   return (
@@ -244,6 +255,13 @@ export const DayView: React.FC<DayViewProps> = ({ date }) => {
         </Button>
       </div>
 
+      <CalendarLocationControl location={geo} />
+      {!loading && solar && <dl className="flex flex-wrap justify-center gap-x-6 gap-y-2 mb-4 text-sm">
+        <div><dt className="text-xs text-muted-foreground">Moonrise</dt><dd className="font-medium">{solar.moonrise === null ? 'No moonrise' : fmtH(solar.moonrise)}</dd></div>
+        <div><dt className="text-xs text-muted-foreground">Moonset</dt><dd className="font-medium">{solar.moonset === null ? 'No moonset' : fmtH(solar.moonset)}</dd></div>
+        <div><dt className="text-xs text-muted-foreground">Illumination</dt><dd className="font-medium">{solar.illumination.toFixed(1)}%</dd></div>
+      </dl>}
+
       <div className="flex flex-wrap items-center gap-1 text-xs text-muted-foreground mb-3">
         <button onClick={() => navigate(`/year?year=${hijri.year}`)} className="hover:text-primary transition-colors">{hijri.year} AH</button>
         <span>›</span>
@@ -265,6 +283,8 @@ export const DayView: React.FC<DayViewProps> = ({ date }) => {
 
       {loading ? (
         <div className="flex items-center justify-center py-20 text-muted-foreground">Loading…</div>
+      ) : !solar ? (
+        <p role="alert" className="text-center py-10 text-muted-foreground">Moon times unavailable. Choose another location or try again.</p>
       ) : (
         <div className="flex justify-center">
             <svg ref={svgRef} viewBox={`0 0 ${TOTAL_W} ${TOTAL_H}`} className="w-full max-w-xs sm:max-w-sm" style={{ height: 'auto' }} />

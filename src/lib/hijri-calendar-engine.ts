@@ -290,6 +290,23 @@ export function getAllNewMoons(): Date[] {
   return LUNATION_TIMESTAMPS.map(t => tsToLocalDate(t[0]));
 }
 
+/** Exact reference instants, independent of browser or selected timezone.
+ * Astronomy views may localize these without changing existing task/Hijri dates.
+ */
+export function getReferencePhaseInstants() {
+  return LUNATION_TIMESTAMPS.flatMap((timestamps, index) =>
+    timestamps.map((timestamp, phase) => ({
+      utc: new Date(timestamp),
+      phase,
+      name: PHASE_NAMES[phase],
+      icon: PHASE_EMOJIS[phase],
+      newMoonUtc: new Date(timestamps[0]),
+      hijriYear: ANCHOR_HIJRI_YEAR + Math.floor((index - ANCHOR_INDEX) / 12),
+      hijriMonth: ((index - ANCHOR_INDEX) % 12 + 12) % 12 + 1,
+    }))
+  );
+}
+
 export function getPhaseBoundariesForLunation(lun: LunationData): number[] {
   return [
     0,
