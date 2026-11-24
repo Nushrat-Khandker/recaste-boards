@@ -33,21 +33,23 @@ export default function SunsetDayChart({ days, now, zoom = 1, events, onDay, onE
     return () => observer.disconnect();
   }, []);
   if (!days.length) return <p role="alert">Sunset times unavailable.</p>;
-  const left = 48, right = 12, top = 68, height = days.length === 1 ? 560 : 440;
+  const left = 48, right = 12, top = 68;
   const col = Math.max(78, (availableWidth - left - right) / days.length) * zoom;
   const width = left + days.length * col + right;
   const minimum = Math.floor(Math.min(...days.map(day => chartHour(day, day.start))));
   const maximum = Math.ceil(Math.max(...days.map(day => chartHour(day, day.end))));
-  const y = (hour: number) => top + (hour - minimum) / (maximum - minimum) * height;
+  const hourRowHeight = 32 * zoom;
+  const height = (maximum - minimum) * hourRowHeight;
+  const y = (hour: number) => top + (hour - minimum) * hourRowHeight;
   const position = (day: SunsetDay, instant: Date) => y(chartHour(day, instant));
   const gridHours = Array.from({ length: maximum - minimum + 1 }, (_, i) => minimum + i);
   const totalHeight = top + height + 24;
   return (
     <div ref={host} className="w-full overflow-x-auto border border-border rounded-md bg-background">
       <svg width={width} height={totalHeight} viewBox={`0 0 ${width} ${totalHeight}`} role="img" aria-label="Sunset-to-sunset calendar chart" className="block font-sans">
-        {gridHours.map(hour => <g key={hour} className="pointer-events-none">
-          <line x1={left} x2={width - right} y1={y(hour)} y2={y(hour)} className="stroke-border" strokeWidth={hour % 3 === 0 ? 1 : 0.5} />
-          {hour % 3 === 0 && <text x={left - 8} y={y(hour) + 4} textAnchor="end" fontSize={11} className="fill-muted-foreground">{formatChartTime(new Date(days[0].origin.getTime() + hour * 3600000), days[0].timeZone)}</text>}
+        {gridHours.map(hour => <g key={hour} className="pointer-events-none" data-grid-hour={hour}>
+          <line x1={left} x2={width - right} y1={y(hour)} y2={y(hour)} className="stroke-border" strokeWidth={1} />
+          <text x={left - 8} y={y(hour) + 4} textAnchor="end" fontSize={11} className="fill-muted-foreground">{formatChartTime(new Date(days[0].origin.getTime() + hour * 3600000), days[0].timeZone)}</text>
         </g>)}
         {days.map((day, index) => {
           const x = left + index * col;
@@ -67,7 +69,7 @@ export default function SunsetDayChart({ days, now, zoom = 1, events, onDay, onE
             </foreignObject>
             <rect x={x} y={startY} width={col} height={endY - startY} className={wd === 5 ? 'fill-[hsl(var(--chart-friday))]' : wd === 6 ? 'fill-[hsl(var(--chart-saturday))]' : 'fill-background'} />
             {day.sunrise && <rect x={x} y={startY} width={col} height={position(day, day.sunrise) - startY} className="fill-[hsl(var(--chart-night))]" opacity={0.5} />}
-            {gridHours.filter(hour => y(hour) > startY && y(hour) < endY).map(hour => <line key={hour} x1={x} x2={x + col} y1={y(hour)} y2={y(hour)} className="stroke-border pointer-events-none" strokeWidth={hour % 3 === 0 ? 1 : 0.5} />)}
+            {gridHours.filter(hour => y(hour) > startY && y(hour) < endY).map(hour => <line key={hour} x1={x} x2={x + col} y1={y(hour)} y2={y(hour)} className="stroke-border pointer-events-none" strokeWidth={1} />)}
             <foreignObject x={x} y={startY} width={col} height={endY - startY}>
               <Button variant="ghost" aria-label={`Open ${day.dateKey}`} title={summary} onClick={() => onDay(day.dateKey)} className="w-full h-full rounded-none p-0 hover:bg-primary/5" />
             </foreignObject>
