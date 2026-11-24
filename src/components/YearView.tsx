@@ -4,7 +4,10 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getHijriMonthName } from '@/lib/hijri-utils';
 import { cn } from '@/lib/utils';
-import { getCurrentHijriMonth } from '@/lib/hijri-calendar-engine';
+import { findLunationForDate } from '@/lib/hijri-calendar-engine';
+import { useGeolocation } from '@/hooks/useGeolocation';
+import { displayDateInZone } from '@/lib/moon-calculations';
+import CalendarLocationControl from '@/components/CalendarLocationControl';
 
 interface YearViewProps {
   hijriYear: number;
@@ -12,7 +15,9 @@ interface YearViewProps {
 
 export const YearView: React.FC<YearViewProps> = ({ hijriYear }) => {
   const navigate = useNavigate();
-  const current = getCurrentHijriMonth();
+  const location = useGeolocation();
+  const lunation = findLunationForDate(displayDateInZone(new Date(), location.timeZone));
+  const current = { year: lunation.hijriYear, month: lunation.hijriMonth };
 
   const months = Array.from({ length: 12 }, (_, i) => {
     const month = i + 1;
@@ -51,6 +56,7 @@ export const YearView: React.FC<YearViewProps> = ({ hijriYear }) => {
         </Button>
       </div>
 
+      <CalendarLocationControl location={location} />
       {/* Circular arrangement */}
       <div className="relative mx-auto" style={{ width: '400px', height: '400px', maxWidth: '100%' }}>
         <svg viewBox="0 0 400 400" className="w-full h-full">

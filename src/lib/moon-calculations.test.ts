@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { calculateSolarData, dateKeyInZone, localDayStart, getTimeZone, fmtH, getLocalPhaseForDate } from './moon-calculations';
+import { calculateSolarData, dateKeyInZone, localDayStart, getTimeZone, fmtH, getLocalPhaseForDate, getLocalPhaseMarkers, getLocalMonthPhaseMarkers } from './moon-calculations';
 import { getReferencePhaseInstants, getMonthStartDate } from './hijri-calendar-engine';
 
 describe('Location-based astronomy', () => {
@@ -52,6 +52,22 @@ describe('Location-based astronomy', () => {
     const full = getReferencePhaseInstants().find(e => e.phase === 2 && e.utc.toISOString().startsWith('2026-11-24'));
     assert.ok(full);
     assert.equal(full.utc.toISOString(), '2026-11-24T14:53:00.000Z');
+  });
+  it('moves shared Month and date-picker markers to the selected local date', () => {
+    const dhaka = getLocalPhaseMarkers('Asia/Dhaka');
+    const newYork = getLocalPhaseMarkers('America/New_York');
+    assert.equal(dhaka.get('2026-12-09')?.name, 'New Moon');
+    assert.equal(dhaka.has('2026-12-08'), false);
+    assert.equal(newYork.get('2026-12-08')?.name, 'New Moon');
+    assert.equal(newYork.has('2026-12-09'), false);
+  });
+  it('localizes Quarter markers without changing the established month start', () => {
+    const start = new Date(2026, 11, 9);
+    const dhaka = getLocalMonthPhaseMarkers(1448, 7, start, 'Asia/Dhaka');
+    const newYork = getLocalMonthPhaseMarkers(1448, 7, start, 'America/New_York');
+    assert.equal(dhaka.find(p => p.phase === 0)?.dateKey, '2026-12-09');
+    assert.equal(newYork.find(p => p.phase === 0)?.dateKey, '2026-12-08');
+    assert.equal(start.getTime(), new Date(2026, 11, 9).getTime());
   });
   it('does not change the established Hijri month anchor', () => {
     const date = getMonthStartDate(1447, 1);

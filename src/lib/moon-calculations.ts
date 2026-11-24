@@ -70,6 +70,26 @@ export function buildPhaseEvents(pivot: Date): PhaseEvent[] {
     .map(event => ({ ...event, label: labels[event.phase] }));
 }
 
+/** Shared civil-day markers for every calendar and task date picker. */
+export function getLocalPhaseMarkers(timeZone: string) {
+  return new Map(getReferencePhaseInstants().map(event => [
+    dateKeyInZone(event.utc, timeZone),
+    { icon: event.icon, name: event.name, utc: event.utc, phase: event.phase },
+  ]));
+}
+
+/** Keep month/task boundaries intact; only move the astronomical marker within them. */
+export function getLocalMonthPhaseMarkers(year: number, month: number, monthStart: Date, timeZone: string) {
+  const start = Date.UTC(monthStart.getFullYear(), monthStart.getMonth(), monthStart.getDate());
+  return getReferencePhaseInstants()
+    .filter(event => event.hijriYear === year && event.hijriMonth === month)
+    .map(event => {
+      const date = displayDateInZone(event.utc, timeZone);
+      return { ...event, dateKey: dateKeyInZone(event.utc, timeZone),
+        day: Math.round((Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) - start) / 86400000) + 1 };
+    });
+}
+
 export function getLocalPhaseForDate(date: Date, timeZone: string) {
   const target = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
   const events = getReferencePhaseInstants();

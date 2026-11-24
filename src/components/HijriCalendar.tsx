@@ -10,6 +10,9 @@ import EditCardDialog from '@/components/EditCardDialog';
 import CalendarEventDialog from '@/components/CalendarEventDialog';
 import { useAuth } from '@/context/AuthContext';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useGeolocation } from '@/hooks/useGeolocation';
+import { getLocalPhaseMarkers, dateKeyInZone } from '@/lib/moon-calculations';
+import CalendarLocationControl from '@/components/CalendarLocationControl';
 
 interface MoonPhaseData {
   date: string;
@@ -47,6 +50,7 @@ interface HijriCalendarProps {
 
 export function HijriCalendar({ targetYear, targetMonth }: HijriCalendarProps = {}) {
   const { user } = useAuth();
+  const location = useGeolocation();
   const { selectedTags, selectedProject, updateCard, addCard, columns } = useKanban();
   const [calendarFilter, setCalendarFilter] = useState<'all' | 'mine' | 'team'>('all');
   const [newMoons, setNewMoons] = useState<string[]>([]);
@@ -54,7 +58,7 @@ export function HijriCalendar({ targetYear, targetMonth }: HijriCalendarProps = 
   const [monthRange, setMonthRange] = useState<{ start: Date; end: Date } | null>(null);
   const [hijriTitle, setHijriTitle] = useState<{ year: number; month: number; monthName: string }>({ year: 1447, month: 1, monthName: getHijriMonthName(1) });
 
-  const [moonPhases, setMoonPhases] = useState<Map<string, string>>(new Map());
+  const moonPhases = React.useMemo(() => getLocalPhaseMarkers(location.timeZone), [location.timeZone]);
   const [solarEvents, setSolarEvents] = useState<Map<string, string>>(new Map());
   const [cards, setCards] = useState<KanbanCard[]>([]);
   const [calendarEvents, setCalendarEvents] = useState<any[]>([]);
@@ -133,24 +137,11 @@ export function HijriCalendar({ targetYear, targetMonth }: HijriCalendarProps = 
       const startStr = format(start, 'yyyy-MM-dd');
       const endStr = format(end, 'yyyy-MM-dd');
 
-      const { data: moonData } = await supabase
-        .from('moon_phases')
-        .select('date, phase')
-        .gte('date', startStr)
-        .lt('date', endStr);
-
       const { data: solarData } = await supabase
         .from('solar_events')
         .select('date, type')
         .gte('date', startStr)
         .lt('date', endStr);
-
-      const moonMap = new Map<string, string>();
-      moonData?.forEach((item: any) => {
-        const emoji = MOON_PHASE_EMOJIS[item.phase] || '';
-        if (emoji) moonMap.set(item.date, emoji);
-      });
-      setMoonPhases(moonMap);
 
       const solarMap = new Map<string, string>();
       solarData?.forEach((item: any) => {
@@ -378,6 +369,8 @@ export function HijriCalendar({ targetYear, targetMonth }: HijriCalendarProps = 
         </Button>
       </div>
 
+      <CalendarLocationControl location={location} />
+
       {/* Filter tabs */}
       <div className="flex justify-center mb-3 sm:mb-4">
         <Tabs value={calendarFilter} onValueChange={(v) => setCalendarFilter(v as 'all' | 'mine' | 'team')}>
@@ -411,9 +404,9 @@ export function HijriCalendar({ targetYear, targetMonth }: HijriCalendarProps = 
         {/* Day cells */}
         {days.map(({ hijriDay, gregorianDate, weekday }) => {
           const dateKey = format(gregorianDate, 'yyyy-MM-dd');
-          const moonEmoji = moonPhases.get(dateKey);
+          const moonMarker = moonPhases.get(dateKey);
           const solarEmoji = solarEvents.get(dateKey);
-          const isToday = format(new Date(), 'yyyy-MM-dd') === dateKey;
+          const isToday = dateKeyInZone(new Date(), location.timeZone) === dateKey;
           const cardsForDate = getCardsForDate(gregorianDate);
           const eventsForDate = getEventsForDate(gregorianDate);
           const isHovered = hoveredDate === dateKey;
@@ -457,7 +450,7 @@ export function HijriCalendar({ targetYear, targetMonth }: HijriCalendarProps = 
                 {dateEmojis.map((emoji, i) => (
                   <span key={i} className="text-[10px] sm:text-base leading-none">{emoji}</span>
                 ))}
-                {moonEmoji && <span className="text-[10px] sm:text-base leading-none">{moonEmoji}</span>}
+                {moonMarker && <span title={`${moonMarker.name} · ${new Intl.DateTimeFormat('en-GB', { timeZone: location.timeZone, hour: '2-digit', minute: '2-digit' }).format(moonMarker.utc)}`} className="text-[10px] sm:text-base leading-none">{moonMarker.icon}</span>}
                 {solarEmoji && <span className="text-[10px] sm:text-base leading-none">{solarEmoji}</span>}
               </div>
 

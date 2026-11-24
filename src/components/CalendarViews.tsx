@@ -6,7 +6,7 @@ import { YearView } from '@/components/YearView';
 import { QuarterView } from '@/components/QuarterView';
 import MoonPhaseView from '@/components/MoonPhaseView';
 import { DayView } from '@/components/DayView';
-import { getCurrentHijriMonth } from '@/lib/hijri-calendar-engine';
+import { findLunationForDate } from '@/lib/hijri-calendar-engine';
 import type { CalendarSubView } from '@/hooks/useCalendarNav';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { displayDateInZone } from '@/lib/moon-calculations';
@@ -22,7 +22,8 @@ const SUB_VIEWS: { value: CalendarSubView; label: string }[] = [
 export default function CalendarViews() {
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useGeolocation();
-  const current = getCurrentHijriMonth();
+  const lunation = findLunationForDate(displayDateInZone(new Date(), location.timeZone));
+  const current = { year: lunation.hijriYear, month: lunation.hijriMonth };
 
   const raw = searchParams.get('sub');
   const sub: CalendarSubView = SUB_VIEWS.some(s => s.value === raw)

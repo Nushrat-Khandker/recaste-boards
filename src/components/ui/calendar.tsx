@@ -8,16 +8,11 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { useGeolocation } from '@/hooks/useGeolocation';
+import { getLocalPhaseMarkers } from '@/lib/moon-calculations';
+import CalendarLocationControl from '@/components/CalendarLocationControl';
 
 type CalendarProps = React.ComponentProps<typeof DayPicker>;
-// Moon phase emoji mapping
-const MOON_PHASE_EMOJIS: Record<string, string> = {
-  'new_moon': '🌑',       // New Moon
-  'first_quarter': '🌓',  // First Quarter
-  'full_moon': '🌕',      // Full Moon
-  'last_quarter': '🌗',   // Last Quarter
-};
-
 // Solar event emoji mapping
 const SOLAR_EVENT_EMOJIS = {
   'equinox_spring': '🌼',
@@ -30,15 +25,17 @@ function Calendar({
   className,
   classNames,
   showOutsideDays = true,
+  onMonthChange,
   ...props
 }: CalendarProps) {
-  const [moonPhases, setMoonPhases] = React.useState<Record<string, string>>({});
+  const location = useGeolocation();
+  const moonPhases = React.useMemo(() => getLocalPhaseMarkers(location.timeZone), [location.timeZone]);
   const [solarEvents, setSolarEvents] = React.useState<Record<string, string>>({});
 
   // Track current displayed month for dynamic fetching
   const [currentMonth, setCurrentMonth] = React.useState<Date>(new Date());
 
-  // Fetch moon phases and solar events for current month range
+  // Solar markers retain their stored dates; lunar markers are localized separately.
   React.useEffect(() => {
     const fetchAstronomicalData = async (month: Date) => {
       console.log('Fetching astronomical data for month:', format(month, 'MMMM yyyy'));
@@ -47,39 +44,12 @@ function Calendar({
       const startOfMonth = new Date(month.getFullYear(), month.getMonth(), 1);
       const endOfMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0);
       
-      // Fetch moon phases for the month
-      const { data: moonData, error: moonError } = await supabase
-        .from('moon_phases')
-        .select('date, phase')
-        .gte('date', format(startOfMonth, 'yyyy-MM-dd'))
-        .lte('date', format(endOfMonth, 'yyyy-MM-dd'));
-      
       // Fetch solar events for the month
       const { data: solarData, error: solarError } = await supabase
         .from('solar_events')
         .select('date, type')
         .gte('date', format(startOfMonth, 'yyyy-MM-dd'))
         .lte('date', format(endOfMonth, 'yyyy-MM-dd'));
-      
-      console.log('Moon phases data:', moonData, 'Solar events data:', solarData);
-      
-      if (moonData && !moonError) {
-        const phaseMap: Record<string, string> = {};
-        moonData.forEach((item) => {
-          const { date, phase } = item;
-          const normalizedPhase = phase.toLowerCase().replace(/\s/g, '_');
-          const emoji = MOON_PHASE_EMOJIS[normalizedPhase as keyof typeof MOON_PHASE_EMOJIS];
-          if (emoji) {
-            phaseMap[date] = emoji;
-          } else {
-            console.warn(`Unknown moon phase: ${phase} (normalized: ${normalizedPhase}) for date: ${date}`);
-          }
-        });
-        console.log('Final moon phase map:', phaseMap);
-        setMoonPhases(phaseMap);
-      } else if (moonError) {
-        console.error('Error fetching moon phases:', moonError);
-      }
       
       if (solarData && !solarError) {
         const eventMap: Record<string, string> = {};
@@ -111,10 +81,8 @@ function Calendar({
   const renderDayContent = (date: Date) => {
     // Use ISO date string format to match Supabase date storage
     const dateStr = format(date, 'yyyy-MM-dd');
-    const moonPhase = moonPhases[dateStr];
+    const moonPhase = moonPhases.get(dateStr);
     const solarEvent = solarEvents[dateStr];
-    
-    console.log(`Rendering date: ${dateStr}, Moon phase: ${moonPhase}, Solar event: ${solarEvent}`);
     
     return (
       <div className="relative w-full h-full flex items-center justify-center">
@@ -123,9 +91,9 @@ function Calendar({
           <span 
             className="absolute top-0 right-0 text-xs leading-none select-none" 
             style={{ fontSize: '10px', zIndex: 20 }}
-            title={`Moon phase: ${Object.keys(MOON_PHASE_EMOJIS).find(key => MOON_PHASE_EMOJIS[key as keyof typeof MOON_PHASE_EMOJIS] === moonPhase) || 'unknown'}`}
+            title={`Moon phase: ${moonPhase.name} · ${location.label}`}
           >
-            {moonPhase}
+            {moonPhase.icon}
           </span>
         )}
         {solarEvent && (
@@ -142,12 +110,14 @@ function Calendar({
   };
 
   return (
+    <div>
     <DayPicker
       showOutsideDays={showOutsideDays}
       className={cn("p-3", className)}
       onMonthChange={(month) => {
         console.log('Month changed to:', format(month, 'MMMM yyyy'));
         setCurrentMonth(month);
+        onMonthChange?.(month);
       }}
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
@@ -192,6 +162,8 @@ function Calendar({
       weekStartsOn={0} // Start on Sunday for Gregorian calendar
       {...props}
     />
+    <CalendarLocationControl location={location} />
+    </div>
   );
 }
 Calendar.displayName = "Calendar";

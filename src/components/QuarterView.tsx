@@ -7,9 +7,11 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import {
   PHASE_NAMES,
-  getCurrentHijriMonth, getMonthStartDate, getMonthEndDate,
-  getLunationForHijriMonth, getPhaseBoundariesForLunation,
+  findLunationForDate, getMonthStartDate, getMonthEndDate,
 } from '@/lib/hijri-calendar-engine';
+import { useGeolocation } from '@/hooks/useGeolocation';
+import { displayDateInZone, getLocalMonthPhaseMarkers } from '@/lib/moon-calculations';
+import CalendarLocationControl from '@/components/CalendarLocationControl';
 
 interface QuarterViewProps {
   quarter: number;
@@ -18,7 +20,9 @@ interface QuarterViewProps {
 
 export const QuarterView: React.FC<QuarterViewProps> = ({ quarter, hijriYear }) => {
   const navigate = useNavigate();
-  const current = getCurrentHijriMonth();
+  const location = useGeolocation();
+  const lunation = findLunationForDate(displayDateInZone(new Date(), location.timeZone));
+  const current = { year: lunation.hijriYear, month: lunation.hijriMonth };
   const startMonth = (quarter - 1) * 3 + 1;
   const months = [startMonth, startMonth + 1, startMonth + 2];
 
@@ -57,6 +61,7 @@ export const QuarterView: React.FC<QuarterViewProps> = ({ quarter, hijriYear }) 
         </Button>
       </div>
 
+      <CalendarLocationControl location={location} />
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6">
         {months.map(m => {
           const monthName = getHijriMonthName(m);
@@ -72,14 +77,7 @@ export const QuarterView: React.FC<QuarterViewProps> = ({ quarter, hijriYear }) 
             days.push({ day: d + 1, date, weekday: date.getDay() });
           }
 
-          // Phase markers from lookup table
-          const lun = getLunationForHijriMonth(hijriYear, m);
-          const phases = lun
-            ? getPhaseBoundariesForLunation(lun).slice(0, 4).map((dayOffset, pi) => ({
-                name: PHASE_NAMES[pi],
-                day: dayOffset + 1,
-              }))
-            : [];
+          const phases = getLocalMonthPhaseMarkers(hijriYear, m, monthStart, location.timeZone);
 
           return (
             <button
@@ -119,8 +117,8 @@ export const QuarterView: React.FC<QuarterViewProps> = ({ quarter, hijriYear }) 
 
               <div className="flex flex-wrap gap-1">
                 {phases.map((p, pi) => (
-                  <span key={pi} className="text-[10px] text-muted-foreground">
-                    {p.name.split(' ')[0]}:{p.day}
+                  <span key={pi} title={`${p.name} · ${p.dateKey}`} className="text-[10px] text-muted-foreground">
+                    {p.name.split(' ')[0]}: {format(new Date(`${p.dateKey}T12:00:00`), 'd MMM')}
                   </span>
                 ))}
               </div>
