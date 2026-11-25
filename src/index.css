@@ -300,6 +300,38 @@
     border-color: hsl(0 50% 70%);
   }
 
+  /* Whole-month print: one full page per phase of the Hijri month. */
+  [data-calendar-print][data-print-scope="month"] [data-print-phase-sheet] {
+    display: none !important;
+  }
+
+  [data-print-month-phase-sheet] {
+    display: block !important;
+    width: 100%;
+    break-after: page;
+    page-break-after: always;
+    break-inside: avoid;
+  }
+
+  [data-print-month-phase-sheet]:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+
+  [data-print-month-phase-sheet] > div:last-child {
+    grid-template-rows: auto 166mm;
+  }
+
+  [data-calendar-print][data-print-scope="month"] {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  html:has([data-print-scope="month"]),
+  body:has([data-print-scope="month"]) {
+    overflow: visible !important;
+  }
+
   html:has([data-calendar-print]),
   body:has([data-calendar-print]) {
     height: auto !important;

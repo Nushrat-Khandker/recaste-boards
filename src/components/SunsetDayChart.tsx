@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { chartHour, formatChartTime, calendarEventInterval, sunsetDayDisplayDate, type ChartCalendarEvent, type SunsetDay } from '@/lib/sunset-day';
+import PhasePrintSheet from '@/components/PhasePrintSheet';
 
 interface Props {
   days: SunsetDay[];
@@ -45,8 +46,6 @@ export default function SunsetDayChart({ days, now, zoom = 1, events, onDay, onE
   const position = (day: SunsetDay, instant: Date) => y(chartHour(day, instant));
   const gridHours = Array.from({ length: maximum - minimum + 1 }, (_, i) => minimum + i);
   const totalHeight = top + height + 24;
-  const span = Math.max(1, maximum - minimum);
-  const percent = (day: SunsetDay, instant: Date) => ((chartHour(day, instant) - minimum) / span) * 100;
   return (
     <>
     <div ref={host} data-print-sunset-chart className="w-full overflow-x-auto border border-border rounded-md bg-background">
@@ -123,45 +122,7 @@ export default function SunsetDayChart({ days, now, zoom = 1, events, onDay, onE
       </svg>
     </div>
     {/* Print-only sheet: same boxed style as the printed Month view, filling the page. */}
-    <div data-print-phase-sheet aria-hidden="true" className="hidden">
-      <div className="grid gap-[2mm]" style={{ gridTemplateColumns: `repeat(${days.length}, minmax(0, 1fr))` }}>
-        {days.map((day, index) => {
-          const displayDate = sunsetDayDisplayDate(day.date);
-          const wd = displayDate.getDay();
-          const dayLabel = wd === 5 ? 'Jumuah' : wd === 6 ? 'As-sabt' : `Day ${wd + 1}`;
-          const dateLabel = displayDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-          const eveningDateLabel = day.date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-          return <div key={day.dateKey} data-print-phase-head={wd} className="rounded-lg py-[1.5mm] text-center font-semibold text-[9pt]">
-            {wd === 5 && jumuahDatePair
-              ? <span className="whitespace-nowrap"><span className="text-[7pt] font-normal">{eveningDateLabel}</span> {dayLabel} <span className="text-[7pt] font-normal">{dateLabel}</span></span>
-              : <>{dayLabel} <span className="text-[7pt] font-normal">{dateLabel}</span></>}
-          </div>;
-        })}
-        {days.map((day, index) => {
-          const wd = sunsetDayDisplayDate(day.date).getDay();
-          const showSolarTimes = index === 0 || index === days.length - 1;
-          const top = percent(day, day.start), bottom = percent(day, day.end);
-          return <div key={day.dateKey} data-print-phase-col={wd} className="relative">
-            <div className="absolute inset-x-0 rounded-lg border border-border overflow-hidden" style={{ top: `${top}%`, height: `${bottom - top}%` }}>
-              {gridHours.filter(hour => hour > chartHour(day, day.start) && hour < chartHour(day, day.end)).map(hour =>
-                <div key={hour} className="absolute inset-x-0 border-t border-border/40" style={{ top: `${((hour - chartHour(day, day.start)) / (chartHour(day, day.end) - chartHour(day, day.start))) * 100}%` }} />)}
-            </div>
-            {(Object.keys(styles) as Array<keyof typeof styles>).map(key => {
-              const instant = day[key];
-              if (!instant) return null;
-              const at = percent(day, instant);
-              const colour = key === 'sunrise' ? '--chart-sunrise' : key === 'meridian' ? '--chart-meridian' : '--chart-sunset';
-              return <div key={key} className="absolute inset-x-0" style={{ top: `${at}%` }}>
-                <div className="h-[2px] -translate-y-1/2" style={{ background: `hsl(var(${colour}))` }} />
-                {showSolarTimes && <span className="absolute left-0 right-0 text-center text-[7pt]" style={{ color: `hsl(var(${colour}))`, top: key === 'end' ? '-11pt' : '1pt' }}>{formatChartTime(instant, day.timeZone)}</span>}
-              </div>;
-            })}
-            {phaseChange && phaseChange.instant >= day.start && phaseChange.instant < day.end &&
-              <span className="absolute left-0 right-0 text-center text-[13pt] -translate-y-1/2" style={{ top: `${percent(day, phaseChange.instant)}%` }}>{phaseChange.icon}</span>}
-          </div>;
-        })}
-      </div>
-    </div>
+    <PhasePrintSheet days={days} phaseChange={phaseChange} jumuahDatePair={jumuahDatePair} />
     </>
   );
 }

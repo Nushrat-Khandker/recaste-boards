@@ -2,6 +2,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useCalendarNav as useNavigate } from '@/hooks/useCalendarNav';
 import { ChevronLeft, ChevronRight, Loader2, ZoomIn, ZoomOut, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { useGeolocation } from '@/hooks/useGeolocation';
@@ -13,6 +16,8 @@ import {
 } from '@/lib/moon-calculations';
 import { calculateSunsetDay, type SunsetDay } from '@/lib/sunset-day';
 import SunsetDayChart from '@/components/SunsetDayChart';
+import PhasePrintSheet from '@/components/PhasePrintSheet';
+import { buildMonthPhaseSheets, type PhasePrintSheetData } from '@/lib/phase-print';
 import { getHijriMonthName } from '@/lib/hijri-utils';
 
 import {
@@ -77,6 +82,8 @@ const MoonPhaseView: React.FC = () => {
   const [eventDialogState, setEventDialogState] = useState<{ open: boolean; date: string; event?: any }>({
     open: false, date: '',
   });
+  // A print request keeps the chosen scope and sheets in the DOM until the dialog closes.
+  const [printRequest, setPrintRequest] = useState<{ scope: 'phase' | 'month'; sheets: PhasePrintSheetData[]; id: number } | null>(null);
 
   // Localize exact reference instants without shifting existing task dates.
   useEffect(() => {
@@ -186,10 +193,32 @@ const MoonPhaseView: React.FC = () => {
   const hijriMonthName = hijriInfo ? getHijriMonthName(hijriInfo.month) : '';
   const hijriYear = hijriInfo ? hijriInfo.year : '';
 
+  const printScope = printRequest?.scope ?? 'phase';
+  const monthSheets = printRequest?.sheets ?? [];
+
+  const requestPrint = (scope: 'phase' | 'month') => {
+    const sheets = scope === 'month' && currentBlock
+      ? buildMonthPhaseSheets(phaseBlocks, currentBlock, geo.latitude, geo.longitude)
+      : [];
+    setPrintRequest({ scope, sheets, id: Date.now() });
+  };
+
+  useEffect(() => {
+    if (!printRequest) return;
+    const timer = window.setTimeout(() => window.print(), 80);
+    return () => window.clearTimeout(timer);
+  }, [printRequest]);
+
+  useEffect(() => {
+    const reset = () => setPrintRequest(null);
+    window.addEventListener('afterprint', reset);
+    return () => window.removeEventListener('afterprint', reset);
+  }, []);
+
   return (
-    <div data-calendar-print="phase" className="w-full max-w-6xl mx-auto p-2 sm:p-6">
+    <div data-calendar-print="phase" data-print-scope={printScope} className="w-full max-w-6xl mx-auto p-2 sm:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-1 sm:mb-3">
+      <div data-print-hide={printScope === 'month' || undefined} className="flex items-center justify-between mb-1 sm:mb-3">
         <Button
           variant="outline"
           size="sm"
@@ -249,9 +278,17 @@ const MoonPhaseView: React.FC = () => {
           </div>
         </div>
         <div data-print-hide className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="h-6 w-6" title="Print phase" aria-label="Print phase" disabled={loading || calculationError || !days.length} onClick={() => window.print()}>
-            <Printer className="h-4 w-4" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-6 w-6" title="Print" aria-label="Print calendar" disabled={loading || calculationError || !days.length}>
+                <Printer className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => requestPrint('phase')}>This phase</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => requestPrint('month')}>Whole month</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <div className="flex items-center gap-1">
             <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setZoom(z => Math.max(0.5, z - 0.25))}>
               <ZoomOut className="h-3.5 w-3.5" />
@@ -287,6 +324,23 @@ const MoonPhaseView: React.FC = () => {
           />
         )}
       </div>
+
+      {/* Whole-month print sheets: one page per phase of this Hijri month. */}
+      {monthSheets.length > 0 && (
+        <div data-print-month-sheets>
+          {monthSheets.map(sheet => (
+            <PhasePrintSheet
+              key={sheet.key}
+              month
+              days={sheet.days}
+              phaseChange={sheet.phaseChange}
+              jumuahDatePair
+              title={sheet.title}
+              phaseLabel={sheet.phaseLabel}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Calendar Event Dialog */}
       <CalendarEventDialog
