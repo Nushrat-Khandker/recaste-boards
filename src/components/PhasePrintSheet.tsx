@@ -44,7 +44,7 @@ export default function PhasePrintSheet({ days, phaseChange, jumuahDatePair = fa
           return <div key={day.dateKey} data-print-phase-head={wd} className="rounded-lg py-[1.5mm] text-center font-semibold text-[9pt]">
             {wd === 5 && jumuahDatePair
               ? <span className="whitespace-nowrap"><span className="text-[7pt] font-normal">{eveningDateLabel}</span> {dayLabel} <span className="text-[7pt] font-normal">{dateLabel}</span></span>
-              : <>{dayLabel} <span className="text-[7pt] font-normal">{dateLabel}</span></>}
+              : dayLabel}
           </div>;
         })}
         {days.map((day, index) => {

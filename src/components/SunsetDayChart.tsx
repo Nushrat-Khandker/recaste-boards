@@ -74,10 +74,7 @@ export default function SunsetDayChart({ days, now, zoom = 1, events, onDay, onE
                     <span className="text-[9px] text-muted-foreground">{dateLabel}</span>
                   </span>
                 ) : (
-                  <>
-                    <span className={active ? 'text-primary font-semibold' : ''}>{dayLabel}</span>
-                    <span className="text-[10px] text-muted-foreground">{dateLabel}</span>
-                  </>
+                  <span className={active ? 'text-primary font-semibold' : ''}>{dayLabel}</span>
                 )}
                 {active && <span className="text-[10px] text-primary">Today</span>}
               </Button>
