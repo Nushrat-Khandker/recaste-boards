@@ -38,7 +38,7 @@ export default function PhasePrintSheet({ days, phaseChange, jumuahDatePair = fa
         {days.map(day => {
           const displayDate = sunsetDayDisplayDate(day.date);
           const wd = displayDate.getDay();
-          const dayLabel = wd === 5 ? 'Jumuah' : wd === 6 ? 'As-sabt' : `Day ${wd + 1}`;
+          const dayLabel = wd === 5 ? 'Jumuah' : wd === 6 ? 'As-sabt' : `${wd + 1}`;
           const dateLabel = displayDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
           const eveningDateLabel = day.date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
           return <div key={day.dateKey} data-print-phase-head={wd} className="rounded-lg py-[1.5mm] text-center font-semibold text-[9pt]">

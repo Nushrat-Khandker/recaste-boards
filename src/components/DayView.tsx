@@ -85,7 +85,7 @@ export const DayView: React.FC<DayViewProps> = ({ date }) => {
         </Button>
         <div className="text-center leading-tight">
           {(() => {
-            const dayLabel = isJummah ? 'Jumuah' : isSabt ? 'As-Sabt' : `Day ${weekday + 1}`;
+            const dayLabel = isJummah ? 'Jumuah' : isSabt ? 'As-Sabt' : `${weekday + 1}`;
             const labelColor = isJummah ? 'text-green-700 dark:text-green-300' : isSabt ? 'text-red-700 dark:text-red-300' : '';
             return (
               <>

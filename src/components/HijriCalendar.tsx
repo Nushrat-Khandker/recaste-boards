@@ -396,8 +396,8 @@ export function HijriCalendar({ targetYear, targetMonth }: HijriCalendarProps = 
               index === 6 && "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300"
             )}
           >
-            <span className="hidden sm:inline">{index === 5 ? 'Jumuah' : index === 6 ? 'As-sabt' : `Day ${index + 1}`}</span>
-            <span className="sm:hidden">{index === 5 ? 'Jum' : index === 6 ? 'Sab' : `D${index + 1}`}</span>
+            <span className="hidden sm:inline">{index === 5 ? 'Jumuah' : index === 6 ? 'As-sabt' : `${index + 1}`}</span>
+            <span className="sm:hidden">{index === 5 ? 'Jum' : index === 6 ? 'Sab' : `${index + 1}`}</span>
           </div>
         ))}
       </div>

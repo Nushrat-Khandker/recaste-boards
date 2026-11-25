@@ -60,7 +60,7 @@ export default function SunsetDayChart({ days, now, zoom = 1, events, onDay, onE
           const displayDate = sunsetDayDisplayDate(day.date);
           const wd = displayDate.getDay();
           const active = now >= day.start && now < day.end;
-          const dayLabel = wd === 5 ? 'Jumuah' : wd === 6 ? 'As-sabt' : `Day ${wd + 1}`;
+          const dayLabel = wd === 5 ? 'Jumuah' : wd === 6 ? 'As-sabt' : `${wd + 1}`;
           const dateLabel = displayDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
           const eveningDateLabel = day.date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
           const summary = `${day.dateKey} ${formatChartTime(day.start, day.timeZone)} → ${day.nextDateKey} ${formatChartTime(day.end, day.timeZone)}`;
