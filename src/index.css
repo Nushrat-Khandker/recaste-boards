@@ -259,26 +259,45 @@
     overflow-wrap: anywhere;
   }
 
-  [data-calendar-print] div:has([data-print-sunset-chart]) {
-    width: 100% !important;
-    max-width: none !important;
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-
   [data-print-sunset-chart] {
-    width: 100% !important;
-    overflow: hidden !important;
-    break-inside: avoid;
-    border: none !important;
-    border-radius: 0 !important;
-    height: 188mm;
+    display: none !important;
   }
 
-  [data-print-sunset-chart] > svg {
-    width: 100% !important;
-    height: 188mm !important;
-    max-height: none;
+  [data-print-phase-sheet] {
+    display: block !important;
+    width: 100%;
+  }
+
+  [data-print-phase-sheet] > div {
+    grid-template-rows: auto 172mm;
+  }
+
+  [data-print-phase-head] {
+    background: hsl(var(--secondary));
+  }
+
+  [data-print-phase-head="5"] {
+    background: hsl(145 50% 85%);
+    color: hsl(145 60% 25%);
+  }
+
+  [data-print-phase-head="6"] {
+    background: hsl(0 60% 88%);
+    color: hsl(0 60% 35%);
+  }
+
+  [data-print-phase-col] > div:first-child {
+    background: hsl(var(--background));
+  }
+
+  [data-print-phase-col="5"] > div:first-child {
+    background: hsl(var(--chart-friday));
+    border-color: hsl(145 40% 60%);
+  }
+
+  [data-print-phase-col="6"] > div:first-child {
+    background: hsl(var(--chart-saturday));
+    border-color: hsl(0 50% 70%);
   }
 
   html:has([data-calendar-print]),

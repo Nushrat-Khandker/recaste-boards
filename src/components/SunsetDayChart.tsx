@@ -24,13 +24,6 @@ const labels = { start: 'Sunset', end: 'Next sunset', sunrise: 'Sunrise', meridi
 export default function SunsetDayChart({ days, now, zoom = 1, events, onDay, onEvent, phaseChange, jumuahDatePair = false }: Props) {
   const host = useRef<HTMLDivElement>(null);
   const [availableWidth, setAvailableWidth] = useState(700);
-  const [printing, setPrinting] = useState(() => window.matchMedia('print').matches);
-  useEffect(() => {
-    const media = window.matchMedia('print');
-    const update = () => setPrinting(media.matches);
-    media.addEventListener('change', update);
-    return () => media.removeEventListener('change', update);
-  }, []);
   useEffect(() => {
     const element = host.current;
     if (!element) return;
@@ -40,21 +33,24 @@ export default function SunsetDayChart({ days, now, zoom = 1, events, onDay, onE
   }, []);
   if (!days.length) return <p role="alert">Sunset times unavailable.</p>;
   const left = 12, right = 12, top = 68;
-  const chartWidth = printing ? 1000 : availableWidth;
-  const chartZoom = printing ? 1 : zoom;
+  const chartWidth = availableWidth;
+  const chartZoom = zoom;
   const col = Math.max(jumuahDatePair ? 132 : 0, Math.max(78, (chartWidth - left - right) / days.length) * chartZoom);
   const width = left + days.length * col + right;
   const minimum = Math.floor(Math.min(...days.map(day => chartHour(day, day.start))));
   const maximum = Math.ceil(Math.max(...days.map(day => chartHour(day, day.end))));
-  const hourRowHeight = (printing ? 20 : 32) * chartZoom;
+  const hourRowHeight = 32 * chartZoom;
   const height = (maximum - minimum) * hourRowHeight;
   const y = (hour: number) => top + (hour - minimum) * hourRowHeight;
   const position = (day: SunsetDay, instant: Date) => y(chartHour(day, instant));
   const gridHours = Array.from({ length: maximum - minimum + 1 }, (_, i) => minimum + i);
   const totalHeight = top + height + 24;
+  const span = Math.max(1, maximum - minimum);
+  const percent = (day: SunsetDay, instant: Date) => ((chartHour(day, instant) - minimum) / span) * 100;
   return (
+    <>
     <div ref={host} data-print-sunset-chart className="w-full overflow-x-auto border border-border rounded-md bg-background">
-      <svg width={width} height={totalHeight} viewBox={`0 0 ${width} ${totalHeight}`} preserveAspectRatio={printing ? "none" : undefined} role="img" aria-label="Sunset-to-sunset calendar chart" className="block font-sans">
+      <svg width={width} height={totalHeight} viewBox={`0 0 ${width} ${totalHeight}`} role="img" aria-label="Sunset-to-sunset calendar chart" className="block font-sans">
         {gridHours.map(hour => <g key={hour} className="pointer-events-none" data-grid-hour={hour}>
           <line x1={left} x2={width - right} y1={y(hour)} y2={y(hour)} className="stroke-border" strokeWidth={1} />
         </g>)}
@@ -126,5 +122,46 @@ export default function SunsetDayChart({ days, now, zoom = 1, events, onDay, onE
         })}
       </svg>
     </div>
+    {/* Print-only sheet: same boxed style as the printed Month view, filling the page. */}
+    <div data-print-phase-sheet aria-hidden="true" className="hidden">
+      <div className="grid gap-[2mm]" style={{ gridTemplateColumns: `repeat(${days.length}, minmax(0, 1fr))` }}>
+        {days.map((day, index) => {
+          const displayDate = sunsetDayDisplayDate(day.date);
+          const wd = displayDate.getDay();
+          const dayLabel = wd === 5 ? 'Jumuah' : wd === 6 ? 'As-sabt' : `Day ${wd + 1}`;
+          const dateLabel = displayDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+          const eveningDateLabel = day.date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+          return <div key={day.dateKey} data-print-phase-head={wd} className="rounded-lg py-[1.5mm] text-center font-semibold text-[9pt]">
+            {wd === 5 && jumuahDatePair
+              ? <span className="whitespace-nowrap"><span className="text-[7pt] font-normal">{eveningDateLabel}</span> {dayLabel} <span className="text-[7pt] font-normal">{dateLabel}</span></span>
+              : <>{dayLabel} <span className="text-[7pt] font-normal">{dateLabel}</span></>}
+          </div>;
+        })}
+        {days.map((day, index) => {
+          const wd = sunsetDayDisplayDate(day.date).getDay();
+          const showSolarTimes = index === 0 || index === days.length - 1;
+          const top = percent(day, day.start), bottom = percent(day, day.end);
+          return <div key={day.dateKey} data-print-phase-col={wd} className="relative">
+            <div className="absolute inset-x-0 rounded-lg border border-border overflow-hidden" style={{ top: `${top}%`, height: `${bottom - top}%` }}>
+              {gridHours.filter(hour => hour > chartHour(day, day.start) && hour < chartHour(day, day.end)).map(hour =>
+                <div key={hour} className="absolute inset-x-0 border-t border-border/40" style={{ top: `${((hour - chartHour(day, day.start)) / (chartHour(day, day.end) - chartHour(day, day.start))) * 100}%` }} />)}
+            </div>
+            {(Object.keys(styles) as Array<keyof typeof styles>).map(key => {
+              const instant = day[key];
+              if (!instant) return null;
+              const at = percent(day, instant);
+              const colour = key === 'sunrise' ? '--chart-sunrise' : key === 'meridian' ? '--chart-meridian' : '--chart-sunset';
+              return <div key={key} className="absolute inset-x-0" style={{ top: `${at}%` }}>
+                <div className="h-[2px] -translate-y-1/2" style={{ background: `hsl(var(${colour}))` }} />
+                {showSolarTimes && <span className="absolute left-0 right-0 text-center text-[7pt]" style={{ color: `hsl(var(${colour}))`, top: key === 'end' ? '-11pt' : '1pt' }}>{formatChartTime(instant, day.timeZone)}</span>}
+              </div>;
+            })}
+            {phaseChange && phaseChange.instant >= day.start && phaseChange.instant < day.end &&
+              <span className="absolute left-0 right-0 text-center text-[13pt] -translate-y-1/2" style={{ top: `${percent(day, phaseChange.instant)}%` }}>{phaseChange.icon}</span>}
+          </div>;
+        })}
+      </div>
+    </div>
+    </>
   );
 }
