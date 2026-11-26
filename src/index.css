@@ -281,7 +281,7 @@
   [data-print-sunset-chart] svg {
     width: 100% !important;
     height: auto !important;
-    max-height: 190mm;
+    max-height: none !important;
   }
 
   [data-calendar-print][data-print-scope="month"] [data-print-sunset-chart]:not([data-print-month-phase-sheet] *) {
@@ -303,10 +303,6 @@
   [data-print-month-phase-sheet]:last-child {
     break-after: auto;
     page-break-after: auto;
-  }
-
-  [data-print-month-phase-sheet] [data-print-sunset-chart] svg {
-    max-height: 182mm;
   }
 
   [data-calendar-print][data-print-scope="month"] {

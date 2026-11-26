@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { chartHour, formatChartTime, calendarEventInterval, sunsetDayDisplayDate, type ChartCalendarEvent, type SunsetDay } from '@/lib/sunset-day';
 
@@ -24,6 +25,22 @@ const labels = { start: 'Sunset', end: 'Next sunset', sunrise: 'Sunrise', meridi
 export default function SunsetDayChart({ days, now, zoom = 1, events, onDay, onEvent, phaseChange, jumuahDatePair = false }: Props) {
   const host = useRef<HTMLDivElement>(null);
   const [availableWidth, setAvailableWidth] = useState(700);
+  const [printing, setPrinting] = useState(false);
+  useEffect(() => {
+    const media = window.matchMedia('print');
+    const update = () => setPrinting(media.matches);
+    const beforePrint = () => flushSync(() => setPrinting(true));
+    const afterPrint = () => setPrinting(false);
+    media.addEventListener('change', update);
+    window.addEventListener('beforeprint', beforePrint);
+    window.addEventListener('afterprint', afterPrint);
+    update();
+    return () => {
+      media.removeEventListener('change', update);
+      window.removeEventListener('beforeprint', beforePrint);
+      window.removeEventListener('afterprint', afterPrint);
+    };
+  }, []);
   useEffect(() => {
     const element = host.current;
     if (!element) return;
@@ -33,8 +50,10 @@ export default function SunsetDayChart({ days, now, zoom = 1, events, onDay, onE
   }, []);
   if (!days.length) return <p role="alert">Sunset times unavailable.</p>;
   const left = 12, right = 12, top = 68;
-  const chartWidth = availableWidth;
-  const chartZoom = zoom;
+  // Lay out against the actual A4 landscape printable width, not a phone's
+  // narrow screen. Otherwise the tall SVG height cap creates side letterboxing.
+  const chartWidth = printing ? (297 - 4) * 96 / 25.4 : availableWidth;
+  const chartZoom = printing ? 1 : zoom;
   const col = Math.max(jumuahDatePair ? 132 : 0, Math.max(78, (chartWidth - left - right) / days.length) * chartZoom);
   const width = left + days.length * col + right;
   const minimum = Math.floor(Math.min(...days.map(day => chartHour(day, day.start))));
