@@ -40,7 +40,7 @@ export default function SunsetDayChart({ days, now, zoom = 1, events, onDay, onE
   const width = left + days.length * col + right;
   const minimum = Math.floor(Math.min(...days.map(day => chartHour(day, day.start))));
   const maximum = Math.ceil(Math.max(...days.map(day => chartHour(day, day.end))));
-  const hourRowHeight = 32 * chartZoom;
+  const hourRowHeight = 24 * chartZoom;
   const height = (maximum - minimum) * hourRowHeight;
   const y = (hour: number) => top + (hour - minimum) * hourRowHeight;
   const position = (day: SunsetDay, instant: Date) => y(chartHour(day, instant));
@@ -50,6 +50,7 @@ export default function SunsetDayChart({ days, now, zoom = 1, events, onDay, onE
     <>
     <div ref={host} data-print-sunset-chart className="w-full overflow-x-auto border border-border rounded-md bg-background">
       <svg width={width} height={totalHeight} viewBox={`0 0 ${width} ${totalHeight}`} role="img" aria-label="Sunset-to-sunset calendar chart" className="block font-sans">
+        <defs><pattern id="graph-paper" x={left} y={top} width={24 * chartZoom} height={24 * chartZoom} patternUnits="userSpaceOnUse"><path d={`M ${24 * chartZoom} 0 L 0 0 0 ${24 * chartZoom}`} fill="none" stroke="#A1A1AA" strokeOpacity={0.35} strokeWidth={1} /></pattern></defs>
         {gridHours.map(hour => <g key={hour} className="pointer-events-none" data-grid-hour={hour}>
           <line x1={left} x2={width - right} y1={y(hour)} y2={y(hour)} className="stroke-border" strokeWidth={1} />
         </g>)}
@@ -85,6 +86,7 @@ export default function SunsetDayChart({ days, now, zoom = 1, events, onDay, onE
             <foreignObject x={x} y={startY} width={col} height={endY - startY}>
               <Button variant="ghost" aria-label={`Open ${day.dateKey}`} title={summary} onClick={() => onDay(day.dateKey)} className="w-full h-full rounded-none p-0 hover:bg-primary/5" />
             </foreignObject>
+            <rect x={x} y={startY} width={col} height={endY - startY} fill="url(#graph-paper)" className="pointer-events-none" data-graph-paper />
             <line x1={x} x2={x} y1={startY} y2={endY} className="stroke-border pointer-events-none" />
             {active && <rect x={x + 1} y={startY} width={col - 2} height={endY - startY} fill="none" className="stroke-primary pointer-events-none" strokeDasharray="4 4" />}
             {(Object.keys(styles) as Array<keyof typeof styles>).map(key => {
