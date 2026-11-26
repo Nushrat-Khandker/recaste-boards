@@ -157,7 +157,7 @@
 
 @page {
   size: A4 landscape;
-  margin: 5mm;
+  margin: 2mm;
 }
 
 @media print {
@@ -281,7 +281,7 @@
   [data-print-sunset-chart] svg {
     width: 100% !important;
     height: auto !important;
-    max-height: 180mm;
+    max-height: 190mm;
   }
 
   [data-calendar-print][data-print-scope="month"] [data-print-sunset-chart]:not([data-print-month-phase-sheet] *) {
@@ -306,7 +306,7 @@
   }
 
   [data-print-month-phase-sheet] [data-print-sunset-chart] svg {
-    max-height: 172mm;
+    max-height: 182mm;
   }
 
   [data-calendar-print][data-print-scope="month"] {
@@ -326,7 +326,7 @@
   }
 
   [data-calendar-print] {
-    max-height: 199mm;
+    max-height: 206mm;
     overflow: hidden !important;
   }
 }
