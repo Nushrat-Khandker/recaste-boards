@@ -424,6 +424,7 @@ export function HijriCalendar({ targetYear, targetMonth }: HijriCalendarProps = 
             <div
               key={hijriDay}
               data-print-weekday={weekday}
+              data-today={isToday ? '' : undefined}
               className={cn(
                 "aspect-square border border-border/70 sm:border-2 rounded-sm sm:rounded-lg p-0.5 sm:p-2 relative flex flex-col overflow-hidden bg-white dark:bg-slate-800 group",
                 weekday === 5 && "bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700",

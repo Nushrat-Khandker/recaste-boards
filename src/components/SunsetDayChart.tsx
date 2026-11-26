@@ -89,13 +89,13 @@ export default function SunsetDayChart({ days, now, zoom = 1, events, onDay, onE
                 {jumuahDatePair && wd === 5 ? (
                   <span className="flex items-baseline justify-center gap-1 whitespace-nowrap">
                     <span className="text-[9px] text-muted-foreground">{eveningDateLabel}</span>
-                    <span className={active ? 'text-primary font-semibold' : ''}>{dayLabel}</span>
+                    <span data-today-label className={active ? 'text-primary font-semibold' : ''}>{dayLabel}</span>
                     <span className="text-[9px] text-muted-foreground">{dateLabel}</span>
                   </span>
                 ) : (
-                  <span className={active ? 'text-primary font-semibold' : ''}>{dayLabel}</span>
+                  <span data-today-label className={active ? 'text-primary font-semibold' : ''}>{dayLabel}</span>
                 )}
-                {active && <span className="text-[10px] text-primary">Today</span>}
+                {active && <span data-print-hide className="text-[10px] text-primary">Today</span>}
               </Button>
             </foreignObject>
             <rect x={x} y={startY} width={col} height={endY - startY} className={wd === 5 ? 'fill-[hsl(var(--chart-friday))]' : wd === 6 ? 'fill-[hsl(var(--chart-saturday))]' : 'fill-background'} />
@@ -106,7 +106,7 @@ export default function SunsetDayChart({ days, now, zoom = 1, events, onDay, onE
             </foreignObject>
             <rect x={x} y={startY} width={col} height={endY - startY} fill="url(#graph-paper)" className="pointer-events-none" data-graph-paper />
             <line x1={x} x2={x} y1={startY} y2={endY} className="stroke-border pointer-events-none" />
-            {active && <rect x={x + 1} y={startY} width={col - 2} height={endY - startY} fill="none" className="stroke-primary pointer-events-none" strokeDasharray="4 4" />}
+            {active && <rect data-print-hide x={x + 1} y={startY} width={col - 2} height={endY - startY} fill="none" className="stroke-primary pointer-events-none" strokeDasharray="4 4" />}
             {(Object.keys(styles) as Array<keyof typeof styles>).map(key => {
               const instant = day[key];
               if (!instant) return null;

@@ -259,6 +259,17 @@
     overflow-wrap: anywhere;
   }
 
+  /* The live "today" cue is a screen aid; printed sheets stay neutral. */
+  [data-print-month-grid] [data-today] {
+    box-shadow: none !important;
+    outline: none !important;
+  }
+
+  [data-print-sunset-chart] [data-today-label] {
+    color: hsl(var(--foreground)) !important;
+    font-weight: 400 !important;
+  }
+
   /* Print reuses the live app chart, scaled to the page, so it always matches the app. */
   [data-print-sunset-chart] {
     border: none !important;
