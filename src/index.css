@@ -264,6 +264,18 @@
     border: none !important;
     overflow: visible !important;
     break-inside: avoid;
+    /* Keep the app's own border tint: the print default darkens every border-colored line. */
+    --border: 214.3 31.8% 91.4%;
+  }
+
+  /* The graph-paper pattern already draws these rows; the solid lines would print much darker. */
+  [data-print-sunset-chart] [data-hour-line] {
+    display: none !important;
+  }
+
+  [data-print-sunset-chart] [data-graph-paper] {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
   }
 
   [data-print-sunset-chart] svg {

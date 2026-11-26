@@ -51,7 +51,7 @@ export default function SunsetDayChart({ days, now, zoom = 1, events, onDay, onE
       <svg width={width} height={totalHeight} viewBox={`0 0 ${width} ${totalHeight}`} preserveAspectRatio="xMidYMin meet" role="img" aria-label="Sunset-to-sunset calendar chart" className="block font-sans">
         <defs><pattern id="graph-paper" x={left} y={top} width={24 * chartZoom} height={24 * chartZoom} patternUnits="userSpaceOnUse"><path d={`M ${24 * chartZoom} 0 L 0 0 0 ${24 * chartZoom}`} fill="none" stroke="#A1A1AA" strokeOpacity={0.35} strokeWidth={1} /></pattern></defs>
         {gridHours.map(hour => <g key={hour} className="pointer-events-none" data-grid-hour={hour}>
-          <line x1={left} x2={width - right} y1={y(hour)} y2={y(hour)} className="stroke-border" strokeWidth={1} />
+          <line data-hour-line x1={left} x2={width - right} y1={y(hour)} y2={y(hour)} className="stroke-border" strokeWidth={1} />
         </g>)}
         {days.map((day, index) => {
           const x = left + index * col;
@@ -81,7 +81,7 @@ export default function SunsetDayChart({ days, now, zoom = 1, events, onDay, onE
             </foreignObject>
             <rect x={x} y={startY} width={col} height={endY - startY} className={wd === 5 ? 'fill-[hsl(var(--chart-friday))]' : wd === 6 ? 'fill-[hsl(var(--chart-saturday))]' : 'fill-background'} />
             {day.sunrise && <rect x={x} y={startY} width={col} height={position(day, day.sunrise) - startY} className="fill-[hsl(var(--chart-night))]" opacity={0.5} />}
-            {gridHours.filter(hour => y(hour) > startY && y(hour) < endY).map(hour => <line key={hour} x1={x} x2={x + col} y1={y(hour)} y2={y(hour)} className="stroke-border pointer-events-none" strokeWidth={1} />)}
+            {gridHours.filter(hour => y(hour) > startY && y(hour) < endY).map(hour => <line key={hour} data-hour-line x1={x} x2={x + col} y1={y(hour)} y2={y(hour)} className="stroke-border pointer-events-none" strokeWidth={1} />)}
             <foreignObject x={x} y={startY} width={col} height={endY - startY}>
               <Button variant="ghost" aria-label={`Open ${day.dateKey}`} title={summary} onClick={() => onDay(day.dateKey)} className="w-full h-full rounded-none p-0 hover:bg-primary/5" />
             </foreignObject>
