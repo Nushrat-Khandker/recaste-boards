@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { chartHour, formatChartTime, calendarEventInterval, sunsetDayDisplayDate, type ChartCalendarEvent, type SunsetDay } from '@/lib/sunset-day';
-import PhasePrintSheet from '@/components/PhasePrintSheet';
 
 interface Props {
   days: SunsetDay[];
@@ -49,7 +48,7 @@ export default function SunsetDayChart({ days, now, zoom = 1, events, onDay, onE
   return (
     <>
     <div ref={host} data-print-sunset-chart className="w-full overflow-x-auto border border-border rounded-md bg-background">
-      <svg width={width} height={totalHeight} viewBox={`0 0 ${width} ${totalHeight}`} role="img" aria-label="Sunset-to-sunset calendar chart" className="block font-sans">
+      <svg width={width} height={totalHeight} viewBox={`0 0 ${width} ${totalHeight}`} preserveAspectRatio="xMidYMin meet" role="img" aria-label="Sunset-to-sunset calendar chart" className="block font-sans">
         <defs><pattern id="graph-paper" x={left} y={top} width={24 * chartZoom} height={24 * chartZoom} patternUnits="userSpaceOnUse"><path d={`M ${24 * chartZoom} 0 L 0 0 0 ${24 * chartZoom}`} fill="none" stroke="#A1A1AA" strokeOpacity={0.35} strokeWidth={1} /></pattern></defs>
         {gridHours.map(hour => <g key={hour} className="pointer-events-none" data-grid-hour={hour}>
           <line x1={left} x2={width - right} y1={y(hour)} y2={y(hour)} className="stroke-border" strokeWidth={1} />
@@ -120,8 +119,6 @@ export default function SunsetDayChart({ days, now, zoom = 1, events, onDay, onE
         })}
       </svg>
     </div>
-    {/* Print-only sheet: same boxed style as the printed Month view, filling the page. */}
-    <PhasePrintSheet days={days} phaseChange={phaseChange} jumuahDatePair={jumuahDatePair} />
     </>
   );
 }

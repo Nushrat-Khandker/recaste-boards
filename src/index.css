@@ -259,49 +259,24 @@
     overflow-wrap: anywhere;
   }
 
+  /* Print reuses the live app chart, scaled to the page, so it always matches the app. */
   [data-print-sunset-chart] {
+    border: none !important;
+    overflow: visible !important;
+    break-inside: avoid;
+  }
+
+  [data-print-sunset-chart] svg {
+    width: 100% !important;
+    height: auto !important;
+    max-height: 180mm;
+  }
+
+  [data-calendar-print][data-print-scope="month"] [data-print-sunset-chart]:not([data-print-month-phase-sheet] *) {
     display: none !important;
   }
 
-  [data-print-phase-sheet] {
-    display: block !important;
-    width: 100%;
-  }
-
-  [data-print-phase-sheet] > div {
-    grid-template-rows: auto 172mm;
-  }
-
-  [data-print-phase-head] {
-    background: hsl(var(--secondary));
-  }
-
-  [data-print-phase-head="5"] {
-    background: hsl(145 50% 85%);
-    color: hsl(145 60% 25%);
-  }
-
-  [data-print-phase-head="6"] {
-    background: hsl(0 60% 88%);
-    color: hsl(0 60% 35%);
-  }
-
-  [data-print-phase-col] > div:first-child {
-    background: hsl(var(--background));
-  }
-
-  [data-print-phase-col="5"] > div:first-child {
-    background: hsl(var(--chart-friday));
-    border-color: hsl(145 40% 60%);
-  }
-
-  [data-print-phase-col="6"] > div:first-child {
-    background: hsl(var(--chart-saturday));
-    border-color: hsl(0 50% 70%);
-  }
-
-  /* Whole-month print: one full page per phase of the Hijri month. */
-  [data-calendar-print][data-print-scope="month"] [data-print-phase-sheet] {
+  [data-calendar-print]:not([data-print-scope="month"]) [data-print-month-sheets] {
     display: none !important;
   }
 
@@ -318,8 +293,8 @@
     page-break-after: auto;
   }
 
-  [data-print-month-phase-sheet] > div:last-child {
-    grid-template-rows: auto 166mm;
+  [data-print-month-phase-sheet] [data-print-sunset-chart] svg {
+    max-height: 172mm;
   }
 
   [data-calendar-print][data-print-scope="month"] {

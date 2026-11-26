@@ -331,7 +331,6 @@ const MoonPhaseView: React.FC = () => {
           {monthSheets.map(sheet => (
             <PhasePrintSheet
               key={sheet.key}
-              month
               days={sheet.days}
               phaseChange={sheet.phaseChange}
               jumuahDatePair
